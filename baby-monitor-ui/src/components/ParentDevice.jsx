@@ -12,7 +12,24 @@ function ParentDevice() {
         if (pcRef.current) return;
         pcRef.current = new RTCPeerConnection();
         pcRef.current.ontrack = event => vidRef.current.srcObject = event.streams[0];
-        pcRef.current.onconnectionstatechange = e => console.log(e);
+        pcRef.current.onicecandidate = async (event) => {
+            if (event.candidate !== null) return;
+            const response = await storeSDP(pcRef.current.localDescription);
+            if (response?.status === "answer-stored") {
+                setBtnText("Waiting...");
+                setBtnHandler(() => null);
+            } else {
+                setBtnText("Request Connection");
+                setBtnHandler(() => requestConnection);
+                alert("Connection request failed!");
+            }
+        };
+        pcRef.current.onconnectionstatechange = () => {
+            if (pcRef.current.connectionState === "connected") {
+                setBtnText("Disconnect");
+                setBtnHandler(() => disconnect);
+            }
+        };
     });
 
     async function requestConnection() {
@@ -20,27 +37,22 @@ function ParentDevice() {
         const offer = await loadSDP("offer");
         if (offer?.type === "offer") {
             await pcRef.current.setRemoteDescription(offer);
-            const answer = await pcRef.current.createAnswer();
-            await pcRef.current.setLocalDescription(answer);
-            const response = await storeSDP(answer);
-            if (response?.status === "answer-stored") {
-                setBtnText("Requested");
-                setBtnHandler(() => null);
-            } else {
-                setBtnText("Request Connection");
-                alert("Connection request failed!");
-            }
+            await pcRef.current.setLocalDescription(await pcRef.current.createAnswer());
         } else {
             setBtnText("Request Connection");
             alert("No baby (camera) device found!");
         }
     }
 
+    async function disconnect() {
+        alert("This feature is not implemented yet!\nYou can refresh the page manually.");
+    }
+
     return (
-        <div>
-            <h2>Parent Device (Video)</h2>
-            <video ref={vidRef} autoPlay playsInline></video><br />
-            <button onClick={btnHandler}>{btnText}</button>
+        <div className="container">
+            <h2 className="text-info">Parent Device (Live Audio/Video)</h2>
+            <video ref={vidRef} autoPlay playsInline className="video"></video><br />
+            <button onClick={btnHandler} className="button">{btnText}</button>
         </div>
     );
 }
