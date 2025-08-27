@@ -1,59 +1,47 @@
-import os
 from flask import Flask, jsonify, request, redirect
+from flask_cors import CORS
 
 
 # Temporary storage for SDP exchange (WebRTC handshake)
 storage = {"offer": None, "answer": None}
+
 app = Flask(__name__)
+CORS(app)
 
 
-@app.route("/relay", methods=["GET", "POST"])
-def relay():
+@app.route("/exchange", methods=["GET", "POST"])
+def exchange():
     global storage
 
     if request.method == "POST":
-        data = request.get_json()
-        role = data.get("role")
-        sdp = data.get("sdp")
-        # Baby device stores its offer
-        if role == "offer":
+        sdp = request.get_json()
+        if sdp["type"] == "offer":
             storage["offer"] = sdp
             return jsonify({"status": "offer-stored"}), 200
-        # Parent device stores its answer for the offer
-        elif role == "answer":
+        elif sdp["type"] == "answer":
             storage["answer"] = sdp
             return jsonify({"status": "answer-stored"}), 200
-        return jsonify({"error": "Invalid role"}), 400
+        return jsonify({"error": "invalid-sdp-type"}), 400
 
     if request.method == "GET":
-        role = request.args.get("role")
-        if role == "parent":
-            # Parent asks → send offer
+        type = request.args.get("type")
+        if type == "offer":
             if storage["offer"]:
-                offer = storage["offer"]
-                storage["offer"] = None     # Remove the answer once sent
-                return jsonify({"sdp": offer}), 200
+                sdp = storage["offer"]
+                storage["offer"] = None
+                return jsonify(sdp), 200
             else:
-                return jsonify({"error": "No offer yet"}), 404
-        elif role == "baby":
-            # Baby asks → send answer
+                return jsonify({"error": "offer-not-found"}), 404
+        elif type == "answer":
             if storage["answer"]:
-                answer = storage["answer"]
-                storage["answer"] = None    # Remove the answer once sent
-                return jsonify({"sdp": answer}), 200
+                sdp = storage["answer"]
+                storage["answer"] = None
+                return jsonify(sdp), 200
             else:
-                return jsonify({"error": "No answer yet"}), 404
+                return jsonify({"error": "answer-not-found"}), 404
 
     storage = {"offer": None, "answer": None}
-    return jsonify({"error": "role required"}), 400
-
-
-@app.errorhandler(404)
-def page_not_found(error):
-    index_html = f"./static/{request.path.strip('/')}/index.html"
-    if os.path.isfile(index_html):
-        return redirect(index_html)
-    return error, 404
+    return jsonify({"error": "something-went-wrong"}), 500
 
 
 if __name__ == '__main__':
