@@ -38,6 +38,11 @@ npm run build -- --base ./
 
 # === STEP 2: Zip the dist folder ===
 echo "💾 Zipping dist folder..."
+# Check if bestzip is installed
+if ! command -v bestzip &> /dev/null; then
+  echo "bestzip not found! installing..."
+  npm install -g bestzip
+fi
 bestzip "$DIST_DIR/$ZIP_FILE" "$DIST_DIR/*"
 
 # === STEP 3: Upload to server ===
