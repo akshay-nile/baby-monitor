@@ -10,7 +10,7 @@ function App() {
       try {
         await navigator?.wakeLock?.request("screen");
       } catch {
-        console.error("Screen Wake-Lock Failed!");
+        alert("Screen Wake-Lock Failed!");
       }
     }
     takeWakeLock();

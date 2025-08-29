@@ -24,7 +24,8 @@ export default defineConfig([
     },
     rules: {
       "no-unused-vars": "warn",
-      "semi": "warn"
+      "semi": "warn",
+      "no-empty": ["warn", { "allowEmptyCatch": true }]
     },
   },
 ])

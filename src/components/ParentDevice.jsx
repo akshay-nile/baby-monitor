@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect } from "react";
-import { storeSDP, loadSDP } from "../services/exchange";
+import { storeSDP, loadSDP, waitForIceGatheringCompletion } from "../services/exchange";
 
 function ParentDevice() {
     const pcRef = useRef(null);
@@ -12,18 +12,6 @@ function ParentDevice() {
         if (pcRef.current) return;
         pcRef.current = new RTCPeerConnection();
         pcRef.current.ontrack = event => vidRef.current.srcObject = event.streams[0];
-        pcRef.current.onicecandidate = async (event) => {
-            if (event.candidate !== null) return;
-            const response = await storeSDP(pcRef.current.localDescription);
-            if (response?.status === "answer-stored") {
-                setBtnText("Waiting...");
-                setBtnHandler(() => null);
-            } else {
-                setBtnText("Request Connection");
-                setBtnHandler(() => requestConnection);
-                alert("Connection request failed!");
-            }
-        };
         pcRef.current.onconnectionstatechange = () => {
             if (pcRef.current.connectionState === "connected") {
                 setBtnText("Disconnect");
@@ -38,6 +26,16 @@ function ParentDevice() {
         if (offer?.type === "offer") {
             await pcRef.current.setRemoteDescription(offer);
             await pcRef.current.setLocalDescription(await pcRef.current.createAnswer());
+            await waitForIceGatheringCompletion(pcRef.current);
+            const response = await storeSDP(pcRef.current.localDescription);
+            if (response?.status === "answer-stored") {
+                setBtnText("Waiting...");
+                setBtnHandler(() => null);
+            } else {
+                setBtnText("Request Connection");
+                setBtnHandler(() => requestConnection);
+                alert("Connection request failed!");
+            }
         } else {
             setBtnText("Request Connection");
             alert("No baby (camera) device found!");
@@ -51,7 +49,7 @@ function ParentDevice() {
     return (
         <div className="container">
             <h2 className="text-info">Parent Device (Live Audio/Video)</h2>
-            <video ref={vidRef} autoPlay playsInline className="video"></video><br />
+            <video ref={vidRef} autoPlay playsInline className="video"></video>
             <button onClick={btnHandler} className="button">{btnText}</button>
         </div>
     );

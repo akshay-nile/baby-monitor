@@ -1,26 +1,22 @@
 import { useRef, useState, useEffect } from "react";
-import { storeSDP, loadSDP } from "../services/exchange";
+import { storeSDP, loadSDP, waitForIceGatheringCompletion } from "../services/exchange";
 
 function BabyDevice() {
     const pcRef = useRef(null);
     const vidRef = useRef(null);
+    const camRef = useRef([]);
 
-    const [useFrontCamera, setUseFrontCamera] = useState(true);
+    const [facingMode, setFacingMode] = useState("user");
     const [btnHandler, setBtnHandler] = useState(() => startCamera);
     const [btnText, setBtnText] = useState("Start Camera");
 
+    const audio = { channelCount: 2, sampleRate: 48000, noiseSuppression: false, echoCancellation: true };
+
     useEffect(() => {
+        navigator.mediaDevices.enumerateDevices().then(devices => camRef.current = devices.filter(device => device.kind === "videoinput"));
+
         if (pcRef.current) return;
         pcRef.current = new RTCPeerConnection();
-        pcRef.current.onicecandidate = async (event) => {
-            if (event.candidate !== null) return;
-            const response = await storeSDP(pcRef.current.localDescription);
-            if (response?.status === "offer-stored") {
-                setBtnText("Polling...");
-                setBtnHandler(() => null);
-                await startPollingForAnswer(5 * 60);
-            }
-        };
         pcRef.current.onconnectionstatechange = () => {
             if (pcRef.current.connectionState === "connected") {
                 setBtnText("Stop Camera");
@@ -47,8 +43,11 @@ function BabyDevice() {
     }
 
     async function loadCameraStream() {
-        const video = { facingMode: useFrontCamera ? "user" : "environment" };
-        vidRef.current.srcObject = await navigator.mediaDevices.getUserMedia({ video, audio: true });
+        if (camRef.current.length === 0) {
+            alert("No camera found on this device!");
+            return;
+        }
+        vidRef.current.srcObject = await navigator.mediaDevices.getUserMedia({ video: { facingMode }, audio });
         vidRef.current.srcObject.getTracks().forEach(track => pcRef.current.addTrack(track, vidRef.current.srcObject));
     }
 
@@ -57,22 +56,41 @@ function BabyDevice() {
             alert("Start the camera before toggling front/back!");
             return;
         }
-        if ((await navigator.mediaDevices.enumerateDevices()).filter(d => d.kind === "videoinput").length === 1) {
+
+        if (camRef.current.length === 1) {
             alert("Only one camera is available on this device!\nCannot toggle.");
             return;
         }
-        const isFrontCamActive = vidRef.current.srcObject.getVideoTracks()[0].getSettings().facingMode === "user";
-        pcRef.current.getSenders().forEach(sender => pcRef.current.removeTrack(sender));
-        vidRef.current.srcObject.getTracks().forEach(track => track.stop());
-        vidRef.current.srcObject = null;
-        setUseFrontCamera(!isFrontCamActive);
-        await loadCameraStream();
+
+        setFacingMode((prevFacingMode) => prevFacingMode === "user" ? "environment" : "user");
+
+        const oldMediaStream = vidRef.current.srcObject;
+        const newMediaStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode }, audio });
+
+        for (let track of newMediaStream.getTracks()) {
+            const sender = pcRef.current.getSenders().find(s => s.track && s.track.kind === track.kind);
+            if (sender) await sender.replaceTrack(track);
+        }
+
+        vidRef.current.srcObject = newMediaStream;
+        oldMediaStream.getTracks().forEach(track => track.stop());
     }
 
     async function startCamera() {
         setBtnText("Starting...");
         await loadCameraStream();
-        await pcRef.current.setLocalDescription(await pcRef.current.createOffer());
+        await createAndSendOffer();
+    }
+
+    async function createAndSendOffer() {
+        pcRef.current.setLocalDescription(await pcRef.current.createOffer());
+        await waitForIceGatheringCompletion(pcRef.current);
+        const response = await storeSDP(pcRef.current.localDescription);
+        if (response?.status === "offer-stored") {
+            setBtnText("Polling...");
+            setBtnHandler(() => null);
+            await startPollingForAnswer(5 * 60);
+        }
     }
 
     async function stopCamera() {
@@ -81,7 +99,7 @@ function BabyDevice() {
 
     return (
         <div className="container">
-            <h2 className="text-info">Baby Device ({useFrontCamera ? "Front" : "Back"}-Camera & Mic)</h2>
+            <h2 className="text-info">Baby Device (Camera & Mic)</h2>
             <video ref={vidRef} onClick={toggleCamera} autoPlay playsInline muted className="video" />
             <button onClick={btnHandler} className="button">{btnText}</button>
         </div>

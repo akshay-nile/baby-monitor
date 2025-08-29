@@ -15,3 +15,17 @@ export async function loadSDP(type) {
     });
     return await response.json();
 }
+
+
+export async function waitForIceGatheringCompletion(pc) {
+    return new Promise(resolve => {
+        function checkGatheringState() {
+            if (pc.iceGatheringState === "complete") {
+                pc.removeEventListener('icegatheringstatechange', checkGatheringState);
+                return resolve(pc.iceGatheringState);
+            }
+            pc.addEventListener('icegatheringstatechange', checkGatheringState);
+        }
+        checkGatheringState();
+    });
+}
