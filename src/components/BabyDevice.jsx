@@ -3,42 +3,30 @@ import { storeSDP, loadSDP, waitForIceGatheringCompletion } from "../services/ex
 import { audioConfigs } from "../services/media";
 
 function BabyDevice() {
-    const pcRef = useRef(null);
+    const pcRefs = useRef([]);
     const vidRef = useRef(null);
     const camRef = useRef([]);
 
+    let [polling, setPolling] = useState(false);
+    const [connectionCount, setConnectionCount] = useState(0);
     const [facingMode, setFacingMode] = useState("user");
     const [btnHandler, setBtnHandler] = useState(() => startCamera);
     const [btnText, setBtnText] = useState("Start Camera");
 
     useEffect(() => {
         navigator.mediaDevices.enumerateDevices().then(devices => camRef.current = devices.filter(device => device.kind === "videoinput"));
-
-        if (pcRef.current) return;
-        pcRef.current = new RTCPeerConnection();
-        pcRef.current.onconnectionstatechange = () => {
-            if (pcRef.current.connectionState === "connected") {
-                setBtnText("Stop Camera");
-                setBtnHandler(() => stopCamera);
-            }
-        };
     });
 
-    async function startPollingForAnswer(timeout) {
-        while (timeout > 0) {
-            await new Promise(resolve => setTimeout(resolve, 5000));
-            timeout -= 5;
-            const answer = await loadSDP("answer");
-            if (answer?.type !== "answer") continue;
-            await pcRef.current.setRemoteDescription(answer);
-            setBtnText("Connected");
-            break;
-        }
-        if (timeout <= 0) {
-            alert("Could not find the connection request!\nPolling aborted due to timeout.");
-            setBtnText("Polling Aborted");
-            setBtnHandler(() => stopCamera);
-        }
+    async function startCamera() {
+        setBtnText("Starting...");
+        setBtnHandler(() => null);
+        await loadCameraStream();
+        setBtnText("Stop Camera");
+        setBtnHandler(() => stopCamera);
+
+        setPolling(polling = true);
+        setTimeout(() => setPolling(polling = false), 5 * 60 * 1000);
+        await addNewPeerConnection();
     }
 
     async function loadCameraStream() {
@@ -46,9 +34,16 @@ function BabyDevice() {
             alert("No camera found on this device!");
             return;
         }
+
         const mediaStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode }, audio: audioConfigs });
         vidRef.current.srcObject = mediaStream;
-        mediaStream.getTracks().forEach(track => pcRef.current.addTrack(track, mediaStream));
+
+        for (let pc of pcRefs.current) {
+            for (let track of mediaStream.getTracks()) {
+                const sender = pc.getSenders().find(s => s?.track?.kind === track.kind);
+                if (sender) await sender.replaceTrack(track);
+            }
+        }
     }
 
     async function toggleCamera() {
@@ -67,34 +62,62 @@ function BabyDevice() {
         const oldMediaStream = vidRef.current.srcObject;
         const newMediaStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode }, audio: audioConfigs });
 
-        for (let track of newMediaStream.getTracks()) {
-            const sender = pcRef.current.getSenders().find(s => s.track && s.track.kind === track.kind);
-            if (sender) await sender.replaceTrack(track);
+        for (let pc of pcRefs.current) {
+            for (let track of newMediaStream.getTracks()) {
+                const sender = pc.getSenders().find(s => s?.track?.kind === track.kind);
+                if (sender) await sender.replaceTrack(track);
+            }
         }
 
         vidRef.current.srcObject = newMediaStream;
         oldMediaStream.getTracks().forEach(track => track.stop());
     }
 
-    async function startCamera() {
-        setBtnText("Starting...");
-        await loadCameraStream();
-        await createAndSendOffer();
+    function stopCamera() {
+        setBtnText("Stopping...");
+        setBtnHandler(() => null);
+        setPolling(polling = false);
+        pcRefs.current.pop()?.close();
+
+        pcRefs.current.forEach(pc => pc.getSenders().forEach(s => s?.track?.stop()));
+        vidRef.current.srcObject.getTracks().forEach(track => track.stop());
+        // vidRef.current.srcObject = null;
+        setBtnText("Start Camera");
+        setBtnHandler(() => startCamera);
     }
 
-    async function createAndSendOffer() {
-        pcRef.current.setLocalDescription(await pcRef.current.createOffer());
-        await waitForIceGatheringCompletion(pcRef.current);
-        const response = await storeSDP(pcRef.current.localDescription);
-        if (response?.status === "offer-stored") {
-            setBtnText("Polling...");
-            setBtnHandler(() => null);
-            await startPollingForAnswer(5 * 60);
+    async function addNewPeerConnection() {
+        const pc = new RTCPeerConnection();
+        pc.onconnectionstatechange = () => {
+            if (pc.connectionState === "connected") {
+                setConnectionCount(prevCount => prevCount + 1);
+                addNewPeerConnection();
+            } else if (["disconnected", "closed", "failed"].includes(pc.connectionState)) {
+                pcRefs.current.splice(pcRefs.current.indexOf(pc), 1);
+                setConnectionCount(prevCount => Math.max(prevCount - 1, 0));
+            }
+        };
+        vidRef.current.srcObject.getTracks().forEach(track => pc.addTrack(track, vidRef.current.srcObject));
+        pcRefs.current.push(pc);
+        await createAndSendOffer(pc);
+    }
+
+    async function createAndSendOffer(pc) {
+        pc.setLocalDescription(await pc.createOffer());
+        await waitForIceGatheringCompletion(pc);
+        const response = await storeSDP(pc.localDescription);
+        if (response?.status === "offer-stored") await startPollingForAnswer(pc);
+    }
+
+    async function startPollingForAnswer(pc) {
+        while (polling) {
+            await new Promise(resolve => setTimeout(resolve, 5000));
+            const answer = await loadSDP("answer");
+            if (answer?.type !== "answer") continue;
+            await pc.setRemoteDescription(answer);
+            break;
         }
-    }
-
-    async function stopCamera() {
-        alert("This feature is not implemented yet!\nYou can refresh the page manually.");
+        if (!polling) pc.close();
     }
 
     return (
@@ -102,6 +125,7 @@ function BabyDevice() {
             <h2 className="text-info">Baby Device (Camera & Mic)</h2>
             <video ref={vidRef} onClick={toggleCamera} autoPlay playsInline muted className="video" />
             <button onClick={btnHandler} className="button">{btnText}</button>
+            {(polling || connectionCount > 0) && <h3 className="status-info">Connected Parents: {connectionCount} {polling && " and polling..."}</h3>}
         </div>
     );
 }

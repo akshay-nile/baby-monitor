@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState } from "react";
 import { storeSDP, loadSDP, waitForIceGatheringCompletion } from "../services/exchange";
 
 function ParentDevice() {
@@ -8,7 +8,7 @@ function ParentDevice() {
     const [btnHandler, setBtnHandler] = useState(() => requestConnection);
     const [btnText, setBtnText] = useState("Request Connection");
 
-    useEffect(() => {
+    function addNewPeerConnection() {
         if (pcRef.current) return;
         pcRef.current = new RTCPeerConnection();
         pcRef.current.ontrack = event => vidRef.current.srcObject = event.streams[0];
@@ -16,12 +16,16 @@ function ParentDevice() {
             if (pcRef.current.connectionState === "connected") {
                 setBtnText("Disconnect");
                 setBtnHandler(() => disconnect);
+            } else if (["disconnected", "failed"].includes(pcRef.current.connectionState)) {
+                disconnect();
             }
         };
-    });
+    }
 
     async function requestConnection() {
         setBtnText("Requesting...");
+        setBtnHandler(() => null);
+        addNewPeerConnection();
         const offer = await loadSDP("offer");
         if (offer?.type === "offer") {
             await pcRef.current.setRemoteDescription(offer);
@@ -30,20 +34,24 @@ function ParentDevice() {
             const response = await storeSDP(pcRef.current.localDescription);
             if (response?.status === "answer-stored") {
                 setBtnText("Waiting...");
-                setBtnHandler(() => null);
             } else {
-                setBtnText("Request Connection");
-                setBtnHandler(() => requestConnection);
-                alert("Connection request failed!");
+                alert("Connection request failed!\nPlease try again after 5 seconds.");
+                disconnect();
             }
         } else {
-            setBtnText("Request Connection");
             alert("No baby (camera) device found!");
+            disconnect();
         }
     }
 
     async function disconnect() {
-        alert("This feature is not implemented yet!\nYou can refresh the page manually.");
+        setBtnText("Disconnecting...");
+        setBtnHandler(() => null);
+        pcRef.current.close();
+        pcRef.current = null;
+        vidRef.current.srcObject = null;
+        setBtnText("Request Connection");
+        setBtnHandler(() => requestConnection);
     }
 
     return (
