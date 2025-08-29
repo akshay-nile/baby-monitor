@@ -1,5 +1,6 @@
 import { useRef, useState, useEffect } from "react";
 import { storeSDP, loadSDP, waitForIceGatheringCompletion } from "../services/exchange";
+import { audioConfigs } from "../services/media";
 
 function BabyDevice() {
     const pcRef = useRef(null);
@@ -9,8 +10,6 @@ function BabyDevice() {
     const [facingMode, setFacingMode] = useState("user");
     const [btnHandler, setBtnHandler] = useState(() => startCamera);
     const [btnText, setBtnText] = useState("Start Camera");
-
-    const audio = { channelCount: 2, sampleRate: 48000, noiseSuppression: false, echoCancellation: true };
 
     useEffect(() => {
         navigator.mediaDevices.enumerateDevices().then(devices => camRef.current = devices.filter(device => device.kind === "videoinput"));
@@ -47,8 +46,9 @@ function BabyDevice() {
             alert("No camera found on this device!");
             return;
         }
-        vidRef.current.srcObject = await navigator.mediaDevices.getUserMedia({ video: { facingMode }, audio });
-        vidRef.current.srcObject.getTracks().forEach(track => pcRef.current.addTrack(track, vidRef.current.srcObject));
+        const mediaStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode }, audio: audioConfigs });
+        vidRef.current.srcObject = mediaStream;
+        mediaStream.getTracks().forEach(track => pcRef.current.addTrack(track, mediaStream));
     }
 
     async function toggleCamera() {
@@ -62,10 +62,10 @@ function BabyDevice() {
             return;
         }
 
-        setFacingMode((prevFacingMode) => prevFacingMode === "user" ? "environment" : "user");
+        setFacingMode(facingMode === "user" ? "environment" : "user");
 
         const oldMediaStream = vidRef.current.srcObject;
-        const newMediaStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode }, audio });
+        const newMediaStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode }, audio: audioConfigs });
 
         for (let track of newMediaStream.getTracks()) {
             const sender = pcRef.current.getSenders().find(s => s.track && s.track.kind === track.kind);
