@@ -10,7 +10,8 @@ function App() {
       try {
         await navigator?.wakeLock?.request("screen");
       } catch {
-        alert("Screen Wake-Lock Failed!");
+        console.log("Screen Wake-Lock Failed!");
+        setTimeout(takeWakeLock, 1 * 60 * 1000);
       }
     }
     takeWakeLock();
