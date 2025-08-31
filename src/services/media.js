@@ -1,7 +1,7 @@
 export const audioConfigs = {
-    channelCount: 1,
-    sampleRate: 48000,
-    noiseSuppression: false,
+    channelCount: 2,
+    sampleRate: 44100,
+    noiseSuppression: true,
     echoCancellation: true,
     autoGainControl: true
 };
