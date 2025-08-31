@@ -8,15 +8,8 @@ function ParentDevice() {
     const [button, setButton] = useState({ text: "Request Connection", color: "#007bff", disabled: false, click: requestConnection });
 
     useEffect(() => {
-        setupPeerConnectionRef();
         return cleanUp;
     }, []);
-
-    function setupPeerConnectionRef() {
-        if (pcRef.current?.connectionState === "connected") return;
-        pcRef.current = getNewPC(onConnect, onDisconnect);
-        pcRef.current.ontrack = event => videoRef.current.srcObject = event.streams[0];
-    }
 
     async function requestConnection() {
         setButton({ text: "Requesting...", disabled: true });
@@ -37,6 +30,12 @@ function ParentDevice() {
             alert("No baby active device found!\nMake sure the baby device is Polling.");
             onDisconnect();
         }
+    }
+
+    function setupPeerConnectionRef() {
+        if (pcRef.current?.connectionState === "connected") return;
+        pcRef.current = getNewPC(onConnect, onDisconnect);
+        pcRef.current.ontrack = event => videoRef.current.srcObject = event.streams[0];
     }
 
     function onConnect() {
