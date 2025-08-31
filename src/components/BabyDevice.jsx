@@ -49,6 +49,7 @@ function BabyDevice() {
 
     function onDisconnect() {
         setActiveConnections(getActiveConnections().filter(pc => pc.connectionState === "connected"));
+        if (getActiveConnections().length === 0 && !getPolling()) beginPolling();
     }
 
     async function loadCameraStream() {
