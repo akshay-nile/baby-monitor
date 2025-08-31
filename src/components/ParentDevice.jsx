@@ -1,15 +1,26 @@
-import { useRef, useState } from "react";
-import { storeSDP, loadSDP, waitForIceGatheringCompletion, getNewPC } from "../services/connex";
+import { useRef, useState, useEffect } from "react";
+import { storeSDP, loadSDP, getNewPC, waitForIceGatheringCompletion } from "../services/connex";
 
 function ParentDevice() {
     const pcRef = useRef(null);
-    const vidRef = useRef(null);
+    const videoRef = useRef(null);
 
-    const [button, setButton] = useState({ text: "Start Camera", color: "#007bff", disabled: false, click: requestConnection });
+    const [button, setButton] = useState({ text: "Request Connection", color: "#007bff", disabled: false, click: requestConnection });
+
+    useEffect(() => {
+        setupPeerConnectionRef();
+        return cleanUp;
+    }, []);
+
+    function setupPeerConnectionRef() {
+        if (pcRef.current?.connectionState === "connected") return;
+        pcRef.current = getNewPC(onConnect, onDisconnect);
+        pcRef.current.ontrack = event => videoRef.current.srcObject = event.streams[0];
+    }
 
     async function requestConnection() {
         setButton({ text: "Requesting...", disabled: true });
-        setupPeerConnection();
+        if (!pcRef.current) setupPeerConnectionRef();
         const offer = await loadSDP("offer");
         if (offer?.type === "offer") {
             await pcRef.current.setRemoteDescription(offer);
@@ -23,7 +34,7 @@ function ParentDevice() {
                 onDisconnect();
             }
         } else {
-            alert("No baby (camera) device found!");
+            alert("No baby active device found!\nMake sure the baby device is Polling.");
             onDisconnect();
         }
     }
@@ -36,21 +47,18 @@ function ParentDevice() {
         setButton({ ...button, text: "Disconnecting...", color: "#ff5b00", disabled: true });
         pcRef.current.close();
         pcRef.current = null;
-        vidRef.current.srcObject = null;
+        videoRef.current.srcObject = null;
         setButton({ text: "Request Connection", color: "#007bff", disabled: false, click: requestConnection });
     }
 
-    function setupPeerConnection() {
-        if (pcRef.current?.connectionState === "connected") return;
-        pcRef.current = getNewPC(onConnect, onDisconnect);
-        pcRef.current.ontrack = event => vidRef.current.srcObject = event.streams[0];
+    function cleanUp() {
+        pcRef.current?.close();
     }
-
 
     return (
         <div className="container">
             <h2 className="text-info">Parent Device (Live Audio/Video)</h2>
-            <video ref={vidRef} autoPlay playsInline className="video"></video>
+            <video ref={videoRef} autoPlay playsInline className="video"></video>
             <button onClick={button.click} disabled={button.disabled} className="button" style={{ background: button.color }}>{button.text}</button>
         </div>
     );

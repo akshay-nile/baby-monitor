@@ -16,7 +16,7 @@ export async function loadSDP(type) {
     return await response.json();
 }
 
-export function getNewPC(onConnect = () => { }, onDisconnect = () => { }, stream = null) {
+export function getNewPC(onConnect, onDisconnect, stream = null) {
     const pc = new RTCPeerConnection();
     pc.onconnectionstatechange = () => {
         if (pc.connectionState === "connected") onConnect();

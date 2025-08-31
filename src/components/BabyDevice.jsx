@@ -1,119 +1,136 @@
 import { useEffect, useRef, useState } from "react";
 import { getNewPC, createAndStoreOfferWhilePolling, loadAndApplyAnswerWhilePolling, disconnectAllConnections } from "../services/connex";
 import { audioConfigs } from "../services/media";
+import useRefState from "../custom-hooks/useRefState";
 
 function BabyDevice() {
     const pcRef = useRef(null);
-    const vidRef = useRef(null);
-    const streamRef = useRef(null);
-    const facingModeRef = useRef("user");
-    const cameraCountRef = useRef([]);
+    const videoRef = useRef(null);
+    const localStreamRef = useRef(null);
+    const camerasRef = useRef({ cameras: [], count: 0 });
 
-    let [polling, setPolling] = useState(false);
-    let [activeConnections, setActiveConnections] = useState([]);
+    const [polling, setPolling, getPolling] = useRefState(false);
+    const [activeConnections, setActiveConnections, getActiveConnections] = useRefState([]);
+    const [facingMode, setFacingMode, getFacingMode] = useRefState("user");
+
     const [button, setButton] = useState({ text: "Start Camera", color: "#007bff", disabled: false, click: startCamera });
 
     useEffect(() => {
-        navigator.mediaDevices.enumerateDevices()
-            .then(devices => cameraCountRef.current = devices.filter(device => device.kind === "videoinput").length);
-    });
+        async function findCameraDevices() {
+            const devices = await navigator.mediaDevices.enumerateDevices();
+            const cameras = devices.filter(device => device.kind === "videoinput");
+            camerasRef.current = { cameras, count: cameras.length };
+        }
+        findCameraDevices();
+        return cleanUp;
+    }, []);
 
     async function startCamera() {
         setButton({ ...button, text: "Starting...", disabled: true });
         await loadCameraStream();
-        await replaceTracksForAllConnections();
         setButton({ text: "Stop Camera", color: "#ff5b00", disabled: false, click: stopCamera });
-        beginPolling();
+        await beginPolling();
+        await replaceTracksForAllConnections();
     }
 
     async function beginPolling() {
-        setPolling(polling = true);
-        setTimeout(() => setPolling(polling = false), 5 * 60 * 1000);
-
-        while (polling) {
-            pcRef.current = getNewPC(onConnect, onDisconnect, streamRef.current);
-            await createAndStoreOfferWhilePolling(pcRef.current, () => polling);
-            await loadAndApplyAnswerWhilePolling(pcRef.current, () => polling);
+        setPolling(true);
+        setTimeout(() => setPolling(false), 5 * 60 * 1000);
+        while (getPolling()) {
+            pcRef.current = getNewPC(onConnect, onDisconnect, localStreamRef.current);
+            await createAndStoreOfferWhilePolling(pcRef.current, getPolling);
+            await loadAndApplyAnswerWhilePolling(pcRef.current, getPolling);
         }
     }
 
     function onConnect() {
-        setActiveConnections(activeConnections = [...activeConnections, pcRef.current]);
+        setActiveConnections([...getActiveConnections(), pcRef.current]);
     }
 
     function onDisconnect() {
-        setActiveConnections(activeConnections = activeConnections.filter(pc => pc.connectionState === "connected"));
+        setActiveConnections(getActiveConnections().filter(pc => pc.connectionState === "connected"));
     }
 
     async function loadCameraStream() {
-        if (cameraCountRef.current === 0) {
+        if (camerasRef.current.count === 0) {
             alert("No camera found on this device!");
             return;
         }
-
-        stopAllMediaStreams();
-        const mediaConfigs = { video: { facingMode: facingModeRef.current }, audio: audioConfigs };
-        streamRef.current = await navigator.mediaDevices.getUserMedia(mediaConfigs);
-        vidRef.current.srcObject = new MediaStream(streamRef.current.getVideoTracks());
+        const mediaConfigs = { video: { facingMode: getFacingMode() }, audio: audioConfigs };
+        localStreamRef.current = await navigator.mediaDevices.getUserMedia(mediaConfigs);
+        videoRef.current.srcObject = new MediaStream(localStreamRef.current.getVideoTracks());
     }
 
-    function stopAllMediaStreams() {
-        if (streamRef.current) streamRef.current.getTracks().forEach(track => track.stop());
-        streamRef.current = null;
-        if (vidRef.current.srcObject) vidRef.current.srcObject.getTracks().forEach(track => track.stop());
-        vidRef.current.srcObject = null;
+    function unloadMediaStreams(streams) {
+        if (streams) {
+            streams.forEach(stream => stream.getTracks().forEach(track => track.stop()));
+            return;
+        }
+        if (localStreamRef.current) {
+            localStreamRef.current.getTracks().forEach(track => track.stop());
+            localStreamRef.current = null;
+        }
+        if (videoRef.current?.srcObject) {
+            videoRef.current.srcObject.getTracks().forEach(track => track.stop());
+            videoRef.current.srcObject = null;
+        }
     }
 
-    async function replaceTracksForAllConnections() {
-        for (let pc of [...activeConnections, pcRef.current]) {
-            if (pc?.connectionState === "closed") continue;
-            for (let track of streamRef.current.getTracks()) {
-                const sender = pc?.getSenders().find(s => s?.track?.kind === track.kind);
-                await sender?.replaceTrack(track);
+    async function replaceTracksForAllConnections(stream) {
+        for (let pc of [...getActiveConnections(), pcRef.current]) {
+            if (!pc || pc.connectionState === "closed") continue;
+            for (let track of (stream || localStreamRef.current).getTracks()) {
+                const sender = pc.getSenders().find(s => s.track.kind === track.kind);
+                if (sender) await sender.replaceTrack(track);
             }
         }
     }
 
     async function flipCamera() {
-        if (!vidRef.current.srcObject) {
+        if (!videoRef.current.srcObject) {
             alert("Start the camera before flipping between front/back!");
             return;
         }
-
-        if (cameraCountRef.current === 1) {
+        if (camerasRef.current.count === 1) {
             alert("Only one camera is available on this device!\nCannot flip with single camera.");
             return;
         }
-
         setButton({ ...button, text: "Flipping...", disabled: true });
-        facingModeRef.current = facingModeRef.current === "user" ? "environment" : "user";
+        setFacingMode(getFacingMode() === "user" ? { exact: "environment" } : "user");
+        const [oldLocalStream, oldVideoStream] = [localStreamRef.current, videoRef.current.srcObject];
         await loadCameraStream();
         await replaceTracksForAllConnections();
+        unloadMediaStreams([oldLocalStream, oldVideoStream]);
         setButton({ ...button, text: "Stop Camera", color: "#ff5b00", disabled: false });
     }
 
     async function stopCamera() {
-        if (activeConnections.length > 0) {
-            const cancel = !confirm("This will Disconnect all the parent devices!\nDo you want to proceed?");
+        if (getActiveConnections().length > 0) {
+            const cancel = !confirm("This will Disconnect all the parent devices!\nDo you still want to proceed?");
             if (cancel) return;
         }
-
         setButton({ ...button, text: "Stopping...", disabled: true });
-        stopAllMediaStreams();
-        setPolling(polling = false);
+        unloadMediaStreams();
+        setPolling(false);
         await disconnectAllConnections([...activeConnections, pcRef.current]);
-        setActiveConnections(activeConnections = []);
+        setActiveConnections([]);
         setButton({ text: "Start Camera", color: "#007bff", disabled: false, click: startCamera });
     }
 
+    function cleanUp() {
+        setPolling(false);
+        disconnectAllConnections([...getActiveConnections(), pcRef.current]);
+        unloadMediaStreams();
+    };
+
     return (
         <div className="container">
-            <h2 className="text-info">Baby Device (Camera & Mic)</h2>
-            <video ref={vidRef} onClick={flipCamera} autoPlay playsInline muted className="video" />
+            <h2 className="text-info">Baby Device ({facingMode === "user" ? "Front" : "Back"}-Camera & Mic)</h2>
+            <video ref={videoRef} onClick={flipCamera} autoPlay playsInline muted className="video" />
             <button onClick={button.click} disabled={button.disabled} className="button" style={{ background: button.color }}>{button.text}</button>
-            {(polling || activeConnections > 0) &&
+            {(polling || getActiveConnections().length > 0) &&
                 <h3 className="status-info">
-                    Connected Parents: {activeConnections.length} {polling && " and polling..."}
+                    Connected Parents: {getActiveConnections().length} {polling && " and polling..."}
                 </h3>}
         </div>
     );
