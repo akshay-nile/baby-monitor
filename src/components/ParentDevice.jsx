@@ -6,6 +6,7 @@ function ParentDevice() {
     const videoRef = useRef(null);
 
     const [muted, setMuted] = useState(false);
+    const [isLive, setIsLive] = useState(false);
     const [button, setButton] = useState({ text: "Request Connection", color: "#007bff", disabled: false, click: requestConnection });
 
     useEffect(() => {
@@ -39,6 +40,7 @@ function ParentDevice() {
     }
 
     function onConnect() {
+        setIsLive(true);
         setButton({ text: "Disconnect", color: "#ff5b00", disabled: false, click: onDisconnect });
     }
 
@@ -47,6 +49,7 @@ function ParentDevice() {
         if (pcRef.current) pcRef.current.close();
         pcRef.current = null;
         videoRef.current.srcObject = null;
+        setIsLive(false);
         setButton({ text: "Request Connection", color: "#007bff", disabled: false, click: requestConnection });
     }
 
@@ -60,9 +63,15 @@ function ParentDevice() {
 
     return (
         <div className="container">
-            <h2 className="text-info">Parent Device (Live {muted ? <s>Audio</s> : "Audio"}/Video)</h2>
-            <video ref={videoRef} onMouseDown={() => setMuted(true)} onMouseUp={() => setMuted(false)} muted={muted} autoPlay playsInline className="video"></video>
-            <button onClick={button.click} disabled={button.disabled} className="button" style={{ background: button.color }}>{button.text}</button>
+            <h2 className="text-info">Parent Device ({isLive && "Live "}{muted ? <s>Audio</s> : "Audio"}/Video)</h2>
+            <video ref={videoRef}
+                onMouseDown={() => setMuted(true)} onMouseUp={() => setMuted(false)}
+                onTouchStart={() => setMuted(true)} onTouchEnd={() => setMuted(false)}
+                muted={muted} autoPlay playsInline className="video">
+            </video>
+            <button onClick={button.click} disabled={button.disabled} className="button" style={{ background: button.color }}>
+                {button.text}
+            </button>
         </div>
     );
 }
