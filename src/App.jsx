@@ -25,7 +25,7 @@ function App() {
         <Route path="/parent-device" element={<ParentDevice />} />
       </Routes>
     </HashRouter>
-  )
+  );
 }
 
-export default App
+export default App;

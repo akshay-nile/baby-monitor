@@ -51,7 +51,7 @@ function ParentDevice() {
     }
 
     function cleanUp() {
-        pcRef.current?.close();
+        pcRef.current && pcRef.current.close();
     }
 
     return (

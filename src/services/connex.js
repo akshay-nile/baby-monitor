@@ -22,7 +22,7 @@ export function getNewPC(onConnect, onDisconnect, stream = null) {
         if (pc.connectionState === "connected") onConnect();
         if (["disconnected", "closed", "failed"].includes(pc.connectionState)) onDisconnect();
     };
-    stream?.getTracks().forEach(track => pc.addTrack(track, stream));
+    if (stream) stream.getTracks().forEach(track => pc.addTrack(track, stream));
     return pc;
 }
 
@@ -61,6 +61,6 @@ export async function loadAndApplyAnswerWhilePolling(pc, isPolling = () => false
 }
 
 export async function disconnectAllConnections(pcs) {
-    pcs.forEach(pc => pc?.close());
+    pcs.forEach(pc => pc && pc.close());
     await storeSDP({ type: null });
 }

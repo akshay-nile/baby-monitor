@@ -29,7 +29,7 @@ function BabyDevice() {
         setButton({ ...button, text: "Starting...", disabled: true });
         await loadCameraStream();
         setButton({ text: "Stop Camera", color: "#ff5b00", disabled: false, click: stopCamera });
-        await beginPolling();
+        beginPolling();
         await replaceTracksForAllConnections();
     }
 
@@ -49,6 +49,7 @@ function BabyDevice() {
 
     function onDisconnect() {
         setActiveConnections(getActiveConnections().filter(pc => pc.connectionState === "connected"));
+        if (getActiveConnections().length === 0 && !getPolling()) beginPolling();
     }
 
     async function loadCameraStream() {
@@ -110,16 +111,14 @@ function BabyDevice() {
             if (cancel) return;
         }
         setButton({ ...button, text: "Stopping...", disabled: true });
-        unloadMediaStreams();
-        setPolling(false);
-        await disconnectAllConnections([...activeConnections, pcRef.current]);
-        setActiveConnections([]);
+        cleanUp();
         setButton({ text: "Start Camera", color: "#007bff", disabled: false, click: startCamera });
     }
 
     function cleanUp() {
         setPolling(false);
         disconnectAllConnections([...getActiveConnections(), pcRef.current]);
+        setActiveConnections([]);
         unloadMediaStreams();
     };
 
@@ -128,9 +127,9 @@ function BabyDevice() {
             <h2 className="text-info">Baby Device ({facingMode === "user" ? "Front" : "Back"}-Camera & Mic)</h2>
             <video ref={videoRef} onClick={flipCamera} autoPlay playsInline muted className="video" />
             <button onClick={button.click} disabled={button.disabled} className="button" style={{ background: button.color }}>{button.text}</button>
-            {(polling || getActiveConnections().length > 0) &&
+            {(polling || activeConnections.length > 0) &&
                 <h3 className="status-info">
-                    Connected Parents: {getActiveConnections().length} {polling && " and polling..."}
+                    Connected Parents: {activeConnections.length} {polling && " and polling..."}
                 </h3>}
         </div>
     );
