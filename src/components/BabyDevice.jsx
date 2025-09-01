@@ -37,19 +37,20 @@ function BabyDevice() {
         setPolling(true);
         setTimeout(() => setPolling(false), 5 * 60 * 1000);
         while (getPolling()) {
-            pcRef.current = getNewPC(onConnect, onDisconnect, localStreamRef.current);
+            pcRef.current = getNewPC({ onConnect, onDisconnect, stream: localStreamRef.current });
             await createAndStoreOfferWhilePolling(pcRef.current, getPolling);
             await loadAndApplyAnswerWhilePolling(pcRef.current, getPolling);
         }
     }
 
-    function onConnect() {
-        setActiveConnections([...getActiveConnections(), pcRef.current]);
+    function onConnect(pc) {
+        setActiveConnections([...getActiveConnections(), pc]);
     }
 
-    function onDisconnect() {
-        setActiveConnections(getActiveConnections().filter(pc => pc.connectionState === "connected"));
+    function onDisconnect(pc) {
+        setActiveConnections(getActiveConnections().filter(ac => ac !== pc));
         if (getActiveConnections().length === 0 && !getPolling()) beginPolling();
+        pc?.close();
     }
 
     async function loadCameraStream() {
@@ -127,7 +128,7 @@ function BabyDevice() {
             <h2 className="text-info">Baby Device ({facingMode === "user" ? "Front" : "Back"}-Camera & Mic)</h2>
             <video ref={videoRef} onClick={flipCamera} autoPlay playsInline muted className="video" />
             <button onClick={button.click} disabled={button.disabled} className="button" style={{ background: button.color }}>{button.text}</button>
-            {(polling || activeConnections.length > 0) &&
+            {(polling || getActiveConnections().length > 0) &&
                 <h3 className="status-info">
                     Connected Parents: {activeConnections.length} {polling && " and polling..."}
                 </h3>}

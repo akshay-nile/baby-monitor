@@ -16,13 +16,14 @@ export async function loadSDP(type) {
     return await response.json();
 }
 
-export function getNewPC(onConnect, onDisconnect, stream = null) {
+export function getNewPC({ onConnect, onDisconnect, onTrack, stream }) {
     const pc = new RTCPeerConnection();
     pc.onconnectionstatechange = () => {
-        if (pc.connectionState === "connected") onConnect();
-        if (["disconnected", "closed", "failed"].includes(pc.connectionState)) onDisconnect();
+        if (pc.connectionState === "connected") onConnect(pc);
+        if (["disconnected", "closed", "failed"].includes(pc.connectionState)) onDisconnect(pc);
     };
     if (stream) stream.getTracks().forEach(track => pc.addTrack(track, stream));
+    if (onTrack) pc.ontrack = event => onTrack(event);
     return pc;
 }
 

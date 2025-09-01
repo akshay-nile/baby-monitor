@@ -5,6 +5,7 @@ function ParentDevice() {
     const pcRef = useRef(null);
     const videoRef = useRef(null);
 
+    const [muted, setMuted] = useState(false);
     const [button, setButton] = useState({ text: "Request Connection", color: "#007bff", disabled: false, click: requestConnection });
 
     useEffect(() => {
@@ -34,8 +35,7 @@ function ParentDevice() {
 
     function setupPeerConnectionRef() {
         if (pcRef.current?.connectionState === "connected") return;
-        pcRef.current = getNewPC(onConnect, onDisconnect);
-        pcRef.current.ontrack = event => videoRef.current.srcObject = event.streams[0];
+        pcRef.current = getNewPC({ onConnect, onDisconnect, onTrack });
     }
 
     function onConnect() {
@@ -44,10 +44,14 @@ function ParentDevice() {
 
     function onDisconnect() {
         setButton({ ...button, text: "Disconnecting...", color: "#ff5b00", disabled: true });
-        pcRef.current.close();
+        if (pcRef.current) pcRef.current.close();
         pcRef.current = null;
         videoRef.current.srcObject = null;
         setButton({ text: "Request Connection", color: "#007bff", disabled: false, click: requestConnection });
+    }
+
+    function onTrack(event) {
+        videoRef.current.srcObject = event.streams[0];
     }
 
     function cleanUp() {
@@ -56,8 +60,8 @@ function ParentDevice() {
 
     return (
         <div className="container">
-            <h2 className="text-info">Parent Device (Live Audio/Video)</h2>
-            <video ref={videoRef} autoPlay playsInline className="video"></video>
+            <h2 className="text-info">Parent Device (Live {muted ? <s>Audio</s> : "Audio"}/Video)</h2>
+            <video ref={videoRef} onMouseDown={() => setMuted(true)} onMouseUp={() => setMuted(false)} muted={muted} autoPlay playsInline className="video"></video>
             <button onClick={button.click} disabled={button.disabled} className="button" style={{ background: button.color }}>{button.text}</button>
         </div>
     );
