@@ -2,29 +2,34 @@ import { HashRouter, Routes, Route } from "react-router-dom";
 import SelectRole from "./components/SelectRole";
 import BabyDevice from "./components/BabyDevice";
 import ParentDevice from "./components/ParentDevice";
-import { useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 function App() {
-  useEffect(() => {
-    async function takeWakeLock() {
-      try {
-        await navigator?.wakeLock?.request("screen");
-      } catch {
-        console.log("Screen Wake-Lock Failed!");
-        setTimeout(takeWakeLock, 1 * 60 * 1000);
-      }
-    }
-    takeWakeLock();
-  });
+  const [toast, setToast] = useState({ text: "Toast Message!", visible: false });
+
+  useEffect(() => { takeWakeLock(); });
+
+  async function takeWakeLock() {
+    try { await navigator?.wakeLock?.request("screen"); }
+    catch { console.log("Screen Wake-Lock Failed!"); }
+  }
+
+  const showToast = useCallback((text) => {
+    setToast({ visible: true, text });
+    setTimeout(() => setToast({ ...toast, visible: false }), 3000);
+  }, []);
 
   return (
-    <HashRouter>
-      <Routes>
-        <Route path="/" element={<SelectRole />} />
-        <Route path="/baby-device" element={<BabyDevice />} />
-        <Route path="/parent-device" element={<ParentDevice />} />
-      </Routes>
-    </HashRouter>
+    <>
+      <HashRouter>
+        <Routes>
+          <Route path="/" element={<SelectRole />} />
+          <Route path="/baby-device" element={<BabyDevice showToast={showToast} />} />
+          <Route path="/parent-device" element={<ParentDevice showToast={showToast} />} />
+        </Routes>
+      </HashRouter>
+      {toast.visible && <div className="toast">{toast.text}</div>}
+    </>
   );
 }
 

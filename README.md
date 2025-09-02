@@ -71,8 +71,8 @@ It sets up a **direct connection (P2P)** between one Baby Device (camera + mic) 
 1. **Unique Auto-Generated User IDs**  
    - Stored locally in browser.  
    - Makes the app smarter on repeat usage.
-2. **Push-to-Talk Feature**  
-   - Allow Parents to talk to the Baby by pressing/releasing the screen.
+2. **Settings Screen**  
+   - Allow users to configure some parameters (Settings).
 
 ---
 

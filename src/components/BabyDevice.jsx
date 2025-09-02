@@ -3,7 +3,7 @@ import { getNewPC, createAndStoreOfferWhilePolling, loadAndApplyAnswerWhilePolli
 import { audioConfigs } from "../services/media";
 import useRefState from "../custom-hooks/useRefState";
 
-function BabyDevice() {
+function BabyDevice({ showToast }) {
     const pcRef = useRef(null);
     const videoRef = useRef(null);
     const localStreamRef = useRef(null);
@@ -36,9 +36,10 @@ function BabyDevice() {
     async function beginPolling() {
         setPolling(true);
         setTimeout(() => setPolling(false), 5 * 60 * 1000);
+        showToast("Waiting for parent connections!");
         while (getPolling()) {
             pcRef.current = getNewPC({ onConnect, onDisconnect, onTrack, stream: localStreamRef.current });
-            attachDataChannel(pcRef.current, pcRef.current.createDataChannel("COMMAND"), onMessage);
+            attachDataChannel(pcRef.current, pcRef.current.createDataChannel("SIGNAL"), onMessage);
             await createAndStoreOfferWhilePolling(pcRef.current, getPolling);
             await loadAndApplyAnswerWhilePolling(pcRef.current, getPolling);
         }
@@ -46,6 +47,7 @@ function BabyDevice() {
 
     function onConnect(pc) {
         setActiveConnections([...getActiveConnections(), pc]);
+        showToast("Parent device got connected!");
     }
 
     function onDisconnect(pc) {
@@ -60,8 +62,8 @@ function BabyDevice() {
 
     function onMessage(message) {
         if (["MUTE", "UNMUTE"].includes(message)) {
-            videoRef.current.muted = message !== "UNMUTE";
-            console.log(videoRef.current.muted ? "MUTED" : "UNMUTED");
+            const isPushed = videoRef.current.muted = message !== "UNMUTE";
+            isPushed ? videoRef.current.classList.remove("border-glow") : videoRef.current.classList.add("border-glow");
             return;
         }
         if (message.startsWith("DISCONNECT:")) {
@@ -69,15 +71,15 @@ function BabyDevice() {
             const remoteDescription = sanitize(message.split(":")[1]);
             const inactive = getActiveConnections().find(pc => sanitize(pc.remoteDescription) === remoteDescription);
             onDisconnect(inactive);
-            // show toast: A Parent device got disconnected!
+            showToast("Parent device got disconnected!");
             return;
         }
-        console.warn("Unknown Command: " + message);
+        console.warn("Unknown Signal: " + message);
     }
 
     async function loadCameraStream() {
         if (camerasRef.current.count === 0) {
-            alert("No camera found on this device!");
+            showToast("No camera found on this device!");
             return;
         }
         const mediaConfigs = { video: { facingMode: getFacingMode() }, audio: audioConfigs };
@@ -112,11 +114,11 @@ function BabyDevice() {
 
     async function flipCamera() {
         if (!videoRef.current.srcObject) {
-            alert("Start the camera before flipping between front/back!");
+            showToast("Start the camera before flipping!");
             return;
         }
         if (camerasRef.current.count === 1) {
-            alert("Only one camera is available on this device!\nCannot flip with single camera.");
+            showToast("Cannot flip with single camera!");
             return;
         }
         setButton({ ...button, text: "Flipping...", disabled: true });
@@ -126,6 +128,7 @@ function BabyDevice() {
         await replaceTracksForAllConnections();
         unloadMediaStreams([oldLocalStream, oldVideoStream]);
         setButton({ ...button, text: "Stop Camera", color: "#ff5b00", disabled: false });
+        showToast("Flipped to " + (getFacingMode() === "user" ? "Front" : "Back") + " Camera!");
     }
 
     async function stopCamera() {
@@ -136,6 +139,7 @@ function BabyDevice() {
         setButton({ ...button, text: "Stopping...", disabled: true });
         cleanUp();
         setButton({ text: "Start Camera", color: "#007bff", disabled: false, click: startCamera });
+        showToast("Camera stopped! All parents disconnected!");
     }
 
     function cleanUp() {
@@ -149,8 +153,13 @@ function BabyDevice() {
     return (
         <div className="container">
             <h2 className="text-info">Baby Device ({facingMode === "user" ? "Front" : "Back"}-Camera & Mic)</h2>
+
             <video ref={videoRef} onClick={flipCamera} muted autoPlay playsInline className="video" />
-            <button onClick={button.click} disabled={button.disabled} className="button" style={{ background: button.color }}>{button.text}</button>
+
+            <button onClick={button.click} disabled={button.disabled} className="button" style={{ background: button.color }}>
+                {button.text}
+            </button>
+
             {(polling || getActiveConnections().length > 0) &&
                 <h3 className="status-info">
                     Connected Parents: {activeConnections.length} {polling && " and polling..."}
