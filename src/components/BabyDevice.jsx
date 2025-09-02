@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { getNewPC, createAndStoreOfferWhilePolling, loadAndApplyAnswerWhilePolling, disconnectAllConnections } from "../services/connex";
+import { getNewPC, createAndStoreOfferWhilePolling, loadAndApplyAnswerWhilePolling, disconnectAllConnections, attachDataChannel } from "../services/connex";
 import { audioConfigs } from "../services/media";
 import useRefState from "../custom-hooks/useRefState";
 
@@ -37,7 +37,8 @@ function BabyDevice() {
         setPolling(true);
         setTimeout(() => setPolling(false), 5 * 60 * 1000);
         while (getPolling()) {
-            pcRef.current = getNewPC({ onConnect, onDisconnect, stream: localStreamRef.current });
+            pcRef.current = getNewPC({ onConnect, onDisconnect, onTrack, stream: localStreamRef.current });
+            attachDataChannel(pcRef.current, pcRef.current.createDataChannel("COMMAND"), onMessage);
             await createAndStoreOfferWhilePolling(pcRef.current, getPolling);
             await loadAndApplyAnswerWhilePolling(pcRef.current, getPolling);
         }
@@ -51,6 +52,27 @@ function BabyDevice() {
         setActiveConnections(getActiveConnections().filter(ac => ac !== pc));
         if (getActiveConnections().length === 0 && !getPolling()) beginPolling();
         pc?.close();
+    }
+
+    function onTrack(event) {
+        videoRef.current.srcObject.addTrack(event.track);
+    }
+
+    function onMessage(message) {
+        if (["MUTE", "UNMUTE"].includes(message)) {
+            videoRef.current.muted = message !== "UNMUTE";
+            console.log(videoRef.current.muted ? "MUTED" : "UNMUTED");
+            return;
+        }
+        if (message.startsWith("DISCONNECT:")) {
+            const sanitize = (rd) => new String(rd).trim();
+            const remoteDescription = sanitize(message.split(":")[1]);
+            const inactive = getActiveConnections().find(pc => sanitize(pc.remoteDescription) === remoteDescription);
+            onDisconnect(inactive);
+            // show toast: A Parent device got disconnected!
+            return;
+        }
+        console.warn("Unknown Command: " + message);
     }
 
     async function loadCameraStream() {
@@ -118,6 +140,7 @@ function BabyDevice() {
 
     function cleanUp() {
         setPolling(false);
+        getActiveConnections().forEach(ac => ac.dataChannel.send("DISCONNECT"));
         disconnectAllConnections([...getActiveConnections(), pcRef.current]);
         setActiveConnections([]);
         unloadMediaStreams();
@@ -126,7 +149,7 @@ function BabyDevice() {
     return (
         <div className="container">
             <h2 className="text-info">Baby Device ({facingMode === "user" ? "Front" : "Back"}-Camera & Mic)</h2>
-            <video ref={videoRef} onClick={flipCamera} autoPlay playsInline muted className="video" />
+            <video ref={videoRef} onClick={flipCamera} muted autoPlay playsInline className="video" />
             <button onClick={button.click} disabled={button.disabled} className="button" style={{ background: button.color }}>{button.text}</button>
             {(polling || getActiveConnections().length > 0) &&
                 <h3 className="status-info">

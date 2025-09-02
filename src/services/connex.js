@@ -27,6 +27,20 @@ export function getNewPC({ onConnect, onDisconnect, onTrack, stream }) {
     return pc;
 }
 
+export function attachDataChannel(pc, dataChannel, onMessage) {
+    if (dataChannel) {
+        dataChannel.onopen = () => {
+            pc.dataChannel = dataChannel;
+            pc.dataChannel.onmessage = (event) => onMessage(event.data);
+        };
+    } else {
+        pc.ondatachannel = event => event.channel.onopen = () => {
+            pc.dataChannel = event.channel;
+            pc.dataChannel.onmessage = (event) => onMessage(event.data);
+        };
+    }
+}
+
 export async function waitForIceGatheringCompletion(pc) {
     return new Promise(resolve => {
         function checkGatheringState() {
