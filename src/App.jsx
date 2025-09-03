@@ -12,7 +12,7 @@ function App() {
 
   async function takeWakeLock() {
     try { await navigator?.wakeLock?.request("screen"); }
-    catch { console.log("Screen Wake-Lock Failed!"); }
+    catch { console.warn("Screen Wake-Lock Failed!"); }
   }
 
   const showToast = useCallback((text) => {

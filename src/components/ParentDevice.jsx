@@ -1,6 +1,7 @@
 import { useRef, useState, useEffect } from "react";
 import { storeSDP, loadSDP, getNewPC, waitForIceGatheringCompletion, attachDataChannel } from "../services/connex";
-import { audioConfigs } from '../services/media';
+import { getBrowserID } from "../services/settings"
+import { audioConfigs } from "../services/media";
 
 function ParentDevice({ showToast }) {
     const pcRef = useRef(null);
@@ -49,7 +50,7 @@ function ParentDevice({ showToast }) {
     function onDisconnect(toastMsg) {
         if (typeof toastMsg !== "string") toastMsg = "Disconnected from the baby device!";
         setButton({ ...button, text: "Disconnecting...", color: "#ff5b00", disabled: true });
-        pcRef.current.dataChannel.send("DISCONNECT: " + pcRef.current.localDescription);
+        pcRef.current.dataChannel.send("DISCONNECT: " + pcRef.current.parentID);
         pcRef.current.close();
         pcRef.current = null;
         videoRef.current.srcObject = null;
@@ -63,8 +64,14 @@ function ParentDevice({ showToast }) {
     }
 
     function onMessage(message) {
+        const sanitize = msg => new String(msg).split(":")[1].trim();
         if (message === "DISCONNECT") {
-            onDisconnect("The baby device went offline!");
+            onDisconnect("Baby device went offline!");
+            return;
+        }
+        if (message.startsWith("PARENT-ID:")) {
+            pcRef.current.parentID = sanitize(message) + getBrowserID();
+            pcRef.current.dataChannel.send("PARENT-ID: " + pcRef.current.parentID);
             return;
         }
         console.warn("Unknown Signal: " + message);

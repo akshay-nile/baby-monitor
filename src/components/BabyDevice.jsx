@@ -51,7 +51,8 @@ function BabyDevice({ showToast }) {
 
     function onConnect(pc) {
         setActiveConnections([...getActiveConnections(), pc]);
-        showToast("Parent device got connected!");
+        pc.parentID = crypto.getRandomValues(new Uint32Array(1)) + "-";
+        pc.dataChannel.send("PARENT-ID: " + pc.parentID);
     }
 
     function onDisconnect(pc) {
@@ -65,16 +66,23 @@ function BabyDevice({ showToast }) {
     }
 
     function onMessage(message) {
+        const sanitize = msg => new String(msg).split(":")[1].trim();
         if (["MUTE", "UNMUTE"].includes(message)) {
             const isPushed = videoRef.current.muted = message !== "UNMUTE";
             isPushed ? videoRef.current.classList.remove("border-glow") : videoRef.current.classList.add("border-glow");
             return;
         }
+        if (message.startsWith("PARENT-ID:")) {
+            const parentID = sanitize(message);
+            const pc = getActiveConnections().find(pc => parentID.startsWith(pc.parentID));
+            if (pc) pc.parentID = parentID;
+            showToast("Parent device got connected!");
+            return;
+        }
         if (message.startsWith("DISCONNECT:")) {
-            const sanitize = (rd) => new String(rd).trim();
-            const remoteDescription = sanitize(message.split(":")[1]);
-            const inactive = getActiveConnections().find(pc => sanitize(pc.remoteDescription) === remoteDescription);
-            onDisconnect(inactive);
+            const parentID = sanitize(message);
+            const pc = getActiveConnections().find(pc => pc.parentID === parentID);
+            onDisconnect(pc);
             showToast("Parent device got disconnected!");
             return;
         }
