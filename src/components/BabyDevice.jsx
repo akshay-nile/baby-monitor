@@ -35,7 +35,11 @@ function BabyDevice({ showToast }) {
 
     async function beginPolling() {
         setPolling(true);
-        setTimeout(() => setPolling(false), 5 * 60 * 1000);
+        setTimeout(() => {
+            setPolling(false);
+            showToast("Polling stopped!");
+            if (getActiveConnections().length === 0) stopCamera();
+        }, 5 * 60 * 1000);
         showToast("Waiting for parent connections!");
         while (getPolling()) {
             pcRef.current = getNewPC({ onConnect, onDisconnect, onTrack, stream: localStreamRef.current });
@@ -132,14 +136,15 @@ function BabyDevice({ showToast }) {
     }
 
     async function stopCamera() {
-        if (getActiveConnections().length > 0) {
-            const cancel = !confirm("This will Disconnect all the parent devices!\nDo you still want to proceed?");
+        const parentCount = getActiveConnections().length;
+        if (parentCount > 0) {
+            const cancel = !confirm("Disconnect all the parent devices?");
             if (cancel) return;
         }
         setButton({ ...button, text: "Stopping...", disabled: true });
         cleanUp();
         setButton({ text: "Start Camera", color: "#007bff", disabled: false, click: startCamera });
-        showToast("Camera stopped! All parents disconnected!");
+        showToast("Camera stopped! " + (parentCount > 0 ? "All parents disconnected!" : "No parent connected!"));
     }
 
     function cleanUp() {
