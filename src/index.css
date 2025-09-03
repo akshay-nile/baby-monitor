@@ -60,13 +60,13 @@ body {
 
 .toast {
     position: fixed;
-    top: 50%;
+    top: 48%;
     left: 50%;
     transform: translate(-50%, -50%) translateY(20px);
     background: #222;
     color: white;
     padding: 0.75rem 1rem;
-    border-radius: 8px;
+    border-radius: 10px;
     opacity: 0;
     animation: slideUpFade 0.3s ease-out forwards;
     z-index: 9999;

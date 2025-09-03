@@ -69,10 +69,9 @@ It sets up a **direct connection (P2P)** between one Baby Device (camera + mic) 
 
 ## 🛠 Upcoming Features
 1. **Unique Auto-Generated User IDs**  
-   - Stored locally in browser.  
-   - Makes the app smarter on repeat usage.
+   - Unique BrowserID (Like UserID).  
 2. **Settings Screen**  
-   - Allow users to configure some parameters (Settings).
+   - Allow users to configure some preferences (Settings Page).
 
 ---
 
