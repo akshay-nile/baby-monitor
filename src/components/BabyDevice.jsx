@@ -70,7 +70,7 @@ function BabyDevice({ showToast }) {
     }
 
     function onTrack(event) {
-        videoRef.current.srcObject.addTrack(event.track);
+        event.streams[0].getAudioTracks().forEach(track => videoRef.current.srcObject.addTrack(track));
     }
 
     function onMessage(message, sender) {
@@ -102,11 +102,7 @@ function BabyDevice({ showToast }) {
         videoRef.current.srcObject = new MediaStream(localStreamRef.current.getVideoTracks());
     }
 
-    function unloadMediaStreams(streams) {
-        if (streams) {
-            streams.forEach(stream => stream.getTracks().forEach(track => track.stop()));
-            return;
-        }
+    function stopMediaStreams() {
         if (localStreamRef.current) {
             localStreamRef.current.getTracks().forEach(track => track.stop());
             localStreamRef.current = null;
@@ -117,10 +113,10 @@ function BabyDevice({ showToast }) {
         }
     }
 
-    async function replaceTracksForAllConnections(stream) {
+    async function replaceTracksForAllConnections() {
         for (let pc of [...getActiveConnections(), pcRef.current]) {
             if (!pc || pc.connectionState === "closed") continue;
-            for (let track of (stream || localStreamRef.current).getTracks()) {
+            for (let track of localStreamRef.current.getTracks()) {
                 const sender = pc.getSenders().find(s => s.track.kind === track.kind);
                 if (sender) await sender.replaceTrack(track);
             }
@@ -141,7 +137,9 @@ function BabyDevice({ showToast }) {
         const [oldLocalStream, oldVideoStream] = [localStreamRef.current, videoRef.current.srcObject];
         await loadCameraStream();
         await replaceTracksForAllConnections();
-        unloadMediaStreams([oldLocalStream, oldVideoStream]);
+        oldVideoStream.getAudioTracks().forEach(track => videoRef.current.srcObject.addTrack(track));
+        oldVideoStream.getVideoTracks().forEach(track => track.stop());
+        oldLocalStream.getTracks().forEach(track => track.stop());
         setButton({ ...button, text: "Stop Camera", color: "#ff5b00", disabled: false });
         showToast("Flipped to " + (getFacingMode() === "user" ? "Front" : "Back") + " Camera!");
     }
@@ -163,7 +161,7 @@ function BabyDevice({ showToast }) {
         getActiveConnections().forEach(ac => ac.dataChannel.send("DISCONNECT"));
         disconnectAllConnections([...getActiveConnections(), pcRef.current]);
         setActiveConnections([]);
-        unloadMediaStreams();
+        stopMediaStreams();
     };
 
     return (
