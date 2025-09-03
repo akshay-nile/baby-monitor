@@ -151,7 +151,7 @@ function BabyDevice({ showToast }) {
     };
 
     return (
-        <div className="container">
+        <div className="container no-select">
             <h2 className="text-info">Baby Device ({facingMode === "user" ? "Front" : "Back"}-Camera & Mic)</h2>
 
             <video ref={videoRef} onClick={flipCamera} muted autoPlay playsInline className="video" />

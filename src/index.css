@@ -60,7 +60,7 @@ body {
 
 .toast {
     position: fixed;
-    top: 48%;
+    top: 45%;
     left: 50%;
     transform: translate(-50%, -50%) translateY(20px);
     background: #222;
@@ -70,6 +70,13 @@ body {
     opacity: 0;
     animation: slideUpFade 0.3s ease-out forwards;
     z-index: 9999;
+}
+
+.no-select {
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
 }
 
 @keyframes slideUpFade {

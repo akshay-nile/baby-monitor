@@ -85,7 +85,7 @@ function ParentDevice({ showToast }) {
     }
 
     return (
-        <div className="container">
+        <div className="container no-select">
             <h2 className="text-info">Parent Device ({isLive && "Live "}{muted ? <s>Audio</s> : "Audio"}/Video)</h2>
 
             <video ref={videoRef}

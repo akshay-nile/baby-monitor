@@ -33,7 +33,7 @@ function App() {
           <Route path="/parent-device" element={<ParentDevice showToast={showToast} />} />
         </Routes>
       </HashRouter>
-      {toast.visible && <div className="toast">{toast.text}</div>}
+      {toast.visible && <div className="toast no-select">{toast.text}</div>}
     </>
   );
 }
