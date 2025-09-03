@@ -1,3 +1,5 @@
+import { getBrowserID } from './settings';
+
 const baseURL = "https://akshaynile.pythonanywhere.com";
 const headers = { "Content-Type": "application/json" };
 
@@ -31,12 +33,14 @@ export function attachDataChannel(pc, dataChannel, onMessage) {
     if (dataChannel) {
         dataChannel.onopen = () => {
             pc.dataChannel = dataChannel;
-            pc.dataChannel.onmessage = (event) => onMessage(event.data);
+            pc.dataChannel.onmessage = (event) => onMessage(event.data, pc);
         };
     } else {
         pc.ondatachannel = event => event.channel.onopen = () => {
             pc.dataChannel = event.channel;
-            pc.dataChannel.onmessage = (event) => onMessage(event.data);
+            pc.dataChannel.onmessage = (event) => onMessage(event.data, pc);
+            pc.parentID = Date.now() + "-" + getBrowserID();
+            pc.dataChannel.send("PARENT-ID: " + pc.parentID);
         };
     }
 }

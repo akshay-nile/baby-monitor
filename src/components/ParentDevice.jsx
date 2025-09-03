@@ -1,6 +1,5 @@
 import { useRef, useState, useEffect } from "react";
 import { storeSDP, loadSDP, getNewPC, waitForIceGatheringCompletion, attachDataChannel } from "../services/connex";
-import { getBrowserID } from "../services/settings"
 import { audioConfigs } from "../services/media";
 
 function ParentDevice({ showToast }) {
@@ -50,7 +49,7 @@ function ParentDevice({ showToast }) {
     function onDisconnect(toastMsg) {
         if (typeof toastMsg !== "string") toastMsg = "Disconnected from the baby device!";
         setButton({ ...button, text: "Disconnecting...", color: "#ff5b00", disabled: true });
-        pcRef.current.dataChannel.send("DISCONNECT: " + pcRef.current.parentID);
+        pcRef.current.dataChannel.send("DISCONNECT");
         pcRef.current.close();
         pcRef.current = null;
         videoRef.current.srcObject = null;
@@ -64,14 +63,8 @@ function ParentDevice({ showToast }) {
     }
 
     function onMessage(message) {
-        const sanitize = msg => new String(msg).split(":")[1].trim();
         if (message === "DISCONNECT") {
             onDisconnect("Baby device went offline!");
-            return;
-        }
-        if (message.startsWith("PARENT-ID:")) {
-            pcRef.current.parentID = sanitize(message) + getBrowserID();
-            pcRef.current.dataChannel.send("PARENT-ID: " + pcRef.current.parentID);
             return;
         }
         console.warn("Unknown Signal: " + message);
@@ -82,7 +75,8 @@ function ParentDevice({ showToast }) {
         setMuted(isPushed);
         micRef.current.track.enabled = isPushed;
         pcRef.current.dataChannel.send(isPushed ? "UNMUTE" : "MUTE");
-        isPushed ? videoRef.current.classList.add("border-glow") : videoRef.current.classList.remove("border-glow");
+        const classList = videoRef.current.classList;
+        isPushed ? classList.add("border-glow") : classList.remove("border-glow");
         showToast(isPushed ? "Baby can hear you now!" : "You can hear the baby!");
     }
 

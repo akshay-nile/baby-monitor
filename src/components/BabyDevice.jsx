@@ -50,13 +50,21 @@ function BabyDevice({ showToast }) {
     }
 
     function onConnect(pc) {
-        setActiveConnections([...getActiveConnections(), pc]);
-        pc.parentID = crypto.getRandomValues(new Uint32Array(1)) + "-";
-        pc.dataChannel.send("PARENT-ID: " + pc.parentID);
+        const acs = getActiveConnections();
+        const exists = acs.find(ac => ac.parentID === pc.parentID);
+        if (!exists) {
+            setActiveConnections([...acs, pc]);
+            showToast("Parent device got connected!");
+        }
     }
 
     function onDisconnect(pc) {
-        setActiveConnections(getActiveConnections().filter(ac => ac !== pc));
+        const acs = getActiveConnections();
+        const exists = acs.find(ac => ac.parentID === pc.parentID);
+        if (exists) {
+            setActiveConnections(acs.filter(ac => ac.parentID !== pc.parentID));
+            showToast("Parent device got disconnected!");
+        }
         if (getActiveConnections().length === 0 && !getPolling()) beginPolling();
         pc?.close();
     }
@@ -65,25 +73,20 @@ function BabyDevice({ showToast }) {
         videoRef.current.srcObject.addTrack(event.track);
     }
 
-    function onMessage(message) {
-        const sanitize = msg => new String(msg).split(":")[1].trim();
+    function onMessage(message, sender) {
         if (["MUTE", "UNMUTE"].includes(message)) {
             const isPushed = videoRef.current.muted = message !== "UNMUTE";
-            isPushed ? videoRef.current.classList.remove("border-glow") : videoRef.current.classList.add("border-glow");
+            const classList = videoRef.current.classList;
+            isPushed ? classList.remove("border-glow") : classList.add("border-glow");
             return;
         }
         if (message.startsWith("PARENT-ID:")) {
-            const parentID = sanitize(message);
-            const pc = getActiveConnections().find(pc => parentID.startsWith(pc.parentID));
-            if (pc) pc.parentID = parentID;
-            showToast("Parent device got connected!");
+            sender.parentID = message.split(":")[1].trim();
+            onConnect(sender);
             return;
         }
-        if (message.startsWith("DISCONNECT:")) {
-            const parentID = sanitize(message);
-            const pc = getActiveConnections().find(pc => pc.parentID === parentID);
-            onDisconnect(pc);
-            showToast("Parent device got disconnected!");
+        if (message === "DISCONNECT") {
+            onDisconnect(sender);
             return;
         }
         console.warn("Unknown Signal: " + message);
