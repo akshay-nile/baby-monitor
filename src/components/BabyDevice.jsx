@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { getNewPC, createAndStoreOfferWhilePolling, loadAndApplyAnswerWhilePolling, disconnectAllConnections, attachDataChannel } from "../services/connex";
 import { audioConfigs } from "../services/media";
 import useRefState from "../custom-hooks/useRefState";
@@ -22,7 +22,6 @@ function BabyDevice({ showToast }) {
             camerasRef.current = { cameras, count: cameras.length };
         }
         findCameraDevices();
-        return cleanUp;
     }, []);
 
     async function startCamera() {
@@ -70,7 +69,7 @@ function BabyDevice({ showToast }) {
     }
 
     function onTrack(event) {
-        event.streams[0].getAudioTracks().forEach(track => videoRef.current.srcObject.addTrack(track));
+        videoRef.current.srcObject.addTrack(event.streams[0].getAudioTracks()[0]);
     }
 
     function onMessage(message, sender) {
@@ -156,13 +155,15 @@ function BabyDevice({ showToast }) {
         showToast("Camera stopped! " + (parentCount > 0 ? "All parents disconnected!" : "No parent connected!"));
     }
 
-    function cleanUp() {
+    const cleanUp = useCallback(() => {
         setPolling(false);
         getActiveConnections().forEach(ac => ac.dataChannel.send("DISCONNECT"));
         disconnectAllConnections([...getActiveConnections(), pcRef.current]);
         setActiveConnections([]);
         stopMediaStreams();
-    };
+    }, [setPolling, setActiveConnections, getActiveConnections]);
+
+    useEffect(() => cleanUp, [cleanUp]);
 
     return (
         <div className="container no-select">

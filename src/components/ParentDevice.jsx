@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, useCallback } from "react";
 import { storeSDP, loadSDP, getNewPC, waitForIceGatheringCompletion, attachDataChannel } from "../services/connex";
 import { audioConfigs } from "../services/media";
 
@@ -10,8 +10,6 @@ function ParentDevice({ showToast }) {
     const [muted, setMuted] = useState(false);
     const [isLive, setIsLive] = useState(false);
     const [button, setButton] = useState({ text: "Request Connection", color: "#007bff", disabled: false, click: requestConnection });
-
-    useEffect(() => { return cleanUp; }, []);
 
     async function requestConnection() {
         setButton({ text: "Requesting...", disabled: true });
@@ -80,10 +78,19 @@ function ParentDevice({ showToast }) {
         showToast(isPushed ? "Baby can hear you now!" : "You can hear the baby!");
     }
 
-    function cleanUp() {
-        pcRef.current && pcRef.current.close();
-        micRef.current.track && micRef.current.track.stop();
-    }
+    const cleanUp = useCallback(() => {
+        if (pcRef.current) {
+            pcRef.current.dataChannel.send("DISCONNECT");
+            pcRef.current.close();
+        }
+        if (videoRef.current) {
+            videoRef.current.srcObject.getTracks().forEach(track => track.stop());
+            videoRef.current.srcObject = null;
+        }
+        if (micRef.current.track) micRef.current.track.stop();
+    }, []);
+
+    useEffect(() => cleanUp, [cleanUp]);
 
     return (
         <div className="container no-select">

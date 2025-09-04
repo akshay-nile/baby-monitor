@@ -22,7 +22,7 @@ function App() {
     }
     setToast({ visible: true, text });
     timeoutRef.current = setTimeout(() => setToast({ ...toast, visible: false }), 3000);
-  }, []);
+  }, [toast]);
 
   return (
     <>
