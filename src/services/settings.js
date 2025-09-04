@@ -1,6 +1,7 @@
 export let browserIDStatus = "exists";
 
 const defaultSettings = {
+    startWithFrontCamera: true,
     maxParentConnections: 5,
     pollingWindow: 5,
     restartPolling: true
