@@ -3,7 +3,7 @@ export let browserIDStatus = "exists";
 const defaultSettings = {
     startWithFrontCamera: true,
     maxParentConnections: 5,
-    pollingStopsIn: 5,
+    pollingTimeout: 5,
     restartPolling: true
 };
 
