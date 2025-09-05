@@ -59,6 +59,8 @@ body {
 }
 
 .toast {
+    width: auto;
+    text-align: center;
     position: fixed;
     top: 45%;
     left: 50%;
