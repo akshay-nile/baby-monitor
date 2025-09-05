@@ -166,7 +166,7 @@ function BabyDevice({ showToast }) {
     useEffect(() => cleanUp, [cleanUp]);
 
     return (
-        <div className="container no-select">
+        <div className="container no-select" style={{ height: "91vh", alignItems: "center" }}>
             <h2 className="text-info">Baby Device ({facingMode === "user" ? "Front" : "Back"}-Camera & Mic)</h2>
 
             <video ref={videoRef} onClick={flipCamera} muted autoPlay playsInline className="video" />

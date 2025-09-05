@@ -93,7 +93,7 @@ function ParentDevice({ showToast }) {
     useEffect(() => cleanUp, [cleanUp]);
 
     return (
-        <div className="container no-select">
+        <div className="container no-select" style={{ height: "91vh", alignItems: "center" }}>
             <h2 className="text-info">Parent Device ({isLive && "Live "}{muted ? <s>Audio</s> : "Audio"}/Video)</h2>
 
             <video ref={videoRef}

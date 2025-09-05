@@ -10,7 +10,6 @@ body {
     justify-content: center;
     align-items: stretch;
     width: 100%;
-    border: 1px dotted white;
 }
 
 .text-info {
@@ -80,7 +79,6 @@ body {
     justify-content: space-between;
     align-items: center;
     padding: 1em;
-    border: 1px dotted yellow;
 }
 
 .icon {
