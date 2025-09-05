@@ -1,5 +1,3 @@
-export let browserIDStatus = "exists";
-
 const defaultSettings = {
     startWithFrontCamera: true,
     maxParentConnections: 5,
@@ -10,9 +8,8 @@ const defaultSettings = {
 export function getBrowserID() {
     let browserID = localStorage.getItem("browserID");
     if (!browserID) {
-        browserID = crypto.randomUUID();
+        browserID = Date.now();
         localStorage.setItem("browserID", browserID);
-        browserIDStatus = "created";
     }
     return browserID;
 }

@@ -8,9 +8,9 @@ body {
     display: flex;
     flex-direction: column;
     justify-content: center;
-    align-items: center;
+    align-items: stretch;
     width: 100%;
-    height: 95vh;
+    border: 1px dotted white;
 }
 
 .text-info {
@@ -72,6 +72,25 @@ body {
     opacity: 0;
     animation: slideUpFade 0.3s ease-out forwards;
     z-index: 9999;
+}
+
+.settings-bar {
+    height: 3em;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1em;
+    border: 1px dotted yellow;
+}
+
+.icon {
+    color: white;
+    transition: color 0.25s;
+}
+
+.icon:hover {
+    color: #5aabff;
+    cursor: pointer;
 }
 
 .no-select {

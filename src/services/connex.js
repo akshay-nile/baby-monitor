@@ -39,7 +39,7 @@ export function attachDataChannel(pc, dataChannel, onMessage) {
         pc.ondatachannel = event => event.channel.onopen = () => {
             pc.dataChannel = event.channel;
             pc.dataChannel.onmessage = (event) => onMessage(event.data, pc);
-            pc.parentID = Date.now() + "-" + getBrowserID();
+            pc.parentID = Date.now() + getBrowserID();
             pc.dataChannel.send("PARENT-ID: " + pc.parentID);
         };
     }
