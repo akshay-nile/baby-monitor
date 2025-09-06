@@ -1,3 +1,4 @@
+// eslint-disable-next-line no-unused-vars
 import { Settings } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { getBrowserID } from "../services/settings";

@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import { HashRouter, Routes, Route } from "react-router-dom";
 import SelectRole from "./components/SelectRole";
 import BabyDevice from "./components/BabyDevice";

@@ -1,3 +1,4 @@
+// eslint-disable-next-line no-unused-vars
 import { Mic, MicOff, Video, VideoOff, Volume2, VolumeOff } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { attachDataChannel, getNewPC, loadSDP, storeSDP, waitForIceGatheringCompletion } from "../services/connex";

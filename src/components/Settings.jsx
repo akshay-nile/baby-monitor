@@ -1,7 +1,7 @@
 
 function Settings() {
     return (
-        <h1>Settings Page!</h1>
+        <h2>Settings Page (Under Developement)!</h2>
     );
 }
 
