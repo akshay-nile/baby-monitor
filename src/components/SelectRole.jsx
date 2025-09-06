@@ -1,36 +1,35 @@
+import { Settings } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { getBrowserID } from "../services/settings";
-import { Settings } from "lucide-react";
 
 function SelectRole() {
     const navigate = useNavigate();
-    const style = { minWidth: "66%", margin: "2em auto" };
 
-    return (<>
-        <div className="container no-select" style={{ height: "91vh" }}>
-            <div className="settings-bar">
-                <div>
-                    <div style={{ color: "white", margin: "0.25em 0em" }}><strong>Browser ID</strong></div>
-                    <div style={{ fontFamily: "Consolas, monospace", fontSize: "smaller", color: "lightgray" }}> {getBrowserID()}</div>
+    return (
+        <div className="container-y no-select" style={{ width: "100%", height: "95vh" }}>
+            <div className="container-x">
+                <div style={{ margin: "0.7em" }}>
+                    <div style={{ marginTop: "0.2em" }}><strong>Browser ID</strong></div>
+                    <div style={{ marginTop: "0.1em", fontFamily: "Consolas, monospace", fontSize: "smaller" }}> {getBrowserID()}</div>
                 </div>
-                <Settings size={40} onClick={() => navigate('/settings')} className="icon" />
+                <Settings size={40} onClick={() => navigate('/settings')} className="icon" style={{ margin: "0.7em" }} />
             </div>
 
-            <div className="container" style={{ margin: "auto 0" }}>
-                <h2 className="text-info" style={{ margin: "1.25em auto" }}>
+            <div className="container-y middle">
+                <div className="text-title">
                     Select a Role for this Device
-                </h2>
+                </div>
 
-                <button onClick={() => navigate('/baby-device')} className="button" style={style}>
+                <button onClick={() => navigate('/baby-device')} className="button">
                     Use as Baby Device (Camera/Mic)
                 </button>
 
-                <button onClick={() => navigate('/parent-device')} className="button" style={style}>
+                <button onClick={() => navigate('/parent-device')} className="button">
                     Use as Parent Device (Live Stream)
                 </button>
             </div>
         </div>
-    </>);
+    );
 }
 
 export default SelectRole;

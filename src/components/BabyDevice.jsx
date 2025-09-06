@@ -1,25 +1,27 @@
+import { Ban, Camera, CameraOff, Mic, MicOff, Users, Volume2, VolumeOff } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { getNewPC, createAndStoreOfferWhilePolling, loadAndApplyAnswerWhilePolling, disconnectAllConnections, attachDataChannel } from "../services/connex";
+import { attachDataChannel, createAndStoreOfferWhilePolling, disconnectAllConnections, getNewPC, loadAndApplyAnswerWhilePolling } from "../services/connex";
 import { audioConfigs } from "../services/media";
 import useRefState from "../custom-hooks/useRefState";
 
 function BabyDevice({ showToast }) {
     const pcRef = useRef(null);
     const videoRef = useRef(null);
+    const cameraRef = useRef({ cameras: [], count: 0, facingMode: "user" });
     const localStreamRef = useRef(null);
-    const camerasRef = useRef({ cameras: [], count: 0 });
 
     const [polling, setPolling, getPolling] = useRefState(false);
     const [activeConnections, setActiveConnections, getActiveConnections] = useRefState([]);
-    const [facingMode, setFacingMode, getFacingMode] = useRefState("user");
 
     const [button, setButton] = useState({ text: "Start Camera", color: "#007bff", disabled: false, click: startCamera });
+    const [isLive, setIsLive] = useState(false);
+    const [isMuted, setIsMuted] = useState(true);
 
     useEffect(() => {
         async function findCameraDevices() {
             const devices = await navigator.mediaDevices.enumerateDevices();
             const cameras = devices.filter(device => device.kind === "videoinput");
-            camerasRef.current = { cameras, count: cameras.length };
+            cameraRef.current = { ...cameraRef.current, cameras, count: cameras.length };
         }
         findCameraDevices();
     }, []);
@@ -28,6 +30,7 @@ function BabyDevice({ showToast }) {
         setButton({ ...button, text: "Starting...", disabled: true });
         await loadCameraStream();
         setButton({ text: "Stop Camera", color: "#ff5b00", disabled: false, click: stopCamera });
+        setIsLive(true);
         beginPolling();
         await replaceTracksForAllConnections();
     }
@@ -77,6 +80,7 @@ function BabyDevice({ showToast }) {
             const isPushed = videoRef.current.muted = message !== "UNMUTE";
             const classList = videoRef.current.classList;
             isPushed ? classList.remove("border-glow") : classList.add("border-glow");
+            setIsMuted(isPushed);
             return;
         }
         if (message.startsWith("PARENT-ID:")) {
@@ -92,11 +96,11 @@ function BabyDevice({ showToast }) {
     }
 
     async function loadCameraStream() {
-        if (camerasRef.current.count === 0) {
+        if (cameraRef.current.count === 0) {
             showToast("No camera found on this device!");
             return;
         }
-        const mediaConfigs = { video: { facingMode: getFacingMode() }, audio: audioConfigs };
+        const mediaConfigs = { video: { facingMode: cameraRef.current.facingMode }, audio: audioConfigs };
         localStreamRef.current = await navigator.mediaDevices.getUserMedia(mediaConfigs);
         videoRef.current.srcObject = new MediaStream(localStreamRef.current.getVideoTracks());
     }
@@ -127,12 +131,12 @@ function BabyDevice({ showToast }) {
             showToast("Start the camera before flipping!");
             return;
         }
-        if (camerasRef.current.count === 1) {
+        if (cameraRef.current.count === 1) {
             showToast("Cannot flip with single camera!");
             return;
         }
         setButton({ ...button, text: "Flipping...", disabled: true });
-        setFacingMode(getFacingMode() === "user" ? { exact: "environment" } : "user");
+        cameraRef.current.facingMode = cameraRef.current.facingMode === "user" ? { exact: "environment" } : "user";
         const [oldLocalStream, oldVideoStream] = [localStreamRef.current, videoRef.current.srcObject];
         await loadCameraStream();
         await replaceTracksForAllConnections();
@@ -140,7 +144,7 @@ function BabyDevice({ showToast }) {
         oldVideoStream.getVideoTracks().forEach(track => track.stop());
         oldLocalStream.getTracks().forEach(track => track.stop());
         setButton({ ...button, text: "Stop Camera", color: "#ff5b00", disabled: false });
-        showToast("Flipped to " + (getFacingMode() === "user" ? "Front" : "Back") + " Camera!");
+        showToast("Flipped to " + (cameraRef.current.facingMode === "user" ? "Front" : "Back") + " Camera!");
     }
 
     async function stopCamera() {
@@ -152,6 +156,7 @@ function BabyDevice({ showToast }) {
         setButton({ ...button, text: "Stopping...", disabled: true });
         cleanUp();
         setButton({ text: "Start Camera", color: "#007bff", disabled: false, click: startCamera });
+        setIsLive(false);
         showToast("Camera stopped! " + (parentCount > 0 ? "All parents disconnected!" : "No parent connected!"));
     }
 
@@ -166,20 +171,47 @@ function BabyDevice({ showToast }) {
     useEffect(() => cleanUp, [cleanUp]);
 
     return (
-        <div className="container no-select" style={{ height: "91vh", alignItems: "center" }}>
-            <h2 className="text-info">Baby Device ({facingMode === "user" ? "Front" : "Back"}-Camera & Mic)</h2>
+        <div className="container-y no-select" style={{ height: "95vh", justifyContent: "center", alignItems: "center" }}>
+            <div className="text-title" style={{ marginBottom: "2em" }}>Baby Device</div>
 
-            <video ref={videoRef} onClick={flipCamera} muted autoPlay playsInline className="video" />
+            <div className="container-y" style={{ alignItems: "center", maxWidth: "90vw" }}>
+                <div className="container-x" style={{ height: "2.25em", justifyContent: "space-between" }}>
+                    <div className="container-y" style={{ alignItems: "center", margin: "auto 0.25em" }}>
+                        {isLive
+                            ? <span>
+                                <Camera style={{ marginRight: "0.4em" }} size={18} />
+                                {isMuted ? <Mic size={18} /> : <MicOff size={18} />}
+                            </span>
+                            : <span>
+                                <CameraOff style={{ marginRight: "0.4em" }} size={18} />
+                                <MicOff size={18} />
+                            </span>}
+                        <div style={{ fontSize: "small" }}>sending</div>
+                    </div>
+                    <div className="container-y" style={{ alignItems: "center", margin: "auto 0.25em" }}>
+                        {(polling || activeConnections.length > 0)
+                            ? <span>
+                                <Users style={{ marginRight: "0.6em" }} size={18} />
+                                <span style={{ display: "inline-block", fontFamily: "Consolas, monospace", fontSize: "larger" }}>
+                                    {activeConnections.length}{polling && "+"}
+                                </span>
+                            </span>
+                            : <span><Ban size={18} /></span>}
+                        <div style={{ fontSize: "small" }}>connections</div>
+                    </div>
+                    <div className="container-y" style={{ alignItems: "center", margin: "auto 0.25em" }}>
+                        <span>{isMuted ? <VolumeOff size={18} /> : <Volume2 size={18} />}</span>
+                        <div style={{ fontSize: "small" }}>recieving</div>
+                    </div>
+                </div>
 
-            <button onClick={button.click} disabled={button.disabled} className="button" style={{ background: button.color }}>
-                {button.text}
-            </button>
+                <video ref={videoRef} onClick={flipCamera} muted={isMuted} autoPlay playsInline className="video" />
 
-            {(polling || getActiveConnections().length > 0) &&
-                <h3 className="status-info">
-                    Connected Parents: {activeConnections.length} {polling && " and polling..."}
-                </h3>}
-        </div>
+                <button onClick={button.click} disabled={button.disabled} style={{ background: button.color }} className="button">
+                    {button.text}
+                </button>
+            </div>
+        </div >
     );
 }
 

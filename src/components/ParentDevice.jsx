@@ -1,5 +1,6 @@
-import { useRef, useState, useEffect, useCallback } from "react";
-import { storeSDP, loadSDP, getNewPC, waitForIceGatheringCompletion, attachDataChannel } from "../services/connex";
+import { Mic, MicOff, Video, VideoOff, Volume2, VolumeOff } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { attachDataChannel, getNewPC, loadSDP, storeSDP, waitForIceGatheringCompletion } from "../services/connex";
 import { audioConfigs } from "../services/media";
 
 function ParentDevice({ showToast }) {
@@ -7,9 +8,9 @@ function ParentDevice({ showToast }) {
     const videoRef = useRef(null);
     const micRef = useRef({ stream: null, track: null });
 
-    const [muted, setMuted] = useState(false);
-    const [isLive, setIsLive] = useState(false);
     const [button, setButton] = useState({ text: "Request Connection", color: "#007bff", disabled: false, click: requestConnection });
+    const [isLive, setIsLive] = useState(false);
+    const [isMuted, setIsMuted] = useState(false);
 
     async function requestConnection() {
         setButton({ text: "Requesting...", disabled: true });
@@ -47,8 +48,10 @@ function ParentDevice({ showToast }) {
     function onDisconnect(toastMsg) {
         if (typeof toastMsg !== "string") toastMsg = "Disconnected from the baby device!";
         setButton({ ...button, text: "Disconnecting...", color: "#ff5b00", disabled: true });
-        pcRef.current.dataChannel.send("DISCONNECT");
-        pcRef.current.close();
+        if (pcRef.current) {
+            pcRef.current.dataChannel?.send("DISCONNECT");
+            pcRef.current.close();
+        }
         pcRef.current = null;
         videoRef.current.srcObject = null;
         setIsLive(false);
@@ -70,7 +73,7 @@ function ParentDevice({ showToast }) {
 
     function pushToTalk(isPushed) {
         if (!videoRef.current.srcObject) return;
-        setMuted(isPushed);
+        setIsMuted(isPushed);
         micRef.current.track.enabled = isPushed;
         pcRef.current.dataChannel.send(isPushed ? "UNMUTE" : "MUTE");
         const classList = videoRef.current.classList;
@@ -83,7 +86,7 @@ function ParentDevice({ showToast }) {
             pcRef.current.dataChannel.send("DISCONNECT");
             pcRef.current.close();
         }
-        if (videoRef.current) {
+        if (videoRef.current?.srcObject) {
             videoRef.current.srcObject.getTracks().forEach(track => track.stop());
             videoRef.current.srcObject = null;
         }
@@ -93,18 +96,39 @@ function ParentDevice({ showToast }) {
     useEffect(() => cleanUp, [cleanUp]);
 
     return (
-        <div className="container no-select" style={{ height: "91vh", alignItems: "center" }}>
-            <h2 className="text-info">Parent Device ({isLive && "Live "}{muted ? <s>Audio</s> : "Audio"}/Video)</h2>
+        <div className="container-y no-select" style={{ height: "95vh", justifyContent: "center", alignItems: "center" }}>
+            <div className="text-title" style={{ marginBottom: "2em" }}>Parent Device</div>
 
-            <video ref={videoRef}
-                onMouseDown={() => pushToTalk(true)} onMouseUp={() => pushToTalk(false)}
-                onTouchStart={() => pushToTalk(true)} onTouchEnd={() => pushToTalk(false)}
-                muted={muted} autoPlay playsInline className="video">
-            </video>
+            <div className="container-y" style={{ alignItems: "center", maxWidth: "90vw" }}>
+                <div className="container-x" style={{ height: "2.25em", justifyContent: "space-between" }}>
+                    <div className="container-y" style={{ alignItems: "center", margin: "auto 0.25em" }}>
+                        <span>{isMuted ? <Mic size={18} /> : <MicOff size={18} />}</span>
+                        <div style={{ fontSize: "small" }}>sending</div>
+                    </div>
+                    <div className="container-y" style={{ alignItems: "center", margin: "auto 0.25em" }}>
+                        {isLive
+                            ? <span>
+                                <Video style={{ marginRight: "0.4em" }} size={18} />
+                                {isMuted ? <VolumeOff size={18} /> : <Volume2 size={18} />}
+                            </span>
+                            : <span>
+                                <VideoOff style={{ marginRight: "0.4em" }} size={18} />
+                                <VolumeOff size={18} />
+                            </span>}
+                        <div style={{ fontSize: "small" }}>recieving</div>
+                    </div>
+                </div>
 
-            <button onClick={button.click} disabled={button.disabled} className="button" style={{ background: button.color }}>
-                {button.text}
-            </button>
+                <video ref={videoRef}
+                    onMouseDown={() => pushToTalk(true)} onMouseUp={() => pushToTalk(false)}
+                    onTouchStart={() => pushToTalk(true)} onTouchEnd={() => pushToTalk(false)}
+                    muted={isMuted} autoPlay playsInline className="video">
+                </video>
+
+                <button onClick={button.click} disabled={button.disabled} style={{ background: button.color }} className="button">
+                    {button.text}
+                </button>
+            </div>
         </div>
     );
 }

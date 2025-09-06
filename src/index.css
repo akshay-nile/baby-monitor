@@ -4,34 +4,36 @@ body {
     color: white;
 }
 
-.container {
+.container-y {
     display: flex;
     flex-direction: column;
-    justify-content: center;
-    align-items: stretch;
+}
+
+.container-x {
+    display: flex;
     width: 100%;
+    justify-content: space-between;
 }
 
-.text-info {
-    margin: 0em 0.5em;
-    margin-top: 0.5em;
-    padding: 0;
-    font-size: larger;
+.middle {
+    margin: auto 0;
+    align-items: center;
+    gap: 3em;
 }
 
-.status-info {
-    margin: 1.25em 0.5em;
-    padding: 0.5em;
-    font-size: large;
+.text-title {
+    font-size: x-large;
+    font-weight: bold;
+    align-self: center;
 }
 
 .video {
     width: auto;
     height: auto;
     max-width: 90vw;
-    max-height: 66vh;
-    margin: 2.5em 1em;
-    padding: 0em;
+    margin-top: 0.5em;
+    margin-bottom: 2em;
+    padding: 0;
     border: 2px solid white;
     border-radius: 0.5em;
 }
@@ -42,7 +44,7 @@ body {
 }
 
 .button {
-    margin: 0em 0.5em;
+    margin: auto;
     padding: 1em;
     border: 2px solid white;
     border-radius: 0.5em;
@@ -55,13 +57,14 @@ body {
 
 .button:hover {
     filter: brightness(80%);
+    transition: filter 0.25s;
 }
 
 .toast {
     width: auto;
     text-align: center;
     position: fixed;
-    top: 45%;
+    top: 50%;
     left: 50%;
     transform: translate(-50%, -50%) translateY(20px);
     background: #222;
@@ -71,14 +74,6 @@ body {
     opacity: 0;
     animation: slideUpFade 0.3s ease-out forwards;
     z-index: 9999;
-}
-
-.settings-bar {
-    height: 3em;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1em;
 }
 
 .icon {
