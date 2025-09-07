@@ -133,7 +133,7 @@ function ParentDevice({ showToast }) {
                     </div>
                 </div>
 
-                <video ref={videoRef} muted={isMuted}
+                <video ref={videoRef} muted={isMuted} onPause={() => videoRef.current?.play()}
                     onMouseDown={() => pushToTalk(true)} onMouseUp={() => pushToTalk(false)}
                     onTouchStart={() => pushToTalk(true)} onTouchEnd={() => pushToTalk(false)}
                     autoPlay playsInline className="video">
