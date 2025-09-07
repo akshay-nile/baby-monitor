@@ -68,7 +68,7 @@ function BabyDevice({ showToast }) {
             setActiveConnections(acs.filter(ac => ac.parentID !== pc.parentID));
             showToast("Parent device got disconnected!");
         }
-        if (getActiveConnections().length === 0 && !getPolling()) beginPolling();
+        if (getActiveConnections().length === 0 && !getPolling() && isLive) beginPolling();
         pc?.close();
     }
 
@@ -157,11 +157,11 @@ function BabyDevice({ showToast }) {
         setButton({ ...button, text: "Stopping...", disabled: true });
         cleanUp();
         setButton({ text: "Start Camera", color: "#007bff", disabled: false, click: startCamera });
-        setIsLive(false);
         showToast("Camera stopped! " + (parentCount > 0 ? "All parents disconnected!" : "No parent connected!"));
     }
 
     const cleanUp = useCallback(() => {
+        setIsLive(false);
         setPolling(false);
         getActiveConnections().forEach(ac => ac.dataChannel.send("DISCONNECT"));
         disconnectAllConnections([...getActiveConnections(), pcRef.current]);
