@@ -6,23 +6,23 @@ const defaultSettings = {
 };
 
 export function getBrowserID() {
-    let browserID = localStorage.getItem("browserID");
+    let browserID = JSON.parse(localStorage.getItem("browserID"));
     if (!browserID) {
         browserID = Date.now();
-        localStorage.setItem("browserID", browserID);
+        localStorage.setItem("browserID", JSON.stringify(browserID));
     }
     return browserID;
 }
 
 export function getSettings() {
-    let settings = localStorage.getItem("settings");
+    let settings = JSON.parse(localStorage.getItem("settings"));
     if (!settings) {
         settings = defaultSettings;
-        localStorage.setItem("settings", settings);
+        localStorage.setItem("settings", JSON.stringify(settings));
     }
     return settings;
 }
 
 export function setSettings(settings) {
-    if (typeof settings === "object") localStorage.setItem("settings", settings);
+    if (typeof settings === "object") localStorage.setItem("settings", JSON.stringify(settings));
 }
