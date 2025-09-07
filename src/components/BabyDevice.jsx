@@ -3,12 +3,14 @@ import { Ban, Camera, CameraOff, Mic, MicOff, Users, Volume2, VolumeOff } from "
 import { useCallback, useEffect, useRef, useState } from "react";
 import { attachDataChannel, createAndStoreOfferWhilePolling, disconnectAllConnections, getNewPC, loadAndApplyAnswerWhilePolling } from "../services/connex";
 import { audioConfigs } from "../services/media";
+import { getSettings } from "../services/settings";
 import useRefState from "../custom-hooks/useRefState";
 
 function BabyDevice({ showToast }) {
+    const settingsRef = useRef(getSettings());
     const pcRef = useRef(null);
     const videoRef = useRef(null);
-    const cameraRef = useRef({ cameras: [], count: 0, facingMode: "user" });
+    const cameraRef = useRef({ cameras: [], count: 0, facingMode: settingsRef.current.startWithFrontCamera ? "user" : { exact: "environment" } });
     const localStreamRef = useRef(null);
 
     const [isLive, setIsLive, getIsLive] = useRefState(false);
@@ -42,7 +44,7 @@ function BabyDevice({ showToast }) {
             setPolling(false);
             showToast("Polling stopped!");
             if (getActiveConnections().length === 0) stopCamera();
-        }, 5 * 60 * 1000);
+        }, settingsRef.current.pollingTimeout * 60 * 1000);
         showToast("Waiting for parent connections!");
         while (getPolling()) {
             pcRef.current = getNewPC({ onConnect, onDisconnect, onTrack, stream: localStreamRef.current });
@@ -57,7 +59,12 @@ function BabyDevice({ showToast }) {
         const exists = acs.find(ac => ac.parentID === pc.parentID);
         if (!exists) {
             setActiveConnections([...acs, pc]);
-            showToast("Parent device got connected!");
+            if (settingsRef.current.maxParentConnections === getActiveConnections().length) {
+                setPolling(false);
+                disconnectAllConnections([pcRef.current]);
+                pcRef.current = null;
+                showToast("Max parent limit reached!");
+            } else showToast("Parent device got connected!");
         }
     }
 
@@ -68,7 +75,7 @@ function BabyDevice({ showToast }) {
             setActiveConnections(acs.filter(ac => ac.parentID !== pc.parentID));
             showToast("Parent device got disconnected!");
         }
-        if (getActiveConnections().length === 0 && !getPolling() && getIsLive()) beginPolling();
+        if (settingsRef.current.restartPolling && !getPolling() && getIsLive() && getActiveConnections().length === 0) beginPolling();
         pc?.close();
     }
 
@@ -101,8 +108,18 @@ function BabyDevice({ showToast }) {
             showToast("No camera found on this device!");
             return;
         }
-        const mediaConfigs = { video: { facingMode: cameraRef.current.facingMode }, audio: audioConfigs };
-        localStreamRef.current = await navigator.mediaDevices.getUserMedia(mediaConfigs);
+        let retry = 2;
+        while (retry > 0) {
+            const mediaConfigs = { video: { facingMode: cameraRef.current.facingMode }, audio: audioConfigs };
+            try { localStreamRef.current = await navigator.mediaDevices.getUserMedia(mediaConfigs); break; }
+            catch (OverconstrainedError) {
+                console.error(OverconstrainedError);
+                console.warn("Overriding user settings by switching to Front Camera!");
+                cameraRef.current.facingMode = "user";
+                showToast("Back camera is not available!");
+            }
+            retry--;
+        }
         videoRef.current.srcObject = new MediaStream(localStreamRef.current.getVideoTracks());
     }
 

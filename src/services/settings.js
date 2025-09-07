@@ -1,6 +1,6 @@
-const defaultSettings = {
+export const defaultSettings = {
     startWithFrontCamera: true,
-    maxParentConnections: 5,
+    maxParentConnections: 3,
     pollingTimeout: 5,
     restartPolling: true
 };

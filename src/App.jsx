@@ -30,7 +30,7 @@ function App() {
     <HashRouter>
       <Routes>
         <Route path="/" element={<SelectRole />} />
-        <Route path="/settings" element={<Settings />} />
+        <Route path="/settings" element={<Settings showToast={showToast} />} />
         <Route path="/baby-device" element={<BabyDevice showToast={showToast} />} />
         <Route path="/parent-device" element={<ParentDevice showToast={showToast} />} />
       </Routes>
