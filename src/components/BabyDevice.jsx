@@ -11,11 +11,11 @@ function BabyDevice({ showToast }) {
     const cameraRef = useRef({ cameras: [], count: 0, facingMode: "user" });
     const localStreamRef = useRef(null);
 
+    const [isLive, setIsLive, getIsLive] = useRefState(false);
     const [polling, setPolling, getPolling] = useRefState(false);
     const [activeConnections, setActiveConnections, getActiveConnections] = useRefState([]);
 
     const [button, setButton] = useState({ text: "Start Camera", color: "#007bff", disabled: false, click: startCamera });
-    const [isLive, setIsLive] = useState(false);
     const [isMuted, setIsMuted] = useState(true);
 
     useEffect(() => {
@@ -68,7 +68,7 @@ function BabyDevice({ showToast }) {
             setActiveConnections(acs.filter(ac => ac.parentID !== pc.parentID));
             showToast("Parent device got disconnected!");
         }
-        if (getActiveConnections().length === 0 && !getPolling() && isLive) beginPolling();
+        if (getActiveConnections().length === 0 && !getPolling() && getIsLive()) beginPolling();
         pc?.close();
     }
 
@@ -167,7 +167,7 @@ function BabyDevice({ showToast }) {
         disconnectAllConnections([...getActiveConnections(), pcRef.current]);
         setActiveConnections([]);
         stopMediaStreams();
-    }, [setPolling, setActiveConnections, getActiveConnections]);
+    }, [setIsLive, setPolling, setActiveConnections, getActiveConnections]);
 
     useEffect(() => cleanUp, [cleanUp]);
 

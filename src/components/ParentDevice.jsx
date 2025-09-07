@@ -1,5 +1,5 @@
 // eslint-disable-next-line no-unused-vars
-import { Mic, MicOff, Video, VideoOff, Volume2, VolumeOff } from "lucide-react";
+import { Fullscreen, Mic, MicOff, Video, VideoOff, Volume2, VolumeOff } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { attachDataChannel, getNewPC, loadSDP, storeSDP, waitForIceGatheringCompletion } from "../services/connex";
 import { audioConfigs } from "../services/media";
@@ -82,6 +82,16 @@ function ParentDevice({ showToast }) {
         showToast(isPushed ? "Baby can hear you now!" : "You can hear the baby!");
     }
 
+    function fullScreen() {
+        if (!videoRef.current?.srcObject) {
+            showToast("Cannot go fullscreen!");
+            return;
+        }
+        if (videoRef.current.requestFullscreen) videoRef.current.requestFullscreen();
+        else if (videoRef.current.webkitRequestFullscreen) videoRef.current.webkitRequestFullscreen();
+        else if (videoRef.current.msRequestFullscreen) videoRef.current.msRequestFullscreen();
+    }
+
     const cleanUp = useCallback(() => {
         if (pcRef.current) {
             pcRef.current.dataChannel.send("DISCONNECT");
@@ -107,6 +117,9 @@ function ParentDevice({ showToast }) {
                         <div style={{ fontSize: "small" }}>sending</div>
                     </div>
                     <div className="container-y" style={{ alignItems: "center", margin: "auto 0.25em" }}>
+                        <Fullscreen onClick={() => fullScreen()} style={{ marginLeft: "0.4em", color: isLive ? "white" : "lightgray" }} size={34} />
+                    </div>
+                    <div className="container-y" style={{ alignItems: "center", margin: "auto 0.25em" }}>
                         {isLive
                             ? <span>
                                 <Video style={{ marginRight: "0.4em" }} size={18} />
@@ -120,10 +133,10 @@ function ParentDevice({ showToast }) {
                     </div>
                 </div>
 
-                <video ref={videoRef}
+                <video ref={videoRef} muted={isMuted}
                     onMouseDown={() => pushToTalk(true)} onMouseUp={() => pushToTalk(false)}
                     onTouchStart={() => pushToTalk(true)} onTouchEnd={() => pushToTalk(false)}
-                    muted={isMuted} autoPlay playsInline className="video">
+                    autoPlay playsInline className="video">
                 </video>
 
                 <button onClick={button.click} disabled={button.disabled} style={{ background: button.color }} className="button">
