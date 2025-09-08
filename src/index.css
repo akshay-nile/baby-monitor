@@ -86,6 +86,12 @@ body {
     cursor: pointer;
 }
 
+.setting {
+    align-items: center;
+    margin: 1em 2em;
+    padding: 1em;
+}
+
 .no-select {
     user-select: none;
     -webkit-user-select: none;
