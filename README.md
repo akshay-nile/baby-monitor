@@ -1,7 +1,11 @@
 # 👶 Baby Monitor (WebRTC-based)
-
-A simple and free hobby **web application** that uses **WebRTC Peer-to-Peer** connections between **one Baby Device** and **multiple Parent Devices**.  
+A simple and free hobby **Web Application** that uses **WebRTC Peer-to-Peer** connections between **single Baby Device** and **multiple Parent Devices**.  
 No app installs required — runs directly in your browser!
+
+---
+
+## Version
+Current Release: **v1.0.0**
 
 ---
 
@@ -67,11 +71,11 @@ It sets up a **direct connection (P2P)** between one Baby Device (camera + mic) 
 
 ---
 
-## 🛠 Upcoming Features
-1. **Unique Auto-Generated User IDs**  
-   - Unique BrowserID (Like UserID).  
-2. **Settings Screen**  
-   - Allow users to configure some preferences (Settings Page).
+## 🛠 Upcoming/Planned Features
+1. **Amplified Audio For Parents**  
+   - Settings option to amplify recieved audio track on Parent Device.  
+2. **Screen Transition Animations**  
+   - Sliding screen animation while transitioning between screens.
 
 ---
 
