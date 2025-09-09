@@ -1,7 +1,6 @@
-// eslint-disable-next-line no-unused-vars
 import { Fullscreen, Mic, MicOff, Video, VideoOff, Volume2, VolumeOff } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { attachDataChannel, getNewPC, loadSDP, storeSDP, waitForIceGatheringCompletion } from "../services/connex";
+import { attachDataChannel, getNewPC, loadSDP, sendMessage, storeSDP, waitForIceGatheringCompletion } from "../services/connex";
 import { audioConfigs } from "../services/media";
 
 function ParentDevice({ showToast }) {
@@ -50,7 +49,7 @@ function ParentDevice({ showToast }) {
         if (typeof toastMsg !== "string") toastMsg = "Disconnected from the baby device!";
         setButton({ ...button, text: "Disconnecting...", color: "#ff5b00", disabled: true });
         if (pcRef.current) {
-            pcRef.current.dataChannel?.send("DISCONNECT");
+            sendMessage("DISCONNECT", pcRef.current);
             pcRef.current.close();
         }
         pcRef.current = null;
@@ -76,7 +75,7 @@ function ParentDevice({ showToast }) {
         if (!videoRef.current.srcObject) return;
         setIsMuted(isPushed);
         micRef.current.track.enabled = isPushed;
-        pcRef.current.dataChannel.send(isPushed ? "UNMUTE" : "MUTE");
+        sendMessage(isPushed ? "UNMUTE" : "MUTE", pcRef.current);
         const classList = videoRef.current.classList;
         isPushed ? classList.add("border-glow") : classList.remove("border-glow");
         showToast(isPushed ? "Baby can hear you now!" : "You can hear the baby!");
@@ -94,7 +93,7 @@ function ParentDevice({ showToast }) {
 
     const cleanUp = useCallback(() => {
         if (pcRef.current) {
-            pcRef.current.dataChannel.send("DISCONNECT");
+            sendMessage("DISCONNECT", pcRef.current);
             pcRef.current.close();
         }
         if (videoRef.current?.srcObject) {
@@ -104,7 +103,7 @@ function ParentDevice({ showToast }) {
         if (micRef.current.track) micRef.current.track.stop();
     }, []);
 
-    useEffect(() => cleanUp, [cleanUp]);
+    useEffect(() => { return cleanUp; }, [cleanUp]);
 
     return (
         <div className="container-y no-select" style={{ height: "95vh", justifyContent: "center", alignItems: "center" }}>

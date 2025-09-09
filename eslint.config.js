@@ -1,8 +1,9 @@
-import js from '@eslint/js'
-import globals from 'globals'
-import reactHooks from 'eslint-plugin-react-hooks'
-import reactRefresh from 'eslint-plugin-react-refresh'
-import { defineConfig, globalIgnores } from 'eslint/config'
+import js from '@eslint/js';
+import globals from 'globals';
+import react from 'eslint-plugin-react';
+import reactHooks from 'eslint-plugin-react-hooks';
+import reactRefresh from 'eslint-plugin-react-refresh';
+import { defineConfig, globalIgnores } from 'eslint/config';
 
 export default defineConfig([
   globalIgnores(['dist']),
@@ -22,10 +23,16 @@ export default defineConfig([
         sourceType: 'module',
       },
     },
+    plugins: { react },
     rules: {
-      "no-unused-vars": "warn",
-      "semi": "warn",
-      "no-empty": ["warn", { "allowEmptyCatch": true }]
+      'react/jsx-uses-react': 'error',
+      'react/jsx-uses-vars': 'error',
+      'semi': 'warn',
+      'no-unused-vars': 'warn',
+      'no-empty': ['warn', { allowEmptyCatch: true }],
     },
+    settings: {
+      react: { version: 'detect' }
+    }
   },
-])
+]);

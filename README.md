@@ -5,7 +5,7 @@ No app installs required — runs directly in your browser!
 ---
 
 ## Version
-Current Release: **v1.0.0**
+Current Release: **v1.0.1**
 
 ---
 

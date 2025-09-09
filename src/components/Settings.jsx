@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useCallback, useEffect } from "react";
 import useRefState from "../custom-hooks/useRefState";
 import { defaultSettings, getSettings, setSettings } from "../services/settings";
 
@@ -19,17 +19,17 @@ function Settings({ showToast }) {
         showToast("Restored default settings!");
     }
 
-    function save() {
+    const save = useCallback(() => {
         if (!getUserSettings().maxParentConnections || !getUserSettings().pollingTimeout) {
             showToast("Cannot save empty value!");
             return;
         }
         setSettings(getUserSettings());
         showToast("Settings saved!");
-    }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    useEffect(() => { return save; }, []);
+    useEffect(() => { return save; }, [save]);
 
     return (
         <div className="container-y" style={{ margin: "1em", padding: "0.5em", height: "90vh", justifyContent: "center", alignItems: "center" }}>

@@ -65,7 +65,7 @@ export async function createAndStoreOfferWhilePolling(pc, isPolling = () => fals
         const response = await storeSDP(pc.localDescription);
         if (response?.status === "offer-stored") break;
     }
-    if (!isPolling()) disconnectAllConnections([pc]);
+    if (!isPolling()) closeAllPCsAndRevokeSDP([pc]);
 }
 
 export async function loadAndApplyAnswerWhilePolling(pc, isPolling = () => false) {
@@ -76,10 +76,16 @@ export async function loadAndApplyAnswerWhilePolling(pc, isPolling = () => false
         await pc.setRemoteDescription(answer);
         break;
     }
-    if (!pc.remoteDescription) disconnectAllConnections([pc]);
+    if (!pc.remoteDescription) closeAllPCsAndRevokeSDP([pc]);
 }
 
-export async function disconnectAllConnections(pcs) {
+export async function closeAllPCsAndRevokeSDP(pcs) {
     pcs.forEach(pc => pc && pc.close());
     await storeSDP({ type: null });
+}
+
+export function sendMessage(msg, pc) {
+    if (pc?.dataChannel && pc.dataChannel?.readyState === "open") {
+        pc.dataChannel.send(msg);
+    } else console.error("Message Not Sent: " + msg);
 }

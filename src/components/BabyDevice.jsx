@@ -1,7 +1,6 @@
-// eslint-disable-next-line no-unused-vars
 import { Ban, Camera, CameraOff, Mic, MicOff, Users, Volume2, VolumeOff } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { attachDataChannel, createAndStoreOfferWhilePolling, disconnectAllConnections, getNewPC, loadAndApplyAnswerWhilePolling } from "../services/connex";
+import { attachDataChannel, createAndStoreOfferWhilePolling, closeAllPCsAndRevokeSDP, getNewPC, sendMessage, loadAndApplyAnswerWhilePolling } from "../services/connex";
 import { audioConfigs } from "../services/media";
 import { getSettings } from "../services/settings";
 import useRefState from "../custom-hooks/useRefState";
@@ -61,7 +60,7 @@ function BabyDevice({ showToast }) {
             setActiveConnections([...acs, pc]);
             if (settingsRef.current.maxParentConnections === getActiveConnections().length) {
                 setPolling(false);
-                disconnectAllConnections([pcRef.current]);
+                closeAllPCsAndRevokeSDP([pcRef.current]);
                 pcRef.current = null;
                 showToast("Max parent limit reached!");
             } else showToast("Parent device got connected!");
@@ -180,13 +179,13 @@ function BabyDevice({ showToast }) {
     const cleanUp = useCallback(() => {
         setIsLive(false);
         setPolling(false);
-        getActiveConnections().forEach(ac => ac.dataChannel.send("DISCONNECT"));
-        disconnectAllConnections([...getActiveConnections(), pcRef.current]);
+        getActiveConnections().forEach(ac => sendMessage("DISCONNECT", ac));
+        closeAllPCsAndRevokeSDP([...getActiveConnections(), pcRef.current]);
         setActiveConnections([]);
         stopMediaStreams();
     }, [setIsLive, setPolling, setActiveConnections, getActiveConnections]);
 
-    useEffect(() => cleanUp, [cleanUp]);
+    useEffect(() => { return cleanUp; }, [cleanUp]);
 
     return (
         <div className="container-y no-select" style={{ height: "95vh", justifyContent: "center", alignItems: "center" }}>
