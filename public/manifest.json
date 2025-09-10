@@ -1,7 +1,7 @@
 {
     "name": "Baby Monitor",
     "short_name": "Baby Monitor",
-    "start_url": "./",
+    "start_url": "./index.html",
     "display": "standalone",
     "background_color": "#000",
     "theme_color": "#000",
