@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 
-export function usePWAInstaller() {
+export function usePWAInstaller(uniqueKey) {
+    if (typeof uniqueKey !== "string") uniqueKey = "app-name";
+
     const [isPWA, setIsPWA] = useState(false);
     const [installPrompt, setInstallPrompt] = useState(null);
 
@@ -12,8 +14,7 @@ export function usePWAInstaller() {
                     isInstalled = apps.length > 0 || isInstalled;
                     setIsPWA(isInstalled);
                 });
-                let wasInstalled = localStorage.getItem("wasInstalled");
-                if (wasInstalled) isInstalled = JSON.parse(wasInstalled) || isInstalled;
+                isInstalled = !!localStorage.getItem(uniqueKey) || isInstalled;
                 setIsPWA(isInstalled);
             } catch (error) { console.error(error); }
         };
@@ -22,9 +23,9 @@ export function usePWAInstaller() {
             event.preventDefault();
             event.userChoice.then(choice => {
                 console.log("PWA installation is " + choice.outcome + "!");
-                localStorage.setItem("wasInstalled", JSON.stringify(choice.outcome === "accepted"));
+                if (choice.outcome === "accepted") localStorage.setItem(uniqueKey, true);
             });
-            localStorage.removeItem("wasInstalled");
+            localStorage.removeItem(uniqueKey);
             setIsPWA(false);
             setInstallPrompt(event);
         }
@@ -38,7 +39,7 @@ export function usePWAInstaller() {
             mediaQuery.removeEventListener("change", checkPWAInstallation);
             window.removeEventListener("beforeinstallprompt", captureBrowserPrompt);
         };
-    }, []);
+    }, [uniqueKey]);
 
     return [isPWA, installPrompt];
 }

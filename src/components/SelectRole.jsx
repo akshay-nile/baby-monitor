@@ -5,7 +5,7 @@ import { usePWAInstaller } from "../custom-hooks/usePWAInstaller";
 
 function SelectRole({ showToast }) {
     const navigate = useNavigate();
-    const [isInstalled, installPrompt] = usePWAInstaller();
+    const [isInstalled, installPrompt] = usePWAInstaller("baby-monitor");
 
     function showPWAInstallPrompt() {
         if (!installPrompt) {
