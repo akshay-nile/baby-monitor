@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 
 export function usePWAInstaller(PWA_KEY) {
-    if (typeof uniqueKey !== "string") PWA_KEY = "app-name";
+    if (typeof PWA_KEY !== "string") PWA_KEY = "app-name";
 
     const [isPWAInstalled, setIsPWAInstalled] = useState(false);
     const [installPrompt, setInstallPrompt] = useState(null);
