@@ -1,19 +1,31 @@
-// eslint-disable-next-line no-unused-vars
-import { Settings } from "lucide-react";
+import { Settings, Smartphone } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { getBrowserID } from "../services/settings";
+import { usePWAInstaller } from "../custom-hooks/usePWAInstaller";
 
-function SelectRole() {
+function SelectRole({ showToast }) {
     const navigate = useNavigate();
+    const [isInstalled, installPrompt] = usePWAInstaller();
+
+    function showPWAInstallPrompt() {
+        if (!installPrompt) {
+            showToast("Not approved by the browser yet!");
+            return;
+        }
+        installPrompt.prompt();
+    }
 
     return (
         <div className="container-y no-select" style={{ width: "100%", height: "95vh" }}>
             <div className="container-x">
-                <div style={{ margin: "0.7em" }}>
+                <div style={{ margin: "0.75em" }}>
                     <div style={{ marginTop: "0.2em" }}><strong>Browser ID</strong></div>
-                    <div style={{ marginTop: "0.1em", fontFamily: "Consolas, monospace", fontSize: "smaller" }}> {getBrowserID()}</div>
+                    <div style={{ marginTop: "0.1em", fontFamily: "Consolas, monospace", fontSize: "smaller" }}>{getBrowserID()}</div>
                 </div>
-                <Settings size={40} onClick={() => navigate('/settings')} className="icon" style={{ margin: "0.7em" }} />
+                <div className="container-x" style={{ justifyContent: "flex-end", alignItems: "center", gap: "1em", margin: "0.75em" }}>
+                    {!isInstalled && <Smartphone size={36} onClick={showPWAInstallPrompt} className="icon"><title>Install as PWA</title></Smartphone>}
+                    <Settings size={40} onClick={() => navigate('/settings')} className="icon"><title>User Settings</title></Settings>
+                </div>
             </div>
 
             <div className="container-y middle">

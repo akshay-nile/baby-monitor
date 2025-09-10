@@ -116,7 +116,9 @@ function ParentDevice({ showToast }) {
                         <div style={{ fontSize: "small" }}>sending</div>
                     </div>
                     <div className="container-y" style={{ alignItems: "center", margin: "auto 0.25em" }}>
-                        <Fullscreen onClick={() => fullScreen()} style={{ marginLeft: "0.4em", color: isLive ? "white" : "lightgray" }} size={34} />
+                        <Fullscreen onClick={() => fullScreen()} style={{ marginLeft: "0.4em", color: isLive ? "white" : "lightgray" }} size={34}>
+                            <title>Watch Fullscreen</title>
+                        </Fullscreen>
                     </div>
                     <div className="container-y" style={{ alignItems: "center", margin: "auto 0.25em" }}>
                         {isLive

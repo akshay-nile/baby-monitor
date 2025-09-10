@@ -28,7 +28,7 @@ function App() {
   return (<>
     <HashRouter>
       <Routes>
-        <Route path="/" element={<SelectRole />} />
+        <Route path="/" element={<SelectRole showToast={showToast} />} />
         <Route path="/settings" element={<Settings showToast={showToast} />} />
         <Route path="/baby-device" element={<BabyDevice showToast={showToast} />} />
         <Route path="/parent-device" element={<ParentDevice showToast={showToast} />} />
