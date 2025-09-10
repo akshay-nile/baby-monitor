@@ -1,11 +1,12 @@
-import { Settings, Smartphone } from "lucide-react";
+import { CircleQuestionMark, Settings, Smartphone } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { getBrowserID } from "../services/settings";
 import { usePWAInstaller } from "../custom-hooks/usePWAInstaller";
+import { getBrowserID } from "../services/settings";
 
 function SelectRole({ showToast }) {
     const navigate = useNavigate();
-    const [isInstalled, installPrompt] = usePWAInstaller("baby-monitor");
+    const [isInstalled, installPrompt] = usePWAInstaller("baby-monitor-pwa");
+    const readMeLink = "https://github.com/akshay-nile/baby-monitor/blob/main/README.md";
 
     function showPWAInstallPrompt() {
         if (!installPrompt) {
@@ -23,6 +24,7 @@ function SelectRole({ showToast }) {
                     <div style={{ marginTop: "0.1em", fontFamily: "Consolas, monospace", fontSize: "smaller" }}>{getBrowserID()}</div>
                 </div>
                 <div className="container-x" style={{ justifyContent: "flex-end", alignItems: "center", gap: "1em", margin: "0.75em" }}>
+                    <CircleQuestionMark size={38} onClick={() => window.open(readMeLink, "_blank")} className="icon"><title>How to Use?</title></CircleQuestionMark>
                     {!isInstalled && <Smartphone size={36} onClick={showPWAInstallPrompt} className="icon"><title>Install as PWA</title></Smartphone>}
                     <Settings size={40} onClick={() => navigate('/settings')} className="icon"><title>User Settings</title></Settings>
                 </div>

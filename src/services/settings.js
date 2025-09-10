@@ -1,3 +1,6 @@
+const BROWSER_ID_KEY = "baby-monitor-browser-id";
+const SETTINGS_KEY = "baby-monitor-settings";
+
 export const defaultSettings = {
     startWithFrontCamera: true,
     maxParentConnections: 3,
@@ -6,23 +9,23 @@ export const defaultSettings = {
 };
 
 export function getBrowserID() {
-    let browserID = JSON.parse(localStorage.getItem("baby-monitor-browser-id"));
+    let browserID = JSON.parse(localStorage.getItem(BROWSER_ID_KEY));
     if (!browserID) {
         browserID = Date.now();
-        localStorage.setItem("baby-monitor-browser-id", JSON.stringify(browserID));
+        localStorage.setItem(BROWSER_ID_KEY, JSON.stringify(browserID));
     }
     return browserID;
 }
 
 export function getSettings() {
-    let settings = JSON.parse(localStorage.getItem("baby-monitor-settings"));
+    let settings = JSON.parse(localStorage.getItem(SETTINGS_KEY));
     if (!settings) {
         settings = defaultSettings;
-        localStorage.setItem("baby-monitor-settings", JSON.stringify(settings));
+        localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
     }
     return settings;
 }
 
 export function setSettings(settings) {
-    if (typeof settings === "object") localStorage.setItem("baby-monitor-settings", JSON.stringify(settings));
+    if (typeof settings === "object") localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
 }

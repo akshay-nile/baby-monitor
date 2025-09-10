@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 
-export function usePWAInstaller(uniqueKey) {
-    if (typeof uniqueKey !== "string") uniqueKey = "app-name";
+export function usePWAInstaller(PWA_KEY) {
+    if (typeof uniqueKey !== "string") PWA_KEY = "app-name";
 
-    const [isPWA, setIsPWA] = useState(false);
+    const [isPWAInstalled, setIsPWAInstalled] = useState(false);
     const [installPrompt, setInstallPrompt] = useState(null);
 
     useEffect(() => {
@@ -12,10 +12,10 @@ export function usePWAInstaller(uniqueKey) {
                 let isInstalled = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
                 if ('getInstalledRelatedApps' in navigator) navigator.getInstalledRelatedApps().then(apps => {
                     isInstalled = apps.length > 0 || isInstalled;
-                    setIsPWA(isInstalled);
+                    setIsPWAInstalled(isInstalled);
                 });
-                isInstalled = !!localStorage.getItem(uniqueKey) || isInstalled;
-                setIsPWA(isInstalled);
+                isInstalled = !!localStorage.getItem(PWA_KEY) || isInstalled;
+                setIsPWAInstalled(isInstalled);
             } catch (error) { console.error(error); }
         };
 
@@ -23,10 +23,10 @@ export function usePWAInstaller(uniqueKey) {
             event.preventDefault();
             event.userChoice.then(choice => {
                 console.log("PWA installation is " + choice.outcome + "!");
-                if (choice.outcome === "accepted") localStorage.setItem(uniqueKey, true);
+                if (choice.outcome === "accepted") localStorage.setItem(PWA_KEY, choice.outcome);
             });
-            localStorage.removeItem(uniqueKey);
-            setIsPWA(false);
+            localStorage.removeItem(PWA_KEY);
+            setIsPWAInstalled(false);
             setInstallPrompt(event);
         }
 
@@ -39,7 +39,7 @@ export function usePWAInstaller(uniqueKey) {
             mediaQuery.removeEventListener("change", checkPWAInstallation);
             window.removeEventListener("beforeinstallprompt", captureBrowserPrompt);
         };
-    }, [uniqueKey]);
+    }, [PWA_KEY]);
 
-    return [isPWA, installPrompt];
+    return [isPWAInstalled, installPrompt];
 }
