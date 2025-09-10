@@ -1,9 +1,9 @@
 self.addEventListener("install", (event) => {
     event.waitUntil(caches.open("app-cache").then((cache) => {
         return cache.addAll([
-            "/",
-            "/manifest.json",
-            "/favicon.png"
+            "./index.html",
+            "./manifest.json",
+            "./favicon.png"
         ]);
     }));
 });
