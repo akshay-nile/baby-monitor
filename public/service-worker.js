@@ -31,7 +31,7 @@ self.addEventListener("activate", (event) => {
 });
 
 self.addEventListener("install", (event) => {
-    event.waitUntil(caches.open("app-cache")
+    event.waitUntil(caches.open(CACHE_KEY)
         .then((cache) => cache.addAll(PUBLIC_FILES)));
 });
 
