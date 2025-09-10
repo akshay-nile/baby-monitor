@@ -4,8 +4,8 @@ No app installs required — runs directly in your browser!
 
 ---
 
-## Version
-Current Release: **v1.0.1**
+## 🎬 Version
+Current Release: **v1.1.1**
 
 ---
 
