@@ -15,8 +15,12 @@ if ("serviceWorker" in navigator) {
       .then(() => {
         console.log("Service Worker Registered!");
         navigator.serviceWorker.addEventListener("message", (event) => {
-          if (event.data === "RELOAD") window.location.reload();
-          else console.log("Message from SW:", event.data);
+          if (event.data === "RELOAD") {
+            const accepted = confirm("New update has been applied!\nRefresh the app now?");
+            if (accepted) window.location.reload();
+            return;
+          }
+          console.log("Message from SW:", event.data);
         });
       })
       .catch((err) => console.error("Service Worker Error:", err));
