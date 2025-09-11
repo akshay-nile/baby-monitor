@@ -1,8 +1,8 @@
-import { useState, useEffect, useCallback, useRef } from "react";
-import { HashRouter, Routes, Route } from "react-router-dom";
-import SelectRole from "./components/SelectRole";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { HashRouter, Route, Routes } from "react-router-dom";
 import BabyDevice from "./components/BabyDevice";
 import ParentDevice from "./components/ParentDevice";
+import SelectRole from "./components/SelectRole";
 import Settings from "./components/Settings";
 
 function App() {
@@ -18,12 +18,12 @@ function App() {
 
   const showToast = useCallback((text) => {
     if (timeoutRef.current) {
-      setToast({ ...toast, visible: false });
+      setToast(prev => ({ ...prev, visible: false }));
       clearTimeout(timeoutRef.current);
     }
     setToast({ visible: true, text });
-    timeoutRef.current = setTimeout(() => setToast({ ...toast, visible: false }), 3000);
-  }, [toast]);
+    timeoutRef.current = setTimeout(() => setToast(prev => ({ ...prev, visible: false })), 3000);
+  }, []);
 
   return (<>
     <HashRouter>

@@ -5,7 +5,7 @@ No app installs required — runs directly in your browser!
 ---
 
 ## 🎬 Version
-Current Release: **v1.1.3**
+Current Release: **v1.1.4**
 
 ---
 
@@ -56,7 +56,7 @@ It sets up a **direct connection (P2P)** between one Baby Device (camera + mic) 
    - Tap the video screen to **mute/unmute** audio temporarily.
    - Click **"Disconnect"** to exit and reset the app.
 6. Ensure:
-   - Baby Device shows **"polling..."** before Parent requests.
+   - Baby Device shows **"+" symbol next to parent count** before Parent requests.
    - Baby Device’s browser tab stays **alive/awake** to prevent interruptions.
 
 ---

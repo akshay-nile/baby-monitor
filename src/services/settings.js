@@ -29,3 +29,19 @@ export function getSettings() {
 export function setSettings(settings) {
     if (typeof settings === "object") localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
 }
+
+export function isChanged(userSettings) {
+    const currSettings = getSettings();
+    for (let key in currSettings) {
+        if (currSettings[key] !== userSettings[key]) return true;
+    }
+    return false;
+}
+
+export function isValid(userSettings) {
+    const currSettings = getSettings();
+    for (let key in currSettings) {
+        if (typeof (currSettings[key]) !== typeof (userSettings[key])) return false;
+    }
+    return true;
+}

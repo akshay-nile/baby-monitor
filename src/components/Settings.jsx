@@ -1,6 +1,6 @@
 import { useCallback, useEffect } from "react";
 import useRefState from "../custom-hooks/useRefState";
-import { defaultSettings, getSettings, setSettings } from "../services/settings";
+import { defaultSettings, getSettings, isChanged, isValid, setSettings } from "../services/settings";
 
 function Settings({ showToast }) {
     const [userSettings, setUserSettings, getUserSettings] = useRefState(getSettings());
@@ -20,14 +20,18 @@ function Settings({ showToast }) {
     }
 
     const save = useCallback(() => {
-        if (!getUserSettings().maxParentConnections || !getUserSettings().pollingTimeout) {
-            showToast("Cannot save empty value!");
+        const settingsToSave = getUserSettings();
+        if (!isValid(settingsToSave)) {
+            showToast("Cannot save invalid settings!");
             return;
         }
-        setSettings(getUserSettings());
+        if (!isChanged(settingsToSave)) {
+            showToast("Settings not changed!");
+            return;
+        }
+        setSettings(settingsToSave);
         showToast("Settings saved!");
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    }, [getUserSettings, showToast]);
 
     useEffect(() => { return save; }, [save]);
 
