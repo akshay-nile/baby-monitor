@@ -11,9 +11,14 @@ createRoot(document.getElementById('root')).render(
 
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
-    navigator.serviceWorker
-      .register("./service-worker.js")
-      .then(() => console.log("Service Worker Registered!"))
+    navigator.serviceWorker.register("./service-worker.js")
+      .then(() => {
+        console.log("Service Worker Registered!");
+        navigator.serviceWorker.addEventListener("message", (event) => {
+          if (event.data === "RELOAD") window.location.reload();
+          else console.log("Message from SW:", event.data);
+        });
+      })
       .catch((err) => console.error("Service Worker Error:", err));
   });
 }

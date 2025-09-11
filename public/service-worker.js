@@ -2,6 +2,11 @@ const APP_CACHE = "baby-monitor-app-cache";
 const META_CACHE = "baby-monitor-meta-cache";
 const PUBLIC_FILES = ["./index.html", "./manifest.json", "./favicon.png"];
 
+async function postMessage(message) {
+    const clients = await self.clients.matchAll({ type: "window" });
+    for (const client of clients) client.postMessage(message);
+}
+
 async function storeOrLoadMetaCache(key, value) {
     try {
         const cache = await caches.open(META_CACHE);
@@ -40,14 +45,13 @@ async function isUpdateAvailable() {
 
 self.addEventListener("activate", (event) => {
     event.waitUntil((async () => {
+        await self.clients.claim();
         if (await isUpdateAvailable()) {
-            console.warn("New Update Detected!\nReplacing the old cache with new one");
             await caches.delete(APP_CACHE);
-
             const cache = await caches.open(APP_CACHE);
             await cache.addAll(PUBLIC_FILES);
+            await postMessage("RELOAD");
         }
-        await self.clients.claim();
     })());
 });
 
