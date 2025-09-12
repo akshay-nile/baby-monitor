@@ -10,19 +10,24 @@ createRoot(document.getElementById('root')).render(
 );
 
 if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
-    navigator.serviceWorker.register("./service-worker.js")
-      .then(() => {
-        console.log("Service Worker Registered!");
-        navigator.serviceWorker.addEventListener("message", (event) => {
-          if (event.data === "RELOAD") {
-            const accepted = confirm("New update has been applied!\nRefresh the app now?");
-            if (accepted) window.location.reload();
-            return;
-          }
-          console.log("Message from SW:", event.data);
-        });
-      })
-      .catch((err) => console.error("Service Worker Error:", err));
+  window.addEventListener("load", async () => {
+    try {
+      const registration = await navigator.serviceWorker.register("./service-worker.js");
+      await navigator.serviceWorker.ready;
+      console.log("Service Worker Registered!");
+
+      navigator.serviceWorker.addEventListener("message", (event) => {
+        if (event.data === "UPDATED") {
+          const accepted = confirm("New update has been applied!\nReload the app now?");
+          if (accepted) window.location.reload();
+          return;
+        }
+        console.log("Message From SW:", event.data);
+      });
+
+      const controller = navigator.serviceWorker.controller ?? registration.active;
+      controller?.postMessage("CHECK-UPDATE");
+    }
+    catch (err) { console.error("Service Worker Error:", err); }
   });
 }

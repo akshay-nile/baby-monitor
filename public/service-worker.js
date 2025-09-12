@@ -7,6 +7,14 @@ async function postMessage(message) {
     for (const client of clients) client.postMessage(message);
 }
 
+self.addEventListener("message", async (event) => {
+    if (event.data === "CHECK-UPDATE") {
+        await checkForUpdateAndReplaceAppCache();
+        return;
+    }
+    console.log("Message From Client:", event.data);
+});
+
 async function storeOrLoadMetaCache(key, value) {
     try {
         const cache = await caches.open(META_CACHE);
@@ -43,21 +51,21 @@ async function isUpdateAvailable() {
     }
 }
 
+async function checkForUpdateAndReplaceAppCache() {
+    if (await isUpdateAvailable()) {
+        await caches.delete(APP_CACHE);
+        const cache = await caches.open(APP_CACHE);
+        await cache.addAll(PUBLIC_FILES);
+        await postMessage("UPDATED");
+    }
+}
+
 self.addEventListener("activate", (event) => {
-    event.waitUntil((async () => {
-        await self.clients.claim();
-        if (await isUpdateAvailable()) {
-            await caches.delete(APP_CACHE);
-            const cache = await caches.open(APP_CACHE);
-            await cache.addAll(PUBLIC_FILES);
-            await postMessage("RELOAD");
-        }
-    })());
+    event.waitUntil((async () => await self.clients.claim())());
 });
 
 self.addEventListener("install", (event) => {
-    event.waitUntil(caches.open(APP_CACHE)
-        .then((cache) => cache.addAll(PUBLIC_FILES)));
+    event.waitUntil(caches.open(APP_CACHE).then((cache) => cache.addAll(PUBLIC_FILES)));
 });
 
 self.addEventListener("fetch", (event) => {
@@ -66,9 +74,7 @@ self.addEventListener("fetch", (event) => {
         if (cached) return cached;
 
         const response = await fetch(event.request);
-        if (event.request.url.includes("/static/")) {
-            cache.put(event.request, response.clone());
-        }
+        if (event.request.url.includes("/static/")) cache.put(event.request, response.clone());
         return response;
     }));
 });
