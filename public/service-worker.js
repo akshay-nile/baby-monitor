@@ -38,25 +38,26 @@ async function isUpdateAvailable() {
         const lastUpdateKey = "last-update";
         const lastUpdateVal = await storeOrLoadMetaCache(lastUpdateKey) ?? "0";
 
-        const response = await fetch("https://akshaynile.pythonanywhere.com/baby-monitor", {
+        const response = await fetch("https://akshaynile.pythonanywhere.com/projects/baby-monitor", {
             headers: { "X-Last-Update": lastUpdateVal }, cache: "no-store"
         });
         const data = await response.json();
 
         if (data.is_updated) await storeOrLoadMetaCache(lastUpdateKey, data.last_update);
-        return data.is_updated;
+        return [data.is_updated, lastUpdateVal > 0];
     } catch (err) {
         console.error("Error While Checking For Update:", err);
-        return false;
+        return [false, false];
     }
 }
 
 async function checkForUpdateAndReplaceAppCache() {
-    if (await isUpdateAvailable()) {
+    const [updateAvailable, shouldNotifyClient] = await isUpdateAvailable();
+    if (updateAvailable) {
         await caches.delete(APP_CACHE);
         const cache = await caches.open(APP_CACHE);
         await cache.addAll(PUBLIC_FILES);
-        await postMessage("UPDATED");
+        if (shouldNotifyClient) await postMessage("UPDATED");
     }
 }
 

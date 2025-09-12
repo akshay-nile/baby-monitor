@@ -56,7 +56,7 @@ AVAILABLE=$(powershell.exe -Command "('$RESPONSE' | ConvertFrom-Json).available 
 
 if [ "$OPERATION" == "success" ] && echo "$AVAILABLE" | grep -q "$PROJECT_NAME"; then
   echo "✅ Deployment Successful!"
-  echo "🌐 https://akshaynile.pythonanywhere.com/$PROJECT_NAME"
+  echo "🌐 https://akshaynile.pythonanywhere.com/projects/$PROJECT_NAME"
 
   # === STEP 5: Clean up dist folder ===
   echo "🧹 Removing the dist folder..."

@@ -27,7 +27,7 @@ It sets up a **direct connection (P2P)** between one Baby Device (camera + mic) 
 ## 🚀 How to Use
 
 ### Step 1: Open the App
-- Go to 👉 [https://akshaynile.pythonanywhere.com/baby-monitor](https://akshaynile.pythonanywhere.com/baby-monitor) on all devices.
+- Go to 👉 [https://akshaynile.pythonanywhere.com/projects/baby-monitor](https://akshaynile.pythonanywhere.com/projects/baby-monitor) on all devices.
 
 ---
 
