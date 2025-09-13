@@ -36,11 +36,11 @@ function SelectRole({ showToast }) {
                 </div>
 
                 <button onClick={() => navigate('/baby-device')} className="button">
-                    Use as Baby Device (Camera/Mic)
+                    Use as <strong>Baby Device</strong> (Camera/Mic)
                 </button>
 
                 <button onClick={() => navigate('/parent-device')} className="button">
-                    Use as Parent Device (Live Stream)
+                    Use as <strong>Parent Device</strong> (Live Stream)
                 </button>
             </div>
         </div>
