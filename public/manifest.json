@@ -1,7 +1,6 @@
 {
     "name": "Baby Monitor",
     "short_name": "Baby Monitor",
-    "appVersion": "1.1.4",
     "start_url": "./index.html",
     "display": "standalone",
     "background_color": "#000",
