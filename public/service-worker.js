@@ -75,7 +75,7 @@ self.addEventListener("fetch", (event) => {
         if (cached) return cached;
 
         const response = await fetch(event.request);
-        if (event.request.url.includes("/static/")) cache.put(event.request, response.clone());
+        if (event.request.url.includes("/baby-monitor/")) cache.put(event.request, response.clone());
         return response;
     }));
 });
