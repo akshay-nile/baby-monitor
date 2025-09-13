@@ -140,7 +140,7 @@ function ParentDevice({ showToast }) {
                     autoPlay playsInline className="video">
                 </video>
 
-                <button onClick={button.click} disabled={button.disabled} style={{ background: button.color }} className="button">
+                <button onClick={button.click} disabled={button.disabled} style={{ background: button.color, width: "auto" }} className="button">
                     {button.text}
                 </button>
             </div>

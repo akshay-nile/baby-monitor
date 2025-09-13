@@ -71,7 +71,7 @@ function Settings({ showToast }) {
                     onChange={e => setUserSettings({ ...getUserSettings(), restartPolling: e.target.checked })} />
             </div>
 
-            <div className="container-x" style={{ margin: "1em", padding: "1em" }}>
+            <div className="container-x" style={{ width: "100%", gap: "1em", marginTop: "1em" }}>
                 <button onClick={save} className="button">Save Settings</button>
                 <button onClick={reset} className="button">Restore Defaults</button>
             </div>

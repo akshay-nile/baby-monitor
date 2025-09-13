@@ -224,7 +224,7 @@ function BabyDevice({ showToast }) {
 
                 <video ref={videoRef} onClick={flipCamera} muted={isMuted} autoPlay playsInline className="video" />
 
-                <button onClick={button.click} disabled={button.disabled} style={{ background: button.color }} className="button">
+                <button onClick={button.click} disabled={button.disabled} style={{ background: button.color, width: "auto" }} className="button">
                     {button.text}
                 </button>
             </div>

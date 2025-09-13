@@ -31,17 +31,16 @@ function SelectRole({ showToast }) {
             </div>
 
             <div className="container-y middle">
-                <div className="text-title">
-                    Select a Role for this Device
+                <div className="text-title" style={{ marginBottom: "0.5em" }}>Select a Role for this Device</div>
+
+                <div className="container-y" style={{ width: "auto", gap: "3em" }}>
+                    <button onClick={() => navigate('/baby-device')} className="button">
+                        Use as <strong>Baby Device</strong> (Camera/Mic)
+                    </button>
+                    <button onClick={() => navigate('/parent-device')} className="button">
+                        Use as <strong>Parent Device</strong> (Live Stream)
+                    </button>
                 </div>
-
-                <button onClick={() => navigate('/baby-device')} className="button">
-                    Use as <strong>Baby Device</strong> (Camera/Mic)
-                </button>
-
-                <button onClick={() => navigate('/parent-device')} className="button">
-                    Use as <strong>Parent Device</strong> (Live Stream)
-                </button>
             </div>
         </div>
     );
