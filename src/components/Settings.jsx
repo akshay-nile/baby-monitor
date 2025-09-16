@@ -1,6 +1,7 @@
 import { useCallback, useEffect } from "react";
 import useRefState from "../custom-hooks/useRefState";
 import { defaultSettings, getSettings, isChanged, isValid, setSettings } from "../services/settings";
+import ToggleSwitch from "./ToggleSwitch";
 
 function Settings({ showToast }) {
     const [userSettings, setUserSettings, getUserSettings] = useRefState(getSettings());
@@ -41,16 +42,15 @@ function Settings({ showToast }) {
 
             <div className="container-x setting">
                 <label htmlFor="startWithFrontCamera" style={{ fontSize: "larger" }}>Start With Front Camera</label>
-                <input type="checkbox" id="startWithFrontCamera" required
-                    style={{ zoom: "2.5" }}
-                    checked={userSettings.startWithFrontCamera}
-                    onChange={e => setUserSettings({ ...getUserSettings(), startWithFrontCamera: e.target.checked })} />
+                <ToggleSwitch id="startWithFrontCamera"
+                    isChecked={userSettings.startWithFrontCamera}
+                    onChange={checked => setUserSettings({ ...getUserSettings(), startWithFrontCamera: checked })} />
             </div>
 
             <div className="container-x setting">
                 <label htmlFor="maxParentConnections" style={{ fontSize: "larger" }}>Max Parent Connections</label>
                 <input type="number" id="maxParentConnections" min="1" max="5" required
-                    style={{ padding: "0.25em", fontSize: "x-large", width: "3ch" }}
+                    style={{ padding: "0.25em", fontSize: "x-large", width: "3ch", background: "white", color: "black", marginRight: "0.2em" }}
                     value={userSettings.maxParentConnections}
                     onChange={e => validateParseAndUpdate(e.target, parseInt, "maxParentConnections")} />
             </div>
@@ -58,17 +58,16 @@ function Settings({ showToast }) {
             <div className="container-x setting">
                 <label htmlFor="pollingTimeout" style={{ fontSize: "larger" }}>Polling Timeout (minutes)</label>
                 <input type="number" id="pollingTimeout" min="1" max="15" required
-                    style={{ padding: "0.25em", fontSize: "x-large", width: "3ch" }}
+                    style={{ padding: "0.25em", fontSize: "x-large", width: "3ch", background: "white", color: "black", marginRight: "0.2em" }}
                     value={userSettings.pollingTimeout}
                     onChange={e => validateParseAndUpdate(e.target, parseInt, "pollingTimeout")} />
             </div>
 
             <div className="container-x setting">
                 <label htmlFor="restartPolling" style={{ fontSize: "larger" }}>Restart Polling</label>
-                <input type="checkbox" id="restartPolling" required
-                    style={{ zoom: "2.5" }}
-                    checked={userSettings.restartPolling}
-                    onChange={e => setUserSettings({ ...getUserSettings(), restartPolling: e.target.checked })} />
+                <ToggleSwitch id="restartPolling"
+                    isChecked={userSettings.restartPolling}
+                    onChange={checked => setUserSettings({ ...getUserSettings(), restartPolling: checked })} />
             </div>
 
             <div className="container-x" style={{ width: "100%", gap: "1em", marginTop: "1em" }}>
