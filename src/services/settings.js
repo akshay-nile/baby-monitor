@@ -32,9 +32,12 @@ export function setSettings(settings) {
     if (typeof settings === "object") localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
 }
 
-export function isChanged(userSettings) {
-    const currSettings = getSettings();
+export function isChanged(userSettings, currSettings = getSettings()) {
     for (let key in currSettings) {
+        if (typeof currSettings[key] === "object" && typeof userSettings[key] === "object") {
+            for (let val of currSettings[key]) if (!userSettings[key].includes(val)) return true;
+            continue;
+        }
         if (currSettings[key] !== userSettings[key]) return true;
     }
     return false;
