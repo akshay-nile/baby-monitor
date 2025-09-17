@@ -1,6 +1,6 @@
 import { useCallback, useEffect } from "react";
 import useRefState from "../custom-hooks/useRefState";
-import { defaultSettings, getSettings, isChanged, setSettings } from "../services/settings";
+import { getSettings, isChanged, resetSettings, setSettings } from "../services/settings";
 import ToggleSwitch from "./ToggleSwitch";
 import NumberInput from "./NumberInput";
 
@@ -8,9 +8,8 @@ function Settings({ showToast }) {
     const [userSettings, setUserSettings, getUserSettings] = useRefState(getSettings());
 
     function reset() {
-        const newSettings = { ...defaultSettings, trustedParents: getUserSettings().trustedParents };
-        setUserSettings(newSettings);
-        setSettings(newSettings);
+        resetSettings();
+        setUserSettings(getSettings());
         showToast("Restored default settings!");
     }
 

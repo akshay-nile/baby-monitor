@@ -54,8 +54,7 @@ function BabyDevice({ showToast }) {
     }
 
     function isTrustedParent(parentID) {
-        if (!settingsRef.current.trustedParents) settingsRef.current.trustedParents = [];
-        else if (settingsRef.current.trustedParents.includes(parentID)) return true;
+        if (settingsRef.current.trustedParents.includes(parentID)) return true;
         const accepted = confirm(`Unknown parent ${parentID} wants to connect!\nAccept connection and mark as trusted parent?`);
         if (!accepted) return false;
         settingsRef.current.trustedParents.push(parentID);

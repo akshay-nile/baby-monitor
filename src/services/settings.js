@@ -39,3 +39,7 @@ export function isChanged(userSettings) {
     }
     return false;
 }
+
+export function resetSettings() {
+    setSettings({ ...defaultSettings, trustedParents: getSettings().trustedParents });
+}
