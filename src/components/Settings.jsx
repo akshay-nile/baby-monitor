@@ -64,6 +64,16 @@ function Settings({ showToast }) {
                     onChange={checked => setUserSettings({ ...getUserSettings(), usePushToTalk: checked })} />
             </div>
 
+            <div className="container-x setting">
+                <label style={{ fontSize: "large" }}>
+                    Trusted Parent Devices <strong>({getUserSettings().trustedParents.length})</strong>
+                </label>
+                <input type="button" className="button"
+                    style={{ width: "auto", height: "40px", margin: "0", padding: "0px 1em" }}
+                    value="Forget All" disabled={getUserSettings().trustedParents.length === 0}
+                    onClick={() => setUserSettings({ ...getUserSettings(), trustedParents: [] })} />
+            </div>
+
             <div className="container-x" style={{ width: "100%", gap: "1em", marginTop: "1.75em" }}>
                 <button onClick={save} className="button">Save Settings</button>
                 <button onClick={reset} className="button">Restore Defaults</button>
