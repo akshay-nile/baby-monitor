@@ -57,6 +57,7 @@ function BabyDevice({ showToast }) {
         if (settingsRef.current.trustedParents.includes(parentID)) return true;
         const accepted = confirm(`Unknown parent ${parentID} wants to connect!\nAccept connection and mark as trusted parent?`);
         if (!accepted) return false;
+        if (!settingsRef.current.trustedParents) settingsRef.current.trustedParents = [];
         settingsRef.current.trustedParents.push(parentID);
         setSettings(settingsRef.current);
         return true;
