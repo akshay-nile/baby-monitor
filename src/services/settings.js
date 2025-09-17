@@ -47,11 +47,11 @@ export function resetSettings() {
     setSettings({ ...defaultSettings, trustedParents: getSettings().trustedParents });
 }
 
+const settings = getSettings();
 for (let key in defaultSettings) {
-    const settings = getSettings();
     if (!(key in settings)) {
         setSettings(defaultSettings);
-        console.warn(`Missing Key (${key}): Default settings restored!`);
+        console.warn(`Missing Key [${key}]: Default settings restored!`);
         break;
     }
 }
