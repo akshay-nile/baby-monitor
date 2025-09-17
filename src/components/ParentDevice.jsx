@@ -75,7 +75,7 @@ function ParentDevice({ showToast }) {
     function pushToTalk(isPushed) {
         if (!videoRef.current.srcObject) return;
         if (!getSettings().usePushToTalk) {
-            showToast("Push-To-Talk is disabled!");
+            if (isPushed) showToast("Push-To-Talk is disabled!");
             return;
         }
         setIsMuted(isPushed);

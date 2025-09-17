@@ -15,10 +15,18 @@ function NumberInput({ value, min, max, onChange, id }) {
 
     return (
         <div style={container}>
-            <button style={{ ...button, borderRadius: "20px 0px 0px 20px" }} className="inc-dec-btn"
+            <button style={{
+                borderRadius: "20px 0px 0px 20px",
+                background: number <= min ? "#ff5b00" : "#007bff"
+            }}
+                className="inc-dec-btn"
                 onClick={() => changeValueBy(-1)}>‒</button>
             <input style={input} type="text" value={number} id={id} disabled readOnly />
-            <button style={{ ...button, borderRadius: "0px 20px 20px 0px" }} className="inc-dec-btn"
+            <button style={{
+                borderRadius: "0px 20px 20px 0px",
+                background: number >= max ? "#ff5b00" : "#007bff"
+            }}
+                className="inc-dec-btn"
                 onClick={() => changeValueBy(+1)}>+</button>
         </div >
     );
@@ -29,12 +37,6 @@ export default NumberInput;
 const container = {
     display: "flex", justifyContent: "center", alignItems: "center",
     width: "auto", height: "40px",
-};
-
-const button = {
-    width: "35px", height: "40px",
-    margin: "0", padding: "0",
-    border: "none", fontSize: "28px"
 };
 
 const input = {

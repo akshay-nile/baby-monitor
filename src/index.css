@@ -57,7 +57,12 @@ body {
 }
 
 .inc-dec-btn {
-    background: #007bff;
+    width: 35px;
+    height: 40px;
+    margin: 0;
+    padding: 0;
+    border: none;
+    font-size: 28px;
     color: white;
 }
 
