@@ -1,6 +1,5 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { resetSettings } from './services/settings.js';
 import App from './App.jsx';
 import './index.css';
 
@@ -19,7 +18,6 @@ if ("serviceWorker" in navigator) {
 
       navigator.serviceWorker.addEventListener("message", (event) => {
         if (event.data === "UPDATED") {
-          resetSettings();
           const accepted = confirm("New update has been applied!\nReload the app now?");
           if (accepted) window.location.reload();
           return;
