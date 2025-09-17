@@ -2,6 +2,7 @@ import { Fullscreen, Mic, MicOff, Video, VideoOff, Volume2, VolumeOff } from "lu
 import { useCallback, useEffect, useRef, useState } from "react";
 import { attachDataChannel, getNewPC, loadSDP, sendMessage, storeSDP, waitForIceGatheringCompletion } from "../services/connex";
 import { audioConfigs } from "../services/media";
+import { getSettings } from "../services/settings";
 
 function ParentDevice({ showToast }) {
     const pcRef = useRef(null);
@@ -73,6 +74,10 @@ function ParentDevice({ showToast }) {
 
     function pushToTalk(isPushed) {
         if (!videoRef.current.srcObject) return;
+        if (!getSettings().usePushToTalk) {
+            showToast("Push-To-Talk is disabled!");
+            return;
+        }
         setIsMuted(isPushed);
         micRef.current.track.enabled = isPushed;
         sendMessage(isPushed ? "UNMUTE" : "MUTE", pcRef.current);

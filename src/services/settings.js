@@ -5,7 +5,8 @@ export const defaultSettings = {
     startWithFrontCamera: true,
     maxParentConnections: 3,
     pollingTimeout: 5,
-    restartPolling: true
+    restartPolling: true,
+    usePushToTalk: true
 };
 
 export function getBrowserID() {
@@ -36,12 +37,4 @@ export function isChanged(userSettings) {
         if (currSettings[key] !== userSettings[key]) return true;
     }
     return false;
-}
-
-export function isValid(userSettings) {
-    const currSettings = getSettings();
-    for (let key in currSettings) {
-        if (typeof (currSettings[key]) !== typeof (userSettings[key])) return false;
-    }
-    return true;
 }

@@ -1,22 +1,24 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
-function ToggleSwitch({ isChecked, onChange, id }) {
-    const [checked, setChecked] = useState(isChecked);
+function ToggleSwitch({ checked, onChange, id }) {
+    const [isChecked, setIsChecked] = useState(checked);
+
+    useEffect(() => setIsChecked(checked), [checked]);
 
     return (
         <div style={{
             ...outerDiv,
-            border: "2px solid " + (checked ? "#007bff" : "#ff5b00")
+            border: "2px solid " + (isChecked ? "#007bff" : "#ff5b00")
         }}
             onClick={() => {
-                const newChecked = !checked;
+                const newChecked = !isChecked;
                 onChange(newChecked);
-                setChecked(newChecked);
+                setIsChecked(newChecked);
             }}>
             <div style={{
                 ...innerDiv,
-                transform: `translateX(${checked ? 30 : 0}px)`,
-                background: checked ? "#007bff" : "#ff5b00"
+                transform: `translateX(${isChecked ? 30 : 0}px)`,
+                background: isChecked ? "#007bff" : "#ff5b00"
             }}></div>
             <input type="checkbox" id={id} style={fakeInputStyle} />
         </div>

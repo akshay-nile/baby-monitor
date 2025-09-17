@@ -1,18 +1,11 @@
 import { useCallback, useEffect } from "react";
 import useRefState from "../custom-hooks/useRefState";
-import { defaultSettings, getSettings, isChanged, isValid, setSettings } from "../services/settings";
+import { defaultSettings, getSettings, isChanged, setSettings } from "../services/settings";
 import ToggleSwitch from "./ToggleSwitch";
+import NumberInput from "./NumberInput";
 
 function Settings({ showToast }) {
     const [userSettings, setUserSettings, getUserSettings] = useRefState(getSettings());
-
-    function validateParseAndUpdate(target, parser, key) {
-        if (target.value && !target.validity.valid) {
-            showToast("Max allowed value is " + target.max);
-            return;
-        }
-        setUserSettings(({ ...getUserSettings(), [key]: target.value ? parser(target.value) : target.value }));
-    }
 
     function reset() {
         setUserSettings(defaultSettings);
@@ -22,10 +15,6 @@ function Settings({ showToast }) {
 
     const save = useCallback(() => {
         const settingsToSave = getUserSettings();
-        if (!isValid(settingsToSave)) {
-            showToast("Cannot save invalid settings!");
-            return;
-        }
         if (!isChanged(settingsToSave)) {
             showToast("Settings not changed!");
             return;
@@ -37,40 +26,45 @@ function Settings({ showToast }) {
     useEffect(() => { return save; }, [save]);
 
     return (
-        <div className="container-y" style={{ margin: "1em", padding: "0.5em", height: "90vh", justifyContent: "center", alignItems: "center" }}>
-            <div className="text-title" style={{ marginBottom: "1em" }}>User Settings</div>
+        <div className="container-y" style={{ margin: "0em 0.5em", padding: "0em", height: "90vh", justifyContent: "center", alignItems: "center" }}>
+            <div className="text-title" style={{ marginBottom: "1.5em" }}>User Settings</div>
 
             <div className="container-x setting">
-                <label htmlFor="startWithFrontCamera" style={{ fontSize: "larger" }}>Start With Front Camera</label>
+                <label htmlFor="startWithFrontCamera" style={{ fontSize: "large" }}>Start With Front Camera</label>
                 <ToggleSwitch id="startWithFrontCamera"
-                    isChecked={userSettings.startWithFrontCamera}
+                    checked={userSettings.startWithFrontCamera}
                     onChange={checked => setUserSettings({ ...getUserSettings(), startWithFrontCamera: checked })} />
             </div>
 
             <div className="container-x setting">
-                <label htmlFor="maxParentConnections" style={{ fontSize: "larger" }}>Max Parent Connections</label>
-                <input type="number" id="maxParentConnections" min="1" max="5" required
-                    style={{ padding: "0.25em", fontSize: "x-large", width: "3ch", background: "white", color: "black", marginRight: "0.2em" }}
+                <label htmlFor="maxParentConnections" style={{ fontSize: "large" }}>Max Parent Connections</label>
+                <NumberInput id="maxParentConnections" min={1} max={5}
                     value={userSettings.maxParentConnections}
-                    onChange={e => validateParseAndUpdate(e.target, parseInt, "maxParentConnections")} />
+                    onChange={value => setUserSettings({ ...getUserSettings(), maxParentConnections: value })} />
             </div>
 
             <div className="container-x setting">
-                <label htmlFor="pollingTimeout" style={{ fontSize: "larger" }}>Polling Timeout (minutes)</label>
-                <input type="number" id="pollingTimeout" min="1" max="15" required
-                    style={{ padding: "0.25em", fontSize: "x-large", width: "3ch", background: "white", color: "black", marginRight: "0.2em" }}
+                <label htmlFor="pollingTimeout" style={{ fontSize: "large" }}>Polling Timeout (minutes)</label>
+                <NumberInput id="pollingTimeout" min={1} max={15}
                     value={userSettings.pollingTimeout}
-                    onChange={e => validateParseAndUpdate(e.target, parseInt, "pollingTimeout")} />
+                    onChange={value => setUserSettings({ ...getUserSettings(), pollingTimeout: value })} />
             </div>
 
             <div className="container-x setting">
-                <label htmlFor="restartPolling" style={{ fontSize: "larger" }}>Restart Polling</label>
+                <label htmlFor="restartPolling" style={{ fontSize: "large" }}>Restart Polling Automatically</label>
                 <ToggleSwitch id="restartPolling"
-                    isChecked={userSettings.restartPolling}
+                    checked={userSettings.restartPolling}
                     onChange={checked => setUserSettings({ ...getUserSettings(), restartPolling: checked })} />
             </div>
 
-            <div className="container-x" style={{ width: "100%", gap: "1em", marginTop: "1em" }}>
+            <div className="container-x setting">
+                <label htmlFor="usePushToTalk" style={{ fontSize: "large" }}>Use Push-To-Talk Feature</label>
+                <ToggleSwitch id="usePushToTalk"
+                    checked={userSettings.usePushToTalk}
+                    onChange={checked => setUserSettings({ ...getUserSettings(), usePushToTalk: checked })} />
+            </div>
+
+            <div className="container-x" style={{ width: "100%", gap: "1em", marginTop: "1.75em" }}>
                 <button onClick={save} className="button">Save Settings</button>
                 <button onClick={reset} className="button">Restore Defaults</button>
             </div>

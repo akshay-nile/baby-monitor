@@ -56,7 +56,13 @@ body {
     cursor: pointer;
 }
 
-.button:hover {
+.inc-dec-btn {
+    background: #007bff;
+    color: white;
+}
+
+.button:hover,
+.inc-dec-btn:hover {
     filter: brightness(80%);
     transition: filter 0.25s;
 }
@@ -89,8 +95,8 @@ body {
 
 .setting {
     align-items: center;
-    margin: 1em 2em;
-    padding: 1em;
+    margin: 1.5em 0em;
+    padding: 0em;
 }
 
 .no-select {
