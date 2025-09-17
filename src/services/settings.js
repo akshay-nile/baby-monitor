@@ -6,7 +6,8 @@ export const defaultSettings = {
     maxParentConnections: 3,
     pollingTimeout: 5,
     restartPolling: true,
-    usePushToTalk: true
+    usePushToTalk: true,
+    trustedParents: []
 };
 
 export function getBrowserID() {

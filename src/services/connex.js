@@ -1,5 +1,3 @@
-import { getBrowserID } from './settings';
-
 const baseURL = "https://akshaynile.pythonanywhere.com";
 const headers = { "Content-Type": "application/json" };
 
@@ -39,8 +37,6 @@ export function attachDataChannel(pc, dataChannel, onMessage) {
         pc.ondatachannel = event => event.channel.onopen = () => {
             pc.dataChannel = event.channel;
             pc.dataChannel.onmessage = (event) => onMessage(event.data, pc);
-            pc.parentID = Date.now() + getBrowserID();
-            pc.dataChannel.send("PARENT-ID: " + pc.parentID);
         };
     }
 }
@@ -68,12 +64,16 @@ export async function createAndStoreOfferWhilePolling(pc, isPolling = () => fals
     if (!isPolling()) closeAllPCsAndRevokeSDP([pc]);
 }
 
-export async function loadAndApplyAnswerWhilePolling(pc, isPolling = () => false) {
+export async function loadAndApplyAnswerWhilePolling(pc, isPolling = () => false, isTrustedParent) {
     while (isPolling()) {
         await new Promise(resolve => setTimeout(resolve, 5000));
         const answer = await loadSDP("answer");
         if (answer?.type !== "answer") continue;
-        await pc.setRemoteDescription(answer);
+        if (!isTrustedParent(answer.parentID)) {
+            await storeSDP(pc.localDescription);
+            continue;
+        } else pc.parentID = answer.parentID;
+        await pc.setRemoteDescription(answer.sdp);
         break;
     }
     if (!pc.remoteDescription) closeAllPCsAndRevokeSDP([pc]);

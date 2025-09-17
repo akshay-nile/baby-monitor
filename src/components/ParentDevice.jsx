@@ -2,11 +2,12 @@ import { Fullscreen, Mic, MicOff, Video, VideoOff, Volume2, VolumeOff } from "lu
 import { useCallback, useEffect, useRef, useState } from "react";
 import { attachDataChannel, getNewPC, loadSDP, sendMessage, storeSDP, waitForIceGatheringCompletion } from "../services/connex";
 import { audioConfigs } from "../services/media";
-import { getSettings } from "../services/settings";
+import { getBrowserID, getSettings } from "../services/settings";
 
 function ParentDevice({ showToast }) {
     const pcRef = useRef(null);
     const videoRef = useRef(null);
+    const settingsRef = useRef(getSettings());
     const micRef = useRef({ stream: null, track: null });
 
     const [button, setButton] = useState({ text: "Request Connection", color: "#007bff", disabled: false, click: requestConnection });
@@ -15,8 +16,10 @@ function ParentDevice({ showToast }) {
 
     async function requestConnection() {
         setButton({ text: "Requesting...", disabled: true });
-        if (!micRef.current.stream) micRef.current.stream = await navigator.mediaDevices.getUserMedia({ audio: audioConfigs });
-        if (!micRef.current.track) micRef.current.track = micRef.current.stream.getAudioTracks()[0];
+        if (settingsRef.current.usePushToTalk && !micRef.current.stream) {
+            micRef.current.stream = await navigator.mediaDevices.getUserMedia({ audio: audioConfigs });
+            micRef.current.track = micRef.current.stream.getAudioTracks()[0];
+        }
         if (!pcRef.current) setupPeerConnectionRef();
         await loadOfferAndStoreAnswer();
     }
@@ -25,7 +28,7 @@ function ParentDevice({ showToast }) {
         if (pcRef.current?.connectionState === "connected") return;
         pcRef.current = getNewPC({ onConnect, onDisconnect, onTrack, stream: micRef.current.stream });
         attachDataChannel(pcRef.current, null, onMessage);
-        micRef.current.track.enabled = false;
+        if (micRef.current.track) micRef.current.track.enabled = false;
     }
 
     async function loadOfferAndStoreAnswer() {
@@ -34,7 +37,11 @@ function ParentDevice({ showToast }) {
             await pcRef.current.setRemoteDescription(offer);
             await pcRef.current.setLocalDescription(await pcRef.current.createAnswer());
             await waitForIceGatheringCompletion(pcRef.current);
-            const response = await storeSDP(pcRef.current.localDescription);
+            const response = await storeSDP({
+                type: "answer",
+                parentID: getBrowserID(),
+                sdp: pcRef.current.localDescription
+            });
             if (response?.status === "answer-stored") setButton({ text: "Connecting...", disabled: true });
             else onDisconnect("Connection request failed!");
         } else onDisconnect("No baby device online!");
@@ -74,7 +81,7 @@ function ParentDevice({ showToast }) {
 
     function pushToTalk(isPushed) {
         if (!videoRef.current.srcObject) return;
-        if (!getSettings().usePushToTalk) {
+        if (!settingsRef.current.usePushToTalk) {
             if (isPushed) showToast("Push-To-Talk is disabled!");
             return;
         }

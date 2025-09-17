@@ -5,7 +5,7 @@ No app installs required — runs directly in your browser!
 ---
 
 ## 🎬 Version
-Current Release: **v1.1.5**
+Current Release: **v1.2.5**
 
 ---
 
@@ -48,12 +48,16 @@ It sets up a **direct connection (P2P)** between one Baby Device (camera + mic) 
 ### Step 3: Setup Parent Device(s)
 1. On each Parent Device, click **"Use as Parent Device"**.
 2. Click **"Request Connection"** → this registers the connection with the server.
-3. The button will show **"Connecting..."**. Wait at least **5 seconds** for Baby Device to accept.
+3. The button will show **"Connecting..."**. 
+3.1 => Wait at least **5 seconds** for the connection request to be recieved by the Baby Device.
+3.2 => Baby device is shown a conformation dialog to accept the request and remember the Parent ID.
+3.3 => If request is not accepted the parent device will stuck at **"Connecting..."** and baby device will continue polling for other parent devices.
 4. Once connected:
    - 🎥 Live audio/video feed from Baby Device appears.
    - Button label changes to **"Disconnect"**.
 5. Extra controls:
    - Tap the video screen to **mute/unmute** audio temporarily.
+   - Press and hold the video screen to use Push-To-Talk feature
    - Click **"Disconnect"** to exit and reset the app.
 6. Ensure:
    - Baby Device shows **"+" symbol next to parent count** before Parent requests.

@@ -8,8 +8,9 @@ function Settings({ showToast }) {
     const [userSettings, setUserSettings, getUserSettings] = useRefState(getSettings());
 
     function reset() {
-        setUserSettings(defaultSettings);
-        setSettings(defaultSettings);
+        const newSettings = { ...defaultSettings, trustedParents: getUserSettings().trustedParents };
+        setUserSettings(newSettings);
+        setSettings(newSettings);
         showToast("Restored default settings!");
     }
 

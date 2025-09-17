@@ -2,7 +2,7 @@ import { Ban, Camera, CameraOff, Mic, MicOff, Users, Volume2, VolumeOff } from "
 import { useCallback, useEffect, useRef, useState } from "react";
 import { attachDataChannel, createAndStoreOfferWhilePolling, closeAllPCsAndRevokeSDP, getNewPC, sendMessage, loadAndApplyAnswerWhilePolling } from "../services/connex";
 import { audioConfigs } from "../services/media";
-import { getSettings } from "../services/settings";
+import { getSettings, setSettings } from "../services/settings";
 import useRefState from "../custom-hooks/useRefState";
 
 function BabyDevice({ showToast }) {
@@ -49,8 +49,17 @@ function BabyDevice({ showToast }) {
             pcRef.current = getNewPC({ onConnect, onDisconnect, onTrack, stream: localStreamRef.current });
             attachDataChannel(pcRef.current, pcRef.current.createDataChannel("SIGNAL"), onMessage);
             await createAndStoreOfferWhilePolling(pcRef.current, getPolling);
-            await loadAndApplyAnswerWhilePolling(pcRef.current, getPolling);
+            await loadAndApplyAnswerWhilePolling(pcRef.current, getPolling, isTrustedParent);
         }
+    }
+
+    function isTrustedParent(parentID) {
+        if (settingsRef.current.trustedParents.includes(parentID)) return true;
+        const accepted = confirm(`Unknown parent ${parentID} wants to connect!\nAccept connection and mark as trusted parent?`);
+        if (!accepted) return false;
+        settingsRef.current.trustedParents.push(parentID);
+        setSettings(settingsRef.current);
+        return true;
     }
 
     function onConnect(pc) {
@@ -88,11 +97,6 @@ function BabyDevice({ showToast }) {
             const classList = videoRef.current.classList;
             isPushed ? classList.remove("border-glow") : classList.add("border-glow");
             setIsMuted(isPushed);
-            return;
-        }
-        if (message.startsWith("PARENT-ID:")) {
-            sender.parentID = message.split(":")[1].trim();
-            onConnect(sender);
             return;
         }
         if (message === "DISCONNECT") {
