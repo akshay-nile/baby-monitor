@@ -1,5 +1,6 @@
-const APP_CACHE = "baby-monitor-app-cache";
-const META_CACHE = "baby-monitor-meta-cache";
+const APP_NAME = "baby-monitor";
+const APP_CACHE = APP_NAME + "-app-cache";
+const META_CACHE = APP_NAME + "-meta-cache";
 const PUBLIC_FILES = ["./index.html", "./manifest.json", "./favicon.png"];
 
 async function postMessage(message) {
@@ -18,7 +19,7 @@ self.addEventListener("message", async (event) => {
 async function storeOrLoadMetaCache(key, value) {
     try {
         const cache = await caches.open(META_CACHE);
-        const request = new Request(`https://local.meta.cache/${key}`);
+        const request = new Request(`https://${APP_NAME}.meta.cache/${key}`);
 
         if (value === undefined) {
             const response = await cache.match(request);
@@ -38,7 +39,7 @@ async function isUpdateAvailable() {
         const lastUpdateKey = "last-update";
         const lastUpdateVal = await storeOrLoadMetaCache(lastUpdateKey) ?? "0";
 
-        const response = await fetch("https://akshaynile.pythonanywhere.com/projects/baby-monitor", {
+        const response = await fetch(`https://akshaynile.pythonanywhere.com/projects/${APP_NAME}`, {
             headers: { "X-Last-Update": lastUpdateVal }, cache: "no-store"
         });
         const data = await response.json();
@@ -75,7 +76,7 @@ self.addEventListener("fetch", (event) => {
         if (cached) return cached;
 
         const response = await fetch(event.request);
-        if (event.request.url.includes("/baby-monitor/")) cache.put(event.request, response.clone());
+        if (event.request.url.includes(`/${APP_NAME}/`)) cache.put(event.request, response.clone());
         return response;
     }));
 });
