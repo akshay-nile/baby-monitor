@@ -16,14 +16,14 @@ function NumberInput({ value, min, max, onChange, id }) {
     return (
         <div style={container}>
             <button style={{
-                borderRadius: "20px 0px 0px 20px",
+                borderRadius: "8px 0px 0px 8px",
                 background: number <= min ? "#ff5b00" : "#007bff"
             }}
                 className="inc-dec-btn"
                 onClick={() => changeValueBy(-1)}>‒</button>
             <input style={input} type="text" value={number} id={id} disabled readOnly />
             <button style={{
-                borderRadius: "0px 20px 20px 0px",
+                borderRadius: "0px 8px 8px 0px",
                 background: number >= max ? "#ff5b00" : "#007bff"
             }}
                 className="inc-dec-btn"
