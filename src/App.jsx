@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { HashRouter, Route, Routes } from "react-router-dom";
 import BabyDevice from "./components/BabyDevice";
 import ParentDevice from "./components/ParentDevice";
 import SelectRole from "./components/SelectRole";
@@ -26,14 +26,14 @@ function App() {
   }, []);
 
   return (<>
-    <BrowserRouter basename={window.location.pathname}>
+    <HashRouter>
       <Routes>
         <Route path="/" element={<SelectRole showToast={showToast} />} />
         <Route path="/settings" element={<Settings showToast={showToast} />} />
         <Route path="/baby-device" element={<BabyDevice showToast={showToast} />} />
         <Route path="/parent-device" element={<ParentDevice showToast={showToast} />} />
       </Routes>
-    </BrowserRouter>
+    </HashRouter>
     {toast.visible && <div className="toast no-select">{toast.text}</div>}
   </>);
 }
