@@ -9,7 +9,7 @@ createRoot(document.getElementById('root')).render(
   </StrictMode>
 );
 
-if ("serviceWorker" in navigator) {
+if ("serviceWorker" in navigator && window.location.href.startsWith('https')) {
   window.addEventListener("load", async () => {
     try {
       const registration = await navigator.serviceWorker.register("./service-worker.js");
