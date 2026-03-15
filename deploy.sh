@@ -15,7 +15,7 @@ set -e
 # === CONFIGURATION ===
 DIST_DIR="./dist"
 ZIP_FILE="dist.zip"
-DEPLOY_URL="https://akshaynile.pythonanywhere.com/deploy"
+BASE_URL="http://localhost:5000"
 PROJECT_NAME="$1"
 
 # === Check if project name is available ===
@@ -51,7 +51,7 @@ bestzip "$DIST_DIR/$ZIP_FILE" "$DIST_DIR/*"
 # === STEP 3: Upload to server ===
 echo "📤 Uploading dist.zip file..."
 HARDWARE=$(powershell.exe -Command "(Get-CimInstance Win32_ComputerSystemProduct).UUID" | tr -d '\r')
-RESPONSE=$(curl -s -X "POST" -H "X-Hardware: $HARDWARE" -F "dist=@$DIST_DIR/$ZIP_FILE" "$DEPLOY_URL/$PROJECT_NAME")
+RESPONSE=$(curl -s -X "POST" -H "X-Hardware: $HARDWARE" -F "dist=@$DIST_DIR/$ZIP_FILE" "$BASE_URL/deploy/$PROJECT_NAME")
 
 # === STEP 4: Verify response status ===
 echo "🔍 Verifying operation status..."
@@ -59,14 +59,14 @@ OPERATION=$(powershell.exe -Command "('$RESPONSE' | ConvertFrom-Json).operation"
 echo "   operation: $OPERATION"
 
 # === STEP 5: Verify project available ===
-echo "🔍 Verifying project available..."
-RESPONSE=$(curl -s "$DEPLOY_URL")
+echo "🔍 Verifying project availability..."
+RESPONSE=$(curl -s "$BASE_URL/deploy")
 AVAILABLE=$(powershell.exe -Command "('$RESPONSE' | ConvertFrom-Json).available -join ', '")
 echo "   available: [$AVAILABLE]"
 
 if [ "$OPERATION" == "success" ] && echo "$AVAILABLE" | grep -q "$PROJECT_NAME"; then
   echo "✅ Deployment Successful !"
-  echo "🌐 https://akshaynile.pythonanywhere.com/projects/$PROJECT_NAME"
+  echo "🌐 $BASE_URL/projects/$PROJECT_NAME"
 
   # === STEP 6: Clean up dist folder ===
   echo "🧹 Removing the dist folder..."
