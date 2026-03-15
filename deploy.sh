@@ -15,7 +15,7 @@ set -e
 # === CONFIGURATION ===
 DIST_DIR="./dist"
 ZIP_FILE="dist.zip"
-BASE_URL="http://localhost:5000"
+BASE_URL="https://akshaynile.pythonanywhere.com"
 PROJECT_NAME="$1"
 
 # === Check if project name is available ===
@@ -25,7 +25,7 @@ if [ -z "$1" ]; then
   if [ -z "$PROJECT_NAME" ]; then
     exit 1
   fi
-  echo "✅ Got project name from package.json"
+  echo "✅ Using project name from package.json"
 fi
 
 echo "🚀 Starting project deployment: /$PROJECT_NAME"
