@@ -1,5 +1,16 @@
-import { useEffect, useState } from 'react';
-import type { BeforeInstallPromptEvent } from '../services/models';
+import { useCallback, useEffect, useState } from 'react';
+
+// Extend Navigator for iOS PWA detection
+interface Navigator {
+    standalone?: boolean;
+}
+
+// Declare BeforeInstallPromptEvent 
+interface BeforeInstallPromptEvent extends Event {
+    readonly platforms: string[];
+    readonly userChoice: Promise<{ outcome: 'accepted' | 'dismissed'; platform: string }>;
+    prompt(): Promise<void>;
+}
 
 // Add a property to window to store the event
 declare global {
@@ -8,14 +19,13 @@ declare global {
     }
 }
 
-// Extend Navigator for iOS PWA detection
-interface Navigator {
-    standalone?: boolean;
-}
-
-export default function usePWAInstaller(PWA_KEY = 'app-name') {
+export default function usePWAInstaller(PWA_KEY = 'app-name'): [boolean, () => void] {
     const [isPWAInstalled, setIsPWAInstalled] = useState<boolean>(false);
     const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+
+    const showPWAInstallPrompt = useCallback(() => {
+        if (installPrompt !== null) installPrompt.prompt();
+    }, [installPrompt]);
 
     useEffect(() => {
         function checkPWAInstallation() {
@@ -48,5 +58,5 @@ export default function usePWAInstaller(PWA_KEY = 'app-name') {
         };
     }, [PWA_KEY]);
 
-    return [isPWAInstalled, installPrompt];
+    return [isPWAInstalled, showPWAInstallPrompt];
 }

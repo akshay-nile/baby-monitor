@@ -1,24 +1,12 @@
-import { Baby, CircleQuestionMark, FileDown, Settings, Users } from 'lucide-react';
+import { Baby, CircleQuestionMark, Download, Settings, Users } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import usePWAInstaller from '../hooks/usePWAInstaller';
-import type { BeforeInstallPromptEvent } from '../services/models';
 import { browserID } from '../services/settings';
 
 function SelectDeviceRole() {
     const navigate = useNavigate();
-    const [isInstalled, installPrompt] = usePWAInstaller('baby-monitor-pwa');
-
-    function showPWAInstallPrompt() {
-        if (installPrompt == null) {
-            // showToast("Not approved by the browser yet!");
-            return;
-        }
-        (installPrompt as BeforeInstallPromptEvent).prompt();
-    }
-
-    function goToGithubPage() {
-        window.location.href = 'https://github.com/akshay-nile/baby-monitor/blob/main/README.md';
-    }
+    const [isPWAInstalled, showPWAInstallPrompt] = usePWAInstaller('baby-monitor-pwa');
+    const gotoGitHubPage = () => window.location.href = 'https://github.com/akshay-nile/baby-monitor/blob/main/README.md';
 
     return (
         <div className={styles.container}>
@@ -29,8 +17,8 @@ function SelectDeviceRole() {
                 </div>
 
                 <div className="flex gap-3 items-center">
-                    {!isInstalled && <FileDown size="40" className={styles.iconButton} onClick={showPWAInstallPrompt} />}
-                    <CircleQuestionMark size="40" className={styles.iconButton} onClick={goToGithubPage} />
+                    {!isPWAInstalled && <Download size="40" className={styles.iconButton} onClick={showPWAInstallPrompt} />}
+                    <CircleQuestionMark size="40" className={styles.iconButton} onClick={gotoGitHubPage} />
                     <Settings size="40" className={styles.iconButton} onClick={() => navigate('/settings')} />
                 </div>
             </div>
