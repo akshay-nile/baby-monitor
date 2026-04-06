@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 // Extend Navigator for iOS PWA detection
 interface Navigator {
@@ -19,13 +19,9 @@ declare global {
     }
 }
 
-export default function usePWAInstaller(PWA_KEY = 'app-name'): [boolean, () => void] {
+export default function usePWAInstaller(PWA_KEY = 'app-name'): [boolean, BeforeInstallPromptEvent | null] {
     const [isPWAInstalled, setIsPWAInstalled] = useState<boolean>(false);
     const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
-
-    const showPWAInstallPrompt = useCallback(() => {
-        if (installPrompt !== null) installPrompt.prompt();
-    }, [installPrompt]);
 
     useEffect(() => {
         function checkPWAInstallation() {
@@ -58,5 +54,5 @@ export default function usePWAInstaller(PWA_KEY = 'app-name'): [boolean, () => v
         };
     }, [PWA_KEY]);
 
-    return [isPWAInstalled, showPWAInstallPrompt];
+    return [isPWAInstalled, installPrompt];
 }

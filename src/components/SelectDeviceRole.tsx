@@ -5,8 +5,11 @@ import { browserID } from '../services/settings';
 
 function SelectDeviceRole() {
     const navigate = useNavigate();
-    const [isPWAInstalled, showPWAInstallPrompt] = usePWAInstaller('baby-monitor-pwa');
-    const gotoGitHubPage = () => window.location.href = 'https://github.com/akshay-nile/baby-monitor/blob/main/README.md';
+    const [isPWAInstalled, installPrompt] = usePWAInstaller('baby-monitor-pwa');
+
+    function gotoGitHubPage() {
+        window.location.href = 'https://github.com/akshay-nile/baby-monitor/blob/main/README.md';
+    }
 
     return (
         <div className={styles.container}>
@@ -17,7 +20,10 @@ function SelectDeviceRole() {
                 </div>
 
                 <div className="flex gap-3 items-center">
-                    {!isPWAInstalled && <Download size="40" className={styles.iconButton} onClick={showPWAInstallPrompt} />}
+                    {
+                        !isPWAInstalled && installPrompt !== null &&
+                        <Download size="40" className={styles.iconButton} onClick={() => installPrompt.prompt()} />
+                    }
                     <CircleQuestionMark size="40" className={styles.iconButton} onClick={gotoGitHubPage} />
                     <Settings size="40" className={styles.iconButton} onClick={() => navigate('/settings')} />
                 </div>

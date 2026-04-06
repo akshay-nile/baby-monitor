@@ -4,11 +4,14 @@ import App from './App.tsx';
 import { PrimeReactProvider } from 'primereact/api';
 
 import './index.css';
+import ToastContextProvider from './contexts/ToastMessage/ToastContextProvider.tsx';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <PrimeReactProvider value={{ ripple: true }}>
-      <App />
+      <ToastContextProvider>
+        <App />
+      </ToastContextProvider>
     </PrimeReactProvider>
   </StrictMode>,
 );
