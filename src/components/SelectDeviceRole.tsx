@@ -18,16 +18,10 @@ function SelectDeviceRole() {
                 <div className="flex gap-3 items-center">
                     {
                         !isPWAInstalled && installPrompt !== null &&
-                        <Download size="40" data-pr-tooltip="Install"
-                            className={styles.iconButton}
-                            onClick={() => installPrompt.prompt()} />
+                        <Download size="40" className={styles.iconButton} onClick={() => installPrompt.prompt()} />
                     }
-                    <CircleQuestionMark size="40" data-pr-tooltip="Help"
-                        className={styles.iconButton}
-                        onClick={() => window.open('https://github.com/akshay-nile/baby-monitor/blob/main/README.md')} />
-                    <Settings size="40" data-pr-tooltip="Settings"
-                        className={styles.iconButton}
-                        onClick={() => navigate('/settings')} />
+                    <CircleQuestionMark size="40" className={styles.iconButton} onClick={() => window.open('https://github.com/akshay-nile/baby-monitor/blob/main/README.md')} />
+                    <Settings size="40" className={styles.iconButton} onClick={() => navigate('/settings')} />
                 </div>
             </div>
 
