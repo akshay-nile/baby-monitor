@@ -1,7 +1,6 @@
 import { Toast, type ToastMessageOptions } from 'primereact/toast';
 import { useRef, type ReactNode } from 'react';
 import { ToastContext } from './ToastContext';
-import { Tooltip } from 'primereact/tooltip';
 
 type Props = { children: ReactNode };
 
@@ -16,7 +15,6 @@ function ToastContextProvider({ children }: Props) {
         <ToastContext.Provider value={{ showToast }}>
             {children}
             <Toast ref={toastRef} />
-            <Tooltip target="[data-pr-tooltip]" position="bottom" />
         </ToastContext.Provider>
     );
 }
