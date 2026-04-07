@@ -56,9 +56,9 @@ function ParentDevice() {
             };
 
             // Accept offer sdp and send the answer sdp
-            await waitForIceGatheringCompletion(pc);
             await pc.setRemoteDescription(offer.sdp);
             await pc.setLocalDescription(await pc.createAnswer());
+            await waitForIceGatheringCompletion(pc);
 
             // Discard unfertilized pc if failed to post the answer sdp
             const isPosted = await postSDP(pc.localDescription);

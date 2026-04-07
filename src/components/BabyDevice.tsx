@@ -72,9 +72,10 @@ function BabyDevice() {
             };
 
             // Create and send the offer sdp
-            await waitForIceGatheringCompletion(pc);
             await pc.setLocalDescription(await pc.createOffer());
+            await waitForIceGatheringCompletion(pc);
             const isPosted = await postSDP(pc.localDescription);
+            console.log(isPosted);
 
             // Keep checking for the answer sdp
             while (isPosted && polling && pc.remoteDescription === null) {
