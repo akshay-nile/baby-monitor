@@ -19,7 +19,7 @@ export async function postSDP(sdp: RTCSessionDescription | null): Promise<boolea
     });
     if (!response.ok) return false;
     const data = await response.json();
-    return data.browserID === browserID;
+    return data.browserID == browserID;
 }
 
 export async function waitForIceGatheringCompletion(pc: RTCPeerConnection): Promise<void> {
@@ -33,4 +33,12 @@ export async function waitForIceGatheringCompletion(pc: RTCPeerConnection): Prom
         pc.addEventListener('icegatheringstatechange', checkIceGatheringState);
         checkIceGatheringState();
     });
+}
+
+export function sendMessage(dc: RTCDataChannel, message: string): boolean {
+    if (dc.readyState === 'open') {
+        dc.send(message);
+        return true;
+    }
+    return false;
 }

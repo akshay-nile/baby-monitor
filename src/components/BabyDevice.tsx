@@ -1,14 +1,15 @@
-import { useRef, useState } from 'react';
-import { useToastMessage } from '../contexts/ToastMessage/useToastMessage';
-import { getSDP, postSDP, waitForIceGatheringCompletion } from '../services/connex';
-import type { Parent } from '../services/models';
 import { Button } from 'primereact/button';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { useToastMessage } from '../contexts/ToastMessage/useToastMessage';
+import { getSDP, postSDP, sendMessage, waitForIceGatheringCompletion } from '../services/connex';
+import type { Parent } from '../services/models';
 
 function BabyDevice() {
     const toast = useToastMessage();
 
     const videoRef = useRef<HTMLVideoElement>(null);
     const streamRef = useRef<MediaStream>(null);
+    const pollingRef = useRef<boolean>(false);
     const timeoutRef = useRef<number>(null);
     const parentsRef = useRef<Map<string, Parent>>(new Map());
 
@@ -30,19 +31,10 @@ function BabyDevice() {
         }
 
         // Set polling active
-        setStatus('POLLING');
-        let polling = true;
-
-        // Reset polling after 5 minutes
-        timeoutRef.current = setTimeout(() => {
-            if (status === 'POLLING') {
-                setStatus(parentsRef.current.size > 0 ? 'CONNECTED' : 'DISCONNECTED');
-            }
-            polling = false;
-        }, 5 * 60 * 1000);
+        startPolling();
 
         // Keep storing connected parents until polling timeout
-        while (polling) {
+        while (pollingRef.current) {
             const pc = new RTCPeerConnection();
             let parentID: string | null = null;
 
@@ -64,21 +56,27 @@ function BabyDevice() {
                 addParent(parentID, { pc, dc, audio });
             };
 
+            // When parent signals disconnect
+            dc.onmessage = (e: MessageEvent) => {
+                if (!parentID) return;
+                if (e.data === 'DISCONNECT') disconnect(parentID);
+                if (!pollingRef.current && parentsRef.current.size === 0) setStatus('DISCONNECTED');
+            };
+
             // When parent gets disconnected
             pc.onconnectionstatechange = () => {
                 if (!parentID) return;
                 if (['disconnected', 'closed', 'failed'].includes(pc.connectionState)) disconnect(parentID);
-                if (!polling && parentsRef.current.size === 0) setStatus('DISCONNECTED');
+                if (!pollingRef.current && parentsRef.current.size === 0) setStatus('DISCONNECTED');
             };
 
             // Create and send the offer sdp
             await pc.setLocalDescription(await pc.createOffer());
             await waitForIceGatheringCompletion(pc);
             const isPosted = await postSDP(pc.localDescription);
-            console.log(isPosted);
 
             // Keep checking for the answer sdp
-            while (isPosted && polling && pc.remoteDescription === null) {
+            while (isPosted && pollingRef.current && pc.remoteDescription === null) {
                 await new Promise(resolve => setTimeout(resolve, 3000));
                 const answer = await getSDP('answer');
                 if (answer) {
@@ -96,23 +94,51 @@ function BabyDevice() {
 
         if (parentsRef.current.size > 0) {
             setStatus('CONNECTED');
-            toast.showMessage({ severity: 'success', summary: 'Polling Stopped', detail: parentsRef.current.size + ' parent devices are connected.' });
         } else disconnectAll();
     }
 
-    function disconnect(parentID: string) {
+    function addParent(parentID: string, parent: Parent) {
+        parentsRef.current.set(parentID, parent);
+        setParentsCount(parentsRef.current.size);
+        toast.showMessage({ severity: 'info', summary: 'Parent Connected', detail: 'Parent ID: ' + parentID });
+    }
+
+    const removeParent = useCallback((parentID: string) => {
+        parentsRef.current.delete(parentID);
+        setParentsCount(parentsRef.current.size);
+        toast.showMessage({ severity: 'warn', summary: 'Parent Disconnected', detail: 'Parent ID: ' + parentID });
+    }, [toast]);
+
+    function startPolling() {
+        pollingRef.current = true;
+        setStatus('POLLING');
+        timeoutRef.current = setTimeout(stopPolling, 5 * 60 * 1000);
+    }
+
+    const stopPolling = useCallback(() => {
+        pollingRef.current = false;
+        setStatus(parentsRef.current.size > 0 ? 'CONNECTED' : 'DISCONNECTED');
+        if (timeoutRef.current) {
+            clearTimeout(timeoutRef.current);
+            timeoutRef.current = null;
+            toast.showMessage({ severity: 'info', summary: 'Polling Stopped', detail: parentsRef.current.size + ' parent devices are connected.' });
+        }
+    }, [toast]);
+
+    const disconnect = useCallback((parentID: string) => {
         const parent = parentsRef.current.get(parentID);
         if (parent) {
             parent.audio.pause();
-            parent.dc.send('DISCONNECT');
+            parent.audio.srcObject = null;
+            sendMessage(parent.dc, 'DISCONNECT');
             parent.dc.close();
-            parent.pc.getSenders().forEach(sender => sender.track?.stop());
+            parent.pc.getReceivers().forEach(receiver => receiver.track.stop());
             parent.pc.close();
             removeParent(parentID);
         }
-    }
+    }, [removeParent]);
 
-    function disconnectAll() {
+    const disconnectAll = useCallback(() => {
         const summary = parentsRef.current.size === 0 ? 'Camera Stopped' : 'All Parents Disconnected';
 
         parentsRef.current.keys().forEach(disconnect);
@@ -129,33 +155,31 @@ function BabyDevice() {
             streamRef.current = null;
         }
 
-        if (timeoutRef.current) {
-            clearTimeout(timeoutRef.current);
-        }
-
-        setStatus('DISCONNECTED');
+        stopPolling();
         toast.showMessage({ severity: 'warn', summary });
-    }
+    }, [toast, disconnect, stopPolling]);
 
-    function addParent(parentID: string, parent: Parent) {
-        parentsRef.current.set(parentID, parent);
-        setParentsCount(parentsRef.current.size);
-        toast.showMessage({ severity: 'info', summary: 'Parent Connected', detail: 'Parent ID: ' + parentID });
-    }
-
-    function removeParent(parentID: string) {
-        parentsRef.current.delete(parentID);
-        setParentsCount(parentsRef.current.size);
-        toast.showMessage({ severity: 'info', summary: 'Parent Disconnected', detail: 'Parent ID: ' + parentID });
-    }
+    useEffect(() => {
+        if (streamRef.current !== null || parentsRef.current.size > 0) return disconnectAll;
+    }, [disconnectAll]);
 
     return (
         <div className="w-full md:w-1/2 lg:w-1/3 mx-auto min-h-dvh flex flex-col justify-between items-center gap-10 p-4 bg-white text-white select-none duration-300 transition-all">
-            <span className="text-black text-xl">{parentsCount} Parent Devices Connected</span>
-            <video ref={videoRef} autoPlay muted />
-            <Button
-                label={status === 'DISCONNECTED' ? 'Start Camera' : 'Stop Camera'}
-                onClick={() => status === 'DISCONNECTED' ? connect() : disconnectAll()} />
+            <span className="text-black">{parentsCount} Parent Devices Connected</span>
+
+            <video ref={videoRef} autoPlay muted className="w-full" />
+
+            <div className="w-full flex justify-center items-center gap-8">
+                {
+                    status !== 'DISCONNECTED' &&
+                    <Button
+                        label={status === 'POLLING' ? 'Stop Polling' : 'Start Polling'}
+                        onClick={() => status === 'POLLING' ? stopPolling() : startPolling()} />
+                }
+                <Button
+                    label={status === 'DISCONNECTED' ? 'Start Camera' : 'Stop Camera'}
+                    onClick={() => status === 'DISCONNECTED' ? connect() : disconnectAll()} />
+            </div>
         </div>
     );
 }

@@ -1,7 +1,7 @@
 import { Button } from 'primereact/button';
 import { useRef, useState } from 'react';
 import { useToastMessage } from '../contexts/ToastMessage/useToastMessage';
-import { getSDP, postSDP, waitForIceGatheringCompletion } from '../services/connex';
+import { getSDP, postSDP, sendMessage, waitForIceGatheringCompletion } from '../services/connex';
 import type { Baby } from '../services/models';
 
 function ParentDevice() {
@@ -48,6 +48,9 @@ function ParentDevice() {
                     setStatus('CONNECTED');
                     toast.showMessage({ severity: 'success', summary: 'Connection Success', detail: 'Baby ID: ' + offer.browserID });
                 };
+                dc.onmessage = (e: MessageEvent) => {
+                    if (e.data === 'DISCONNECT') disconnect();
+                };
             };
 
             // When baby gets disconnected
@@ -75,9 +78,10 @@ function ParentDevice() {
 
     function disconnect() {
         if (babyRef.current) {
-            babyRef.current.dc.send('DISCONNECT');
+            sendMessage(babyRef.current.dc, 'DISCONNECT');
             babyRef.current.dc.close();
             babyRef.current.pc.getSenders().forEach(sender => sender.track?.stop());
+            babyRef.current.pc.getReceivers().forEach(receiver => receiver.track?.stop());
             babyRef.current.pc.close();
             babyRef.current = null;
         }
@@ -98,7 +102,8 @@ function ParentDevice() {
 
     return (
         <div className="w-full md:w-1/2 lg:w-1/3 mx-auto min-h-dvh flex flex-col justify-between items-center gap-10 p-4 bg-white text-white select-none duration-300 transition-all">
-            <video ref={videoRef} autoPlay />
+            <video ref={videoRef} autoPlay className="w-full my-auto" />
+
             <Button
                 label={status === 'DISCONNECTED' ? 'Connect' : status === 'CONNECTED' ? 'Disconnect' : 'Connecting'}
                 onClick={() => status === 'DISCONNECTED' ? connect() : disconnect()}
