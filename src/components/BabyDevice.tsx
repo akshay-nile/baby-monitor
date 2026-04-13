@@ -1,11 +1,11 @@
 import { Button } from 'primereact/button';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useToastMessage } from '../contexts/ToastMessage/useToastMessage';
-import { getSDP, postSDP, sendMessage, waitForIceGatheringCompletion } from '../services/connex';
+import { clearSDP, getSDP, postSDP, sendMessage, waitForIceGatheringCompletion } from '../services/connex';
 import type { Parent } from '../services/models';
 
 function BabyDevice() {
-    const toast = useToastMessage();
+    const { showToast } = useToastMessage();
 
     const videoRef = useRef<HTMLVideoElement>(null);
     const streamRef = useRef<MediaStream>(null);
@@ -22,10 +22,10 @@ function BabyDevice() {
             try {
                 streamRef.current = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
                 if (videoRef.current) videoRef.current.srcObject = streamRef.current;
-                toast.showMessage({ severity: 'info', summary: 'Camera Started', detail: 'Waiting for parent devices to connect.' });
+                showToast({ severity: 'info', summary: 'Camera Started', detail: 'Waiting for parent devices to connect.' });
             }
             catch (error) {
-                toast.showMessage({ severity: 'error', summary: 'Media Access Denied', detail: error });
+                showToast({ severity: 'error', summary: 'Media Access Denied', detail: error });
                 return;
             }
         }
@@ -73,7 +73,7 @@ function BabyDevice() {
             // Create and send the offer sdp
             await pc.setLocalDescription(await pc.createOffer());
             await waitForIceGatheringCompletion(pc);
-            const isPosted = await postSDP(pc.localDescription);
+            const isPosted = await postSDP(pc.localDescription!);
 
             // Keep checking for the answer sdp
             while (isPosted && pollingRef.current && pc.remoteDescription === null) {
@@ -88,26 +88,26 @@ function BabyDevice() {
             // Discard the unfertilized pc
             if (pc.remoteDescription === null) {
                 pc.close();
-                await postSDP(null);
+                await clearSDP();
             }
         }
 
         if (parentsRef.current.size > 0) {
             setStatus('CONNECTED');
-        } else disconnectAll();
+        } else disconnectAll(!pollingRef.current);
     }
 
-    function addParent(parentID: string, parent: Parent) {
+    function addParent(parentID: string, parent: Parent, toast = true) {
         parentsRef.current.set(parentID, parent);
         setParentsCount(parentsRef.current.size);
-        toast.showMessage({ severity: 'info', summary: 'Parent Connected', detail: 'Parent ID: ' + parentID });
+        if (toast) showToast({ severity: 'info', summary: 'Parent Connected', detail: 'Parent ID: ' + parentID });
     }
 
-    const removeParent = useCallback((parentID: string) => {
+    const removeParent = useCallback((parentID: string, toast = true) => {
         parentsRef.current.delete(parentID);
         setParentsCount(parentsRef.current.size);
-        toast.showMessage({ severity: 'warn', summary: 'Parent Disconnected', detail: 'Parent ID: ' + parentID });
-    }, [toast]);
+        if (toast) showToast({ severity: 'warn', summary: 'Parent Disconnected', detail: 'Parent ID: ' + parentID });
+    }, [showToast]);
 
     function startPolling() {
         pollingRef.current = true;
@@ -115,17 +115,17 @@ function BabyDevice() {
         timeoutRef.current = setTimeout(stopPolling, 5 * 60 * 1000);
     }
 
-    const stopPolling = useCallback(() => {
+    const stopPolling = useCallback((toast = true) => {
         pollingRef.current = false;
         setStatus(parentsRef.current.size > 0 ? 'CONNECTED' : 'DISCONNECTED');
         if (timeoutRef.current) {
             clearTimeout(timeoutRef.current);
             timeoutRef.current = null;
-            toast.showMessage({ severity: 'info', summary: 'Polling Stopped', detail: parentsRef.current.size + ' parent devices are connected.' });
+            if (toast) showToast({ severity: 'info', summary: 'Polling Stopped', detail: parentsRef.current.size + ' parent devices are connected.' });
         }
-    }, [toast]);
+    }, [showToast]);
 
-    const disconnect = useCallback((parentID: string) => {
+    const disconnect = useCallback((parentID: string, toast = true) => {
         const parent = parentsRef.current.get(parentID);
         if (parent) {
             parent.audio.pause();
@@ -134,14 +134,13 @@ function BabyDevice() {
             parent.dc.close();
             parent.pc.getReceivers().forEach(receiver => receiver.track.stop());
             parent.pc.close();
-            removeParent(parentID);
+            removeParent(parentID, toast);
         }
     }, [removeParent]);
 
-    const disconnectAll = useCallback(() => {
-        const summary = parentsRef.current.size === 0 ? 'Camera Stopped' : 'All Parents Disconnected';
-
-        parentsRef.current.keys().forEach(disconnect);
+    const disconnectAll = useCallback((toast = true) => {
+        const summary = parentsRef.current.size > 0 ? 'All Parents Disconnected' : 'Camera Stopped';
+        parentsRef.current.keys().forEach(parentID => disconnect(parentID, false));
         parentsRef.current.clear();
         setParentsCount(0);
 
@@ -155,19 +154,20 @@ function BabyDevice() {
             streamRef.current = null;
         }
 
-        stopPolling();
-        toast.showMessage({ severity: 'warn', summary });
-    }, [toast, disconnect, stopPolling]);
+        clearSDP();
+        stopPolling(false);
+        if (toast) showToast({ severity: 'info', summary });
+    }, [showToast, disconnect, stopPolling]);
 
     useEffect(() => {
         if (streamRef.current !== null || parentsRef.current.size > 0) return disconnectAll;
     }, [disconnectAll]);
 
     return (
-        <div className="w-full md:w-1/2 lg:w-1/3 mx-auto min-h-dvh flex flex-col justify-between items-center gap-10 p-4 bg-white text-white select-none duration-300 transition-all">
-            <span className="text-black">{parentsCount} Parent Devices Connected</span>
+        <div className="w-full md:w-1/2 lg:w-1/3 mx-auto min-h-dvh flex flex-col justify-between items-center gap-12 p-4 bg-white text-black select-none duration-300 transition-all">
+            <span>{parentsCount} Parent Devices Connected</span>
 
-            <video ref={videoRef} autoPlay muted className="w-full" />
+            <video ref={videoRef} autoPlay muted className="w-full my-auto rounded-lg border border-pink-500 shadow-xl shadow-gray-200" />
 
             <div className="w-full flex justify-center items-center gap-8">
                 {

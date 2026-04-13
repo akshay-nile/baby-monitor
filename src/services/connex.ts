@@ -1,7 +1,7 @@
 import type { SDP } from './models';
 import { browserID } from './settings';
 
-const baseURL = 'https://akshaynile.pythonanywhere.com/exchange';
+const baseURL = 'https://akshaynile.pythonanywhere.com/exchange/baby-monitor';
 
 export async function getSDP(type: 'offer' | 'answer'): Promise<SDP | null> {
     const response = await fetch(baseURL);
@@ -11,7 +11,7 @@ export async function getSDP(type: 'offer' | 'answer'): Promise<SDP | null> {
     return null;
 }
 
-export async function postSDP(sdp: RTCSessionDescription | null): Promise<boolean> {
+export async function postSDP(sdp: RTCSessionDescription): Promise<boolean> {
     const response = await fetch(baseURL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -22,8 +22,14 @@ export async function postSDP(sdp: RTCSessionDescription | null): Promise<boolea
     return data.browserID == browserID;
 }
 
+export async function clearSDP(): Promise<boolean> {
+    const response = await fetch(baseURL, { method: 'DELETE' });
+    return response.ok;
+}
+
 export async function waitForIceGatheringCompletion(pc: RTCPeerConnection): Promise<void> {
-    return await new Promise(resolve => {
+    return await new Promise((resolve, reject) => {
+        if (!pc.localDescription) reject(new Error('pc.localDescription is not set'));
         function checkIceGatheringState() {
             if (pc.iceGatheringState === 'complete') {
                 pc.removeEventListener('icegatheringstatechange', checkIceGatheringState);

@@ -54,7 +54,7 @@ export default SelectDeviceRole;
 
 const styles = {
     container: 'w-full md:w-1/2 lg:w-1/3 mx-auto min-h-dvh flex flex-col justify-between items-center p-4 bg-white text-white select-none duration-300 transition-all',
-    header: 'w-full flex justify-between items-center p-4 bg-pink-500 rounded-lg shadow-gray-200 shadow',
+    header: 'w-full flex justify-between items-center p-4 bg-pink-500 rounded-lg shadow shadow-gray-200',
     browserID: 'text-sm bg-gray-200 text-gray-800 px-2 py-1 rounded font-mono select-text',
     bigButton: 'w-full flex justify-between items-center gap-1 bg-pink-500 hover:bg-pink-600 px-6 py-4 rounded-2xl shadow-gray-400 shadow-lg cursor-pointer',
     bigBtnText: 'flex flex-col items-center gap-1 font-bold',

@@ -7,12 +7,12 @@ type Props = { children: ReactNode };
 function ToastContextProvider({ children }: Props) {
     const toastRef = useRef<Toast>(null);
 
-    const showMessage = useCallback((options: ToastMessageOptions) => {
+    const showToast = useCallback((options: ToastMessageOptions) => {
         if (toastRef.current) toastRef.current.show(options);
     }, []);
 
     return (
-        <ToastContext.Provider value={{ showMessage }}>
+        <ToastContext.Provider value={{ showToast }}>
             <div>
                 {children}
                 <Toast ref={toastRef} position="top-center" />

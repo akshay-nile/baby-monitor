@@ -5,7 +5,7 @@ import { getSDP, postSDP, sendMessage, waitForIceGatheringCompletion } from '../
 import type { Baby } from '../services/models';
 
 function ParentDevice() {
-    const toast = useToastMessage();
+    const { showToast } = useToastMessage();
 
     const babyRef = useRef<Baby>(null);
     const videoRef = useRef<HTMLVideoElement>(null);
@@ -21,7 +21,7 @@ function ParentDevice() {
                 streamRef.current.getTracks().forEach(track => track.enabled = false);
             }
             catch (error) {
-                toast.showMessage({ severity: 'error', summary: 'Media Access Denied', detail: error });
+                showToast({ severity: 'error', summary: 'Media Access Denied', detail: error });
                 return;
             }
         }
@@ -46,7 +46,7 @@ function ParentDevice() {
                 dc.onopen = () => {
                     babyRef.current = { pc, dc };
                     setStatus('CONNECTED');
-                    toast.showMessage({ severity: 'success', summary: 'Connection Success', detail: 'Baby ID: ' + offer.browserID });
+                    showToast({ severity: 'success', summary: 'Connection Success', detail: 'Baby ID: ' + offer.browserID });
                 };
                 dc.onmessage = (e: MessageEvent) => {
                     if (e.data === 'DISCONNECT') disconnect();
@@ -64,15 +64,15 @@ function ParentDevice() {
             await waitForIceGatheringCompletion(pc);
 
             // Discard unfertilized pc if failed to post the answer sdp
-            const isPosted = await postSDP(pc.localDescription);
+            const isPosted = await postSDP(pc.localDescription!);
             if (!isPosted) {
                 pc.close();
                 setStatus('DISCONNECTED');
-                toast.showMessage({ severity: 'error', summary: 'Connection Failed', detail: 'Failed to post the answer sdp' });
+                showToast({ severity: 'error', summary: 'Connection Failed', detail: 'Failed to post the answer sdp' });
             }
         } else {
             setStatus('DISCONNECTED');
-            toast.showMessage({ severity: 'warn', summary: 'Baby Device Offline', detail: 'No offer sdp was detected' });
+            showToast({ severity: 'warn', summary: 'Baby Device Offline', detail: 'No offer sdp was detected' });
         }
     }
 
@@ -97,12 +97,12 @@ function ParentDevice() {
         }
 
         setStatus('DISCONNECTED');
-        toast.showMessage({ severity: 'warn', summary: 'Disconnected' });
+        showToast({ severity: 'warn', summary: 'Disconnected' });
     }
 
     return (
-        <div className="w-full md:w-1/2 lg:w-1/3 mx-auto min-h-dvh flex flex-col justify-between items-center gap-10 p-4 bg-white text-white select-none duration-300 transition-all">
-            <video ref={videoRef} autoPlay className="w-full my-auto" />
+        <div className="w-full md:w-1/2 lg:w-1/3 mx-auto min-h-dvh flex flex-col justify-between items-center gap-12 p-4 bg-white text-black select-none duration-300 transition-all">
+            <video ref={videoRef} autoPlay className="w-full my-auto rounded-lg border border-pink-500 shadow-xl shadow-gray-200" />
 
             <Button
                 label={status === 'DISCONNECTED' ? 'Connect' : status === 'CONNECTED' ? 'Disconnect' : 'Connecting'}
