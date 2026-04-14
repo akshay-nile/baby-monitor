@@ -1,3 +1,4 @@
+import { User } from 'lucide-react';
 import { Button } from 'primereact/button';
 import { useRef, useState } from 'react';
 import { useToastMessage } from '../contexts/ToastMessage/useToastMessage';
@@ -109,7 +110,7 @@ function ParentDevice() {
         <div className="w-full md:w-1/2 lg:w-1/3 mx-auto min-h-dvh flex flex-col justify-between items-center gap-12 p-4 bg-white text-white select-none duration-300 transition-all">
             <div className="w-full flex justify-between items-center p-4 bg-pink-500 rounded-lg shadow shadow-gray-200">
                 <div className="w-full flex justify-between">
-                    <span className="text-lg font-bold">Parent Device ID</span>
+                    <span className="flex items-center gap-2 text-lg font-bold"><User size="28" strokeWidth="2.5" />Parent Device ID</span>
                     <span className="text-sm bg-gray-200 text-gray-800 px-2 py-1 rounded font-mono select-text">{browserID}</span>
                 </div>
             </div>
