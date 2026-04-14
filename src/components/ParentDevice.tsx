@@ -3,6 +3,7 @@ import { useRef, useState } from 'react';
 import { useToastMessage } from '../contexts/ToastMessage/useToastMessage';
 import { getSDP, postSDP, sendMessage, waitForIceGatheringCompletion } from '../services/connex';
 import type { Baby } from '../services/models';
+import { browserID } from '../services/settings';
 
 function ParentDevice() {
     const { showToast } = useToastMessage();
@@ -16,6 +17,10 @@ function ParentDevice() {
     async function connect() {
         // Start local media stream
         if (!streamRef.current) {
+            if (!window.isSecureContext) {
+                showToast({ severity: 'error', summary: 'No Secure Context' });
+                return;
+            }
             try {
                 streamRef.current = await navigator.mediaDevices.getUserMedia({ audio: true });
                 streamRef.current.getTracks().forEach(track => track.enabled = false);
@@ -101,10 +106,17 @@ function ParentDevice() {
     }
 
     return (
-        <div className="w-full md:w-1/2 lg:w-1/3 mx-auto min-h-dvh flex flex-col justify-between items-center gap-12 p-4 bg-white text-black select-none duration-300 transition-all">
-            <video ref={videoRef} autoPlay className="w-full my-auto rounded-lg border border-pink-500 shadow-xl shadow-gray-200" />
+        <div className="w-full md:w-1/2 lg:w-1/3 mx-auto min-h-dvh flex flex-col justify-between items-center gap-12 p-4 bg-white text-white select-none duration-300 transition-all">
+            <div className="w-full flex justify-between items-center p-4 bg-pink-500 rounded-lg shadow shadow-gray-200">
+                <div className="w-full flex justify-between">
+                    <span className="text-lg font-bold">Parent Device ID</span>
+                    <span className="text-sm bg-gray-200 text-gray-800 px-2 py-1 rounded font-mono select-text">{browserID}</span>
+                </div>
+            </div>
 
-            <Button
+            <video ref={videoRef} autoPlay className="w-full my-auto rounded-lg border-2 border-pink-500 shadow-xl shadow-gray-200" />
+
+            <Button size="large"
                 label={status === 'DISCONNECTED' ? 'Connect' : status === 'CONNECTED' ? 'Disconnect' : 'Connecting'}
                 onClick={() => status === 'DISCONNECTED' ? connect() : disconnect()}
                 disabled={status === 'CONNECTING'} />
