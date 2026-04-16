@@ -1,10 +1,9 @@
-import { User } from 'lucide-react';
 import { Button } from 'primereact/button';
-import { useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useToastMessage } from '../contexts/ToastMessage/useToastMessage';
 import { getSDP, postSDP, sendMessage, waitForIceGatheringCompletion } from '../services/connex';
 import type { Baby } from '../services/models';
-import { browserID } from '../services/settings';
+import Header from './Header';
 
 function ParentDevice() {
     const { showToast } = useToastMessage();
@@ -14,6 +13,30 @@ function ParentDevice() {
     const streamRef = useRef<MediaStream>(null);
 
     const [status, setStatus] = useState<'CONNECTED' | 'CONNECTING' | 'DISCONNECTED'>('DISCONNECTED');
+
+    const disconnect = useCallback(() => {
+        if (babyRef.current) {
+            sendMessage(babyRef.current.dc, 'DISCONNECT');
+            babyRef.current.dc.close();
+            babyRef.current.pc.getSenders().forEach(sender => sender.track?.stop());
+            babyRef.current.pc.getReceivers().forEach(receiver => receiver.track?.stop());
+            babyRef.current.pc.close();
+            babyRef.current = null;
+        }
+
+        if (videoRef.current) {
+            videoRef.current.pause();
+            videoRef.current.srcObject = null;
+        }
+
+        if (streamRef.current) {
+            streamRef.current.getTracks().forEach(track => track.stop());
+            streamRef.current = null;
+        }
+
+        setStatus('DISCONNECTED');
+        showToast({ severity: 'warn', summary: 'Disconnected' });
+    }, [showToast]);
 
     async function connect() {
         // Start local media stream
@@ -82,38 +105,13 @@ function ParentDevice() {
         }
     }
 
-    function disconnect() {
-        if (babyRef.current) {
-            sendMessage(babyRef.current.dc, 'DISCONNECT');
-            babyRef.current.dc.close();
-            babyRef.current.pc.getSenders().forEach(sender => sender.track?.stop());
-            babyRef.current.pc.getReceivers().forEach(receiver => receiver.track?.stop());
-            babyRef.current.pc.close();
-            babyRef.current = null;
-        }
-
-        if (videoRef.current) {
-            videoRef.current.pause();
-            videoRef.current.srcObject = null;
-        }
-
-        if (streamRef.current) {
-            streamRef.current.getTracks().forEach(track => track.stop());
-            streamRef.current = null;
-        }
-
-        setStatus('DISCONNECTED');
-        showToast({ severity: 'warn', summary: 'Disconnected' });
-    }
+    useEffect(() => {
+        if (streamRef.current !== null) return disconnect;
+    }, [disconnect]);
 
     return (
         <div className="w-full md:w-1/2 lg:w-1/3 mx-auto min-h-dvh flex flex-col justify-between items-center gap-12 p-4 bg-white text-white select-none duration-300 transition-all">
-            <div className="w-full flex justify-between items-center p-4 bg-pink-500 rounded-lg shadow shadow-gray-200">
-                <div className="w-full flex justify-between">
-                    <span className="flex items-center gap-2 text-lg font-bold"><User size="28" strokeWidth="2.5" />Parent Device ID</span>
-                    <span className="text-sm bg-gray-200 text-gray-800 px-2 py-1 rounded font-mono select-text">{browserID}</span>
-                </div>
-            </div>
+            <Header>Parent Device ID</Header>
 
             <video ref={videoRef} autoPlay className="w-full my-auto rounded-lg border-2 border-pink-500 shadow-xl shadow-gray-200" />
 
