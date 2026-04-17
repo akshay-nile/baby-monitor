@@ -10,6 +10,7 @@ function BabyDevice() {
 
     const videoRef = useRef<HTMLVideoElement>(null);
     const streamRef = useRef<MediaStream>(null);
+    const facingMode = useRef<'user' | 'environment'>('user');
     const pollingRef = useRef<boolean>(false);
     const timeoutRef = useRef<number>(null);
     const parentsRef = useRef<Map<string, Parent>>(new Map());
@@ -84,21 +85,37 @@ function BabyDevice() {
         if (toast) showToast({ severity: 'info', summary: 'Camera Stopped', detail });
     }, [showToast, disconnect, stopPolling]);
 
+    async function getCameraStream(): Promise<MediaStream | null> {
+        if (!window.isSecureContext) {
+            showToast({ severity: 'error', summary: 'No Secure Context' });
+            return null;
+        }
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const cameras = devices.filter(device => device.kind === 'videoinput');
+        if (cameras.length === 0) {
+            showToast({ severity: 'error', summary: 'No Camera Found' });
+            return null;
+        }
+        if (cameras.length === 1) facingMode.current = 'user';
+        try {
+            return await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: facingMode.current },
+                audio: { noiseSuppression: true, echoCancellation: true, autoGainControl: true }
+            });
+        }
+        catch (error) {
+            showToast({ severity: 'error', summary: 'Media Access Denied', detail: error });
+            return null;
+        }
+    }
+
     async function connect() {
         // Start local media stream
         if (!streamRef.current) {
-            if (!window.isSecureContext) {
-                showToast({ severity: 'error', summary: 'No Secure Context' });
-                return;
-            }
-            try {
-                streamRef.current = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-                if (videoRef.current) videoRef.current.srcObject = streamRef.current;
+            streamRef.current = await getCameraStream();
+            if (videoRef.current) {
+                videoRef.current.srcObject = streamRef.current;
                 showToast({ severity: 'info', summary: 'Camera Started', detail: 'Waiting for parent connections.' });
-            }
-            catch (error) {
-                showToast({ severity: 'error', summary: 'Media Access Denied', detail: error });
-                return;
             }
         }
 
@@ -169,6 +186,20 @@ function BabyDevice() {
         } else disconnectAll(pollingRef.current);
     }
 
+    async function flipCameraStream() {
+        facingMode.current = facingMode.current === 'user' ? 'environment' : 'user';
+        const [oldStream, newStream] = [streamRef.current, await getCameraStream()];
+        if (!newStream || !videoRef.current) return;
+        videoRef.current.srcObject = newStream;
+        parentsRef.current.values()
+            .forEach(parent => parent.pc.getSenders()
+                .forEach(sender => newStream.getTracks()
+                    .forEach(track => sender.replaceTrack(track))));
+        showToast({ severity: 'info', summary: `Switched to ${facingMode.current === 'user' ? 'Front' : 'Back'} Camera` });
+        streamRef.current = newStream;
+        if (oldStream) oldStream.getTracks().forEach(track => track.stop());
+    }
+
     useEffect(() => {
         if (streamRef.current !== null || parentsRef.current.size > 0) return disconnectAll;
     }, [disconnectAll]);
@@ -177,7 +208,7 @@ function BabyDevice() {
         <div className="w-full md:w-1/2 lg:w-1/3 mx-auto min-h-dvh flex flex-col justify-between items-center gap-12 p-4 bg-white text-white select-none duration-300 transition-all">
             <Header>Baby Device ID</Header>
 
-            <video ref={videoRef} autoPlay muted className="w-full my-auto rounded-lg border-2 border-pink-500 shadow-xl shadow-gray-200" />
+            <video ref={videoRef} autoPlay muted onClick={flipCameraStream} className="w-full my-auto rounded-lg border-2 border-pink-500 shadow-xl shadow-gray-200" />
 
             <Button size="large"
                 label={status === 'DISCONNECTED' ? 'Start Camera' : 'Stop Camera'}
