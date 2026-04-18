@@ -13,7 +13,7 @@ function Header({ children }: Props) {
     const gotoGithub = () => window.open('https://github.com/akshay-nile/baby-monitor/blob/main/README.md');
 
     if (!children) return (
-        <div className="w-full flex justify-between items-center p-4 bg-pink-500 rounded-lg shadow shadow-gray-200">
+        <div className="w-full flex justify-between items-center p-4 bg-pink-500 rounded-lg shadow">
             <div className="flex flex-col gap-1">
                 <span className="text-lg font-bold">Browser ID</span>
                 <span className="text-sm bg-gray-200 text-gray-800 px-2 py-1 rounded font-mono select-text">{browserID}</span>
@@ -30,7 +30,7 @@ function Header({ children }: Props) {
         </div>
     );
     else return (
-        <div className="w-full flex justify-between items-center p-4 bg-pink-500 rounded-lg shadow shadow-gray-200">
+        <div className="w-full flex justify-between items-center p-4 bg-pink-500 rounded-lg shadow">
             <div className="w-full flex justify-between">
                 {
                     children.toString().startsWith('Baby')

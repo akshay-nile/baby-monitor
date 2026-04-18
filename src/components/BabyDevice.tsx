@@ -41,13 +41,6 @@ function BabyDevice() {
         }
     }, [showToast]);
 
-    function startPolling(toast = true) {
-        pollingRef.current = true;
-        setStatus('POLLING');
-        timeoutRef.current = setTimeout(stopPolling, 5 * 60 * 1000);
-        if (toast) showToast({ severity: 'info', summary: 'Polling Started', detail: parentsRef.current.size + ' parent devices are connected.' });
-    }
-
     const disconnect = useCallback((parentID: string, toast = true) => {
         const parent = parentsRef.current.get(parentID);
         if (parent) {
@@ -109,8 +102,16 @@ function BabyDevice() {
         }
     }
 
+    function replaceParentTracks(parents: Array<Parent>) {
+        const ms = streamRef.current;
+        if (ms) parents
+            .forEach(parent => parent.pc.getSenders()
+                .forEach(sender => ms.getTracks()
+                    .forEach(track => track.kind === sender.track?.kind && sender.replaceTrack(track))));
+    }
+
     async function connect() {
-        // Start local media stream
+        // Start local video stream
         if (!streamRef.current) {
             streamRef.current = await getCameraStream();
             if (videoRef.current) {
@@ -119,10 +120,12 @@ function BabyDevice() {
             }
         }
 
-        // Set polling active
-        startPolling(false);
+        // Start polling for parent connections
+        pollingRef.current = true;
+        setStatus('POLLING');
+        timeoutRef.current = setTimeout(stopPolling, 5 * 60 * 1000);
 
-        // Keep storing connected parents until polling timeout
+        // Allow connecting parents until polling timeout
         while (pollingRef.current) {
             const pc = new RTCPeerConnection();
             let parentID: string | null = null;
@@ -142,14 +145,18 @@ function BabyDevice() {
             const dc = pc.createDataChannel('SIGNAL');
             dc.onopen = () => {
                 if (!parentID) return;
-                addParent(parentID, { pc, dc, audio });
+                const parent = { pc, dc, audio };
+                addParent(parentID, parent);
+                replaceParentTracks([parent]);
             };
 
             // When parent signals disconnect
             dc.onmessage = (e: MessageEvent) => {
                 if (!parentID) return;
-                if (e.data === 'DISCONNECT') disconnect(parentID);
-                if (!pollingRef.current && parentsRef.current.size === 0) setStatus('DISCONNECTED');
+                if (e.data === 'DISCONNECT') {
+                    disconnect(parentID);
+                    if (!pollingRef.current && parentsRef.current.size === 0) setStatus('DISCONNECTED');
+                }
             };
 
             // When parent gets disconnected
@@ -191,24 +198,22 @@ function BabyDevice() {
         const [oldStream, newStream] = [streamRef.current, await getCameraStream()];
         if (!newStream || !videoRef.current) return;
         videoRef.current.srcObject = newStream;
-        parentsRef.current.values()
-            .forEach(parent => parent.pc.getSenders()
-                .forEach(sender => newStream.getTracks()
-                    .forEach(track => sender.replaceTrack(track))));
+        replaceParentTracks(parentsRef.current.values().toArray());
         showToast({ severity: 'info', summary: `Switched to ${facingMode.current === 'user' ? 'Front' : 'Back'} Camera` });
         streamRef.current = newStream;
         if (oldStream) oldStream.getTracks().forEach(track => track.stop());
     }
 
     useEffect(() => {
-        if (streamRef.current !== null || parentsRef.current.size > 0) return disconnectAll;
+        const parents = parentsRef.current;
+        return () => { if (streamRef.current !== null || parents.size > 0) disconnectAll(); };
     }, [disconnectAll]);
 
     return (
-        <div className="w-full md:w-1/2 lg:w-1/3 mx-auto min-h-dvh flex flex-col justify-between items-center gap-12 p-4 bg-white text-white select-none duration-300 transition-all">
+        <div className="w-full md:w-1/2 lg:w-1/3 mx-auto min-h-dvh flex flex-col justify-between items-center gap-12 p-4 text-white bg-neutral-800 rounded-xl select-none duration-300 transition-all">
             <Header>Baby Device ID</Header>
 
-            <video ref={videoRef} autoPlay muted onClick={flipCameraStream} className="w-full my-auto rounded-lg border-2 border-pink-500 shadow-xl shadow-gray-200" />
+            <video ref={videoRef} autoPlay muted onClick={flipCameraStream} className="w-full my-auto rounded-lg border-2 border-pink-500 shadow" />
 
             <Button size="large"
                 label={status === 'DISCONNECTED' ? 'Start Camera' : 'Stop Camera'}

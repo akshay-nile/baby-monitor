@@ -6,11 +6,11 @@ function SelectDeviceRole() {
     const navigate = useNavigate();
 
     return (
-        <div className="w-full md:w-1/2 lg:w-1/3 mx-auto min-h-dvh flex flex-col justify-between items-center p-4 bg-white text-white select-none duration-300 transition-all">
+        <div className="w-full md:w-1/2 lg:w-1/3 mx-auto min-h-dvh flex flex-col justify-between items-center p-4 text-white bg-neutral-800 rounded-xl select-none duration-300 transition-all">
             <Header />
 
             <div className="w-full flex flex-col items-center gap-16 my-auto">
-                <h1 className="text-gray-800 text-2xl font-semibold">
+                <h1 className="text-2xl font-semibold">
                     Select a role for this device
                 </h1>
 
@@ -37,7 +37,6 @@ function SelectDeviceRole() {
 export default SelectDeviceRole;
 
 const styles = {
-    bigButton: 'w-full flex justify-center items-center gap-4 bg-pink-500 hover:bg-pink-600 px-6 py-4 rounded-2xl shadow-lg shadow-gray-300 cursor-pointer',
+    bigButton: 'w-full flex justify-center items-center gap-4 bg-pink-500 hover:bg-pink-600 px-6 py-4 rounded-2xl shadow-lg cursor-pointer',
     bigBtnText: 'flex flex-col items-center gap-1 font-bold',
-    iconButton: '',
 };
