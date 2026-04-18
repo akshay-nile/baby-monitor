@@ -4,6 +4,7 @@ import { useToastMessage } from '../contexts/ToastMessage/useToastMessage';
 import { getSDP, postSDP, sendMessage, waitForIceGatheringCompletion } from '../services/connex';
 import type { Baby } from '../services/models';
 import Header from './Header';
+import PageAnimation from './PageAnimation';
 
 function ParentDevice() {
     const { showToast } = useToastMessage();
@@ -121,20 +122,22 @@ function ParentDevice() {
     }, [disconnect]);
 
     return (
-        <div className="w-full md:w-1/2 lg:w-1/3 mx-auto min-h-dvh flex flex-col justify-between items-center gap-12 p-4 text-white bg-neutral-800 rounded-xl select-none duration-300 transition-all">
-            <Header>Parent Device ID</Header>
+        <PageAnimation>
+            <div className="w-full md:w-1/2 lg:w-1/3 mx-auto min-h-dvh flex flex-col justify-between items-center gap-12 p-4 text-white bg-neutral-800 rounded-xl select-none duration-300 transition-all">
+                <Header>Parent Device ID</Header>
 
-            <video ref={videoRef} autoPlay
-                className={`w-full my-auto rounded-lg border-2 shadow ${muted ? 'border-pink-500' : 'border-yellow-400'}`}
-                onMouseDown={() => pushToTalk(true)} onTouchStart={() => pushToTalk(true)}
-                onMouseUp={() => pushToTalk(false)} onTouchEnd={() => pushToTalk(false)}
-                onMouseLeave={() => pushToTalk(false)} />
+                <video ref={videoRef} autoPlay
+                    className={`w-full my-auto rounded-lg border-2 shadow ${muted ? 'border-pink-500' : 'border-yellow-400'}`}
+                    onMouseDown={() => pushToTalk(true)} onTouchStart={() => pushToTalk(true)}
+                    onMouseUp={() => pushToTalk(false)} onTouchEnd={() => pushToTalk(false)}
+                    onMouseLeave={() => pushToTalk(false)} />
 
-            <Button size="large"
-                label={status === 'DISCONNECTED' ? 'Connect' : status === 'CONNECTED' ? 'Disconnect' : 'Connecting'}
-                onClick={() => status === 'DISCONNECTED' ? connect() : disconnect()}
-                disabled={status === 'CONNECTING'} />
-        </div>
+                <Button size="large"
+                    label={status === 'DISCONNECTED' ? 'Connect' : status === 'CONNECTED' ? 'Disconnect' : 'Connecting'}
+                    onClick={() => status === 'DISCONNECTED' ? connect() : disconnect()}
+                    disabled={status === 'CONNECTING'} />
+            </div>
+        </PageAnimation>
     );
 }
 

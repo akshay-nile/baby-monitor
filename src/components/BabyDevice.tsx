@@ -4,6 +4,7 @@ import { useToastMessage } from '../contexts/ToastMessage/useToastMessage';
 import { clearSDP, getSDP, postSDP, sendMessage, waitForIceGatheringCompletion } from '../services/connex';
 import type { Parent } from '../services/models';
 import Header from './Header';
+import PageAnimation from './PageAnimation';
 
 function BabyDevice() {
     const { showToast } = useToastMessage();
@@ -221,17 +222,19 @@ function BabyDevice() {
     }, [disconnectAll]);
 
     return (
-        <div className="w-full md:w-1/2 lg:w-1/3 mx-auto min-h-dvh flex flex-col justify-between items-center gap-12 p-4 text-white bg-neutral-800 rounded-xl select-none duration-300 transition-all">
-            <Header>Baby Device ID</Header>
+        <PageAnimation>
+            <div className="w-full md:w-1/2 lg:w-1/3 mx-auto min-h-dvh flex flex-col justify-between items-center gap-12 p-4 text-white bg-neutral-800 rounded-xl select-none duration-300 transition-all">
+                <Header>Baby Device ID</Header>
 
-            <video ref={videoRef} autoPlay muted
-                className={`w-full my-auto rounded-lg border-2 shadow ${speakerCount <= 0 ? 'border-pink-500' : 'border-yellow-400'}`}
-                onClick={flipCameraStream} />
+                <video ref={videoRef} autoPlay muted
+                    className={`w-full my-auto rounded-lg border-2 shadow ${speakerCount <= 0 ? 'border-pink-500' : 'border-yellow-400'}`}
+                    onClick={flipCameraStream} />
 
-            <Button size="large"
-                label={status === 'DISCONNECTED' ? 'Start Camera' : 'Stop Camera'}
-                onClick={() => status === 'DISCONNECTED' ? connect() : disconnectAll()} />
-        </div>
+                <Button size="large"
+                    label={status === 'DISCONNECTED' ? 'Start Camera' : 'Stop Camera'}
+                    onClick={() => status === 'DISCONNECTED' ? connect() : disconnectAll()} />
+            </div>
+        </PageAnimation>
     );
 }
 

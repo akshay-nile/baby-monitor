@@ -1,6 +1,7 @@
 import { PrimeReactProvider } from 'primereact/api';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
+import { HashRouter } from 'react-router';
 import App from './App.tsx';
 import ToastContextProvider from './contexts/ToastMessage/ToastContextProvider.tsx';
 import './index.css';
@@ -9,7 +10,9 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <PrimeReactProvider value={{ ripple: true }}>
       <ToastContextProvider>
-        <App />
+        <HashRouter>
+          <App />
+        </HashRouter>
       </ToastContextProvider>
     </PrimeReactProvider>
   </StrictMode>,

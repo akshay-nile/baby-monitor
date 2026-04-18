@@ -1,6 +1,10 @@
+import PageAnimation from './PageAnimation';
+
 function UserSettings() {
     return (
-        <div>User Settings</div>
+        <PageAnimation>
+            <div>User Settings</div>
+        </PageAnimation>
     );
 }
 
