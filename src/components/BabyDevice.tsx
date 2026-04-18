@@ -15,6 +15,7 @@ function BabyDevice() {
     const timeoutRef = useRef<number>(null);
     const parentsRef = useRef<Map<string, Parent>>(new Map());
 
+    const [speakerCount, setSpeakerCount] = useState<number>(0);
     const [parentsCount, setParentsCount] = useState<number>(0);
     const [status, setStatus] = useState<'CONNECTED' | 'POLLING' | 'DISCONNECTED'>('DISCONNECTED');
     console.log(parentsCount);
@@ -150,12 +151,22 @@ function BabyDevice() {
                 replaceParentTracks([parent]);
             };
 
-            // When parent signals disconnect
+            // When parent sends a message
             dc.onmessage = (e: MessageEvent) => {
                 if (!parentID) return;
+                console.log(e.data);
                 if (e.data === 'DISCONNECT') {
                     disconnect(parentID);
                     if (!pollingRef.current && parentsRef.current.size === 0) setStatus('DISCONNECTED');
+                    return;
+                }
+                if (e.data === 'MUTE') {
+                    setSpeakerCount(prevCount => prevCount - 1);
+                    return;
+                }
+                if (e.data === 'UNMUTE') {
+                    setSpeakerCount(prevCount => prevCount + 1);
+                    showToast({ severity: 'info', summary: 'Parent Talking', detail: 'Parent ID: ' + parentID });
                 }
             };
 
@@ -213,7 +224,9 @@ function BabyDevice() {
         <div className="w-full md:w-1/2 lg:w-1/3 mx-auto min-h-dvh flex flex-col justify-between items-center gap-12 p-4 text-white bg-neutral-800 rounded-xl select-none duration-300 transition-all">
             <Header>Baby Device ID</Header>
 
-            <video ref={videoRef} autoPlay muted onClick={flipCameraStream} className="w-full my-auto rounded-lg border-2 border-pink-500 shadow" />
+            <video ref={videoRef} autoPlay muted
+                className={`w-full my-auto rounded-lg border-2 shadow ${speakerCount <= 0 ? 'border-pink-500' : 'border-yellow-400'}`}
+                onClick={flipCameraStream} />
 
             <Button size="large"
                 label={status === 'DISCONNECTED' ? 'Start Camera' : 'Stop Camera'}
