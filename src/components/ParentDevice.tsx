@@ -132,7 +132,7 @@ function ParentDevice() {
                         isLive={status === 'CONNECTED'}
                         isMuted={talking}
                         onFullscreen={() => videoRef.current?.requestFullscreen()} />
-                    <video ref={videoRef} autoPlay
+                    <video ref={videoRef} autoPlay muted={talking}
                         className={`w-full rounded-lg border-2 shadow ${!talking ? 'border-pink-500' : 'border-yellow-400'}`}
                         onMouseDown={() => pushToTalk(true)} onTouchStart={() => pushToTalk(true)}
                         onMouseUp={() => pushToTalk(false)} onTouchEnd={() => pushToTalk(false)}

@@ -1,4 +1,4 @@
-import { Camera, CameraOff, Fullscreen, Mic, MicOff, Volume2, VolumeOff } from 'lucide-react';
+import { Fullscreen, Mic, MicOff, Video, VideoOff, Volume2, VolumeOff } from 'lucide-react';
 
 type Props = { isLive: boolean, isMuted: boolean, onFullscreen: () => void };
 
@@ -23,11 +23,11 @@ function ParentStatusPanel({ isLive, isMuted, onFullscreen }: Props) {
                 {
                     isLive
                         ? <span className="flex gap-2 justify-center items-center">
-                            <Camera size={18} />
+                            <Video size={18} />
                             {isMuted ? <VolumeOff size={18} /> : <Volume2 size={18} />}
                         </span>
                         : <span className="flex gap-2 justify-center items-center">
-                            <CameraOff size={18} />
+                            <VideoOff size={18} />
                             <VolumeOff size={18} />
                         </span>
                 }
