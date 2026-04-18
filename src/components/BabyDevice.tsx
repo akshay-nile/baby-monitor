@@ -104,8 +104,8 @@ function BabyDevice() {
         }
     }
 
-    function replaceParentTracks(parents: Array<Parent>) {
-        const ms = streamRef.current;
+    function replaceParentTracks(parents: Array<Parent>, stream?: MediaStream) {
+        const ms = stream ?? streamRef.current;
         if (ms) parents
             .forEach(parent => parent.pc.getSenders()
                 .forEach(sender => ms.getTracks()
@@ -210,7 +210,7 @@ function BabyDevice() {
         const [oldStream, newStream] = [streamRef.current, await getCameraStream()];
         if (!newStream || !videoRef.current) return;
         videoRef.current.srcObject = newStream;
-        replaceParentTracks(parentsRef.current.values().toArray());
+        replaceParentTracks(parentsRef.current.values().toArray(), newStream);
         showToast({ severity: 'info', summary: `Switched to ${facingMode.current === 'user' ? 'Front' : 'Back'} Camera` });
         streamRef.current = newStream;
         if (oldStream) oldStream.getTracks().forEach(track => track.stop());
