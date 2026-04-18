@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useToastMessage } from '../contexts/ToastMessage/useToastMessage';
 import { clearSDP, getSDP, postSDP, sendMessage, waitForIceGatheringCompletion } from '../services/connex';
 import type { Parent } from '../services/models';
+import BabyStatusPanel from './BabyStatusPanel';
 import Header from './Header';
 import PageAnimation from './PageAnimation';
 
@@ -19,7 +20,6 @@ function BabyDevice() {
     const [speakerCount, setSpeakerCount] = useState<number>(0);
     const [parentsCount, setParentsCount] = useState<number>(0);
     const [status, setStatus] = useState<'CONNECTED' | 'POLLING' | 'DISCONNECTED'>('DISCONNECTED');
-    console.log(parentsCount);
 
     function addParent(parentID: string, parent: Parent, toast = true) {
         parentsRef.current.set(parentID, parent);
@@ -77,12 +77,13 @@ function BabyDevice() {
 
         clearSDP();
         stopPolling(false);
+        setSpeakerCount(0);
         if (toast) showToast({ severity: 'info', summary: 'Camera Stopped', detail });
     }, [showToast, disconnect, stopPolling]);
 
     async function getCameraStream(): Promise<MediaStream | null> {
         if (!window.isSecureContext) {
-            showToast({ severity: 'error', summary: 'No Secure Context' });
+            showToast({ severity: 'error', summary: 'Insecure Web Context' });
             return null;
         }
         const devices = await navigator.mediaDevices.enumerateDevices();
@@ -113,13 +114,15 @@ function BabyDevice() {
     }
 
     async function connect() {
+        // Reset and clear everything
+        disconnectAll(false);
+
         // Start local video stream
-        if (!streamRef.current) {
-            streamRef.current = await getCameraStream();
-            if (videoRef.current) {
-                videoRef.current.srcObject = streamRef.current;
-                showToast({ severity: 'info', summary: 'Camera Started', detail: 'Waiting for parent connections.' });
-            }
+        streamRef.current = await getCameraStream();
+        if (!streamRef.current) return;
+        if (videoRef.current) {
+            videoRef.current.srcObject = streamRef.current;
+            showToast({ severity: 'info', summary: 'Camera Started', detail: 'Waiting for parent connections.' });
         }
 
         // Start polling for parent connections
@@ -155,7 +158,6 @@ function BabyDevice() {
             // When parent sends a message
             dc.onmessage = (e: MessageEvent) => {
                 if (!parentID) return;
-                console.log(e.data);
                 if (e.data === 'DISCONNECT') {
                     disconnect(parentID);
                     if (!pollingRef.current && parentsRef.current.size === 0) setStatus('DISCONNECTED');
@@ -206,6 +208,10 @@ function BabyDevice() {
     }
 
     async function flipCameraStream() {
+        if (!streamRef.current) {
+            showToast({ severity: 'warn', summary: 'Camera Not Started' });
+            return;
+        }
         facingMode.current = facingMode.current === 'user' ? 'environment' : 'user';
         const [oldStream, newStream] = [streamRef.current, await getCameraStream()];
         if (!newStream || !videoRef.current) return;
@@ -226,9 +232,16 @@ function BabyDevice() {
             <div className="w-full md:w-1/2 lg:w-1/3 mx-auto min-h-dvh flex flex-col justify-between items-center gap-12 p-4 text-white bg-neutral-800 rounded-xl select-none duration-300 transition-all">
                 <Header>Baby Device ID</Header>
 
-                <video ref={videoRef} autoPlay muted
-                    className={`w-full my-auto rounded-lg border-2 shadow ${speakerCount <= 0 ? 'border-pink-500' : 'border-yellow-400'}`}
-                    onClick={flipCameraStream} />
+                <div className="w-full flex flex-col gap-1.5">
+                    <BabyStatusPanel
+                        isLive={status !== 'DISCONNECTED'}
+                        isPolling={status === 'POLLING'}
+                        isMuted={speakerCount <= 0}
+                        parentsCount={parentsCount} />
+                    <video ref={videoRef} autoPlay muted
+                        className={`w-full rounded-lg border-2 shadow ${speakerCount <= 0 ? 'border-pink-500' : 'border-yellow-400'}`}
+                        onClick={flipCameraStream} />
+                </div>
 
                 <Button size="large"
                     label={status === 'DISCONNECTED' ? 'Start Camera' : 'Stop Camera'}
