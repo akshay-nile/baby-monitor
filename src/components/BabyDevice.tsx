@@ -115,6 +115,9 @@ function BabyDevice() {
     }
 
     async function startPolling(toast = true) {
+        // Abort if polling is already up
+        if (status === 'POLLING') return;
+
         // Start local video stream
         if (!streamRef.current) {
             streamRef.current = await getCameraStream();
@@ -126,8 +129,8 @@ function BabyDevice() {
         }
 
         // Start polling for parent connections
-        pollingRef.current = true;
         setStatus('POLLING');
+        pollingRef.current = true;
         timeoutRef.current = setTimeout(stopPolling, 5 * 60 * 1000);
         if (toast) showToast({ severity: 'success', summary: 'Polling Started', detail: 'Parent should connect within 5 minutes' });
 
@@ -161,7 +164,6 @@ function BabyDevice() {
                 if (!parentID) return;
                 if (e.data === 'DISCONNECT') {
                     disconnect(parentID);
-                    if (!pollingRef.current && parentsRef.current.size === 0) setStatus('DISCONNECTED');
                     return;
                 }
                 const parent = parentsRef.current.get(parentID);
@@ -182,7 +184,6 @@ function BabyDevice() {
             pc.onconnectionstatechange = () => {
                 if (!parentID) return;
                 if (['disconnected', 'closed', 'failed'].includes(pc.connectionState)) disconnect(parentID);
-                if (!pollingRef.current && parentsRef.current.size === 0) setStatus('DISCONNECTED');
             };
 
             // Create and send the offer sdp
@@ -234,7 +235,7 @@ function BabyDevice() {
 
     return (
         <PageAnimation>
-            <div className="w-full md:w-1/2 lg:w-1/3 mx-auto min-h-dvh flex flex-col justify-between items-center gap-12 p-4 text-white bg-neutral-800 rounded-xl select-none duration-300 transition-all">
+            <div className="w-full md:w-1/2 lg:w-1/3 mx-auto min-h-dvh flex flex-col justify-between items-center gap-4 p-4 text-white bg-neutral-800 rounded-xl select-none duration-300 transition-all">
                 <Header>Baby Device ID</Header>
 
                 <div className="w-full flex flex-col items-center gap-1.5">
