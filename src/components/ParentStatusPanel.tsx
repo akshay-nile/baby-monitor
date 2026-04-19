@@ -5,7 +5,7 @@ type Props = { isLive: boolean, isMuted: boolean, onFullscreen: () => void };
 function ParentStatusPanel({ isLive, isMuted, onFullscreen }: Props) {
     return (
         <div className="w-full flex justify-between px-2">
-            <div className="flex flex-col">
+            <div className="flex flex-col items-center gap-0.5">
                 <span className="flex gap-2 justify-center items-center">
                     {isMuted ? <Mic size={18} /> : <MicOff size={18} />}
                 </span>
@@ -19,7 +19,7 @@ function ParentStatusPanel({ isLive, isMuted, onFullscreen }: Props) {
                 </Fullscreen>
             }
 
-            <div className="flex flex-col">
+            <div className="flex flex-col items-center gap-0.5">
                 {
                     isLive
                         ? <span className="flex gap-2 justify-center items-center">
