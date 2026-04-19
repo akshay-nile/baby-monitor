@@ -208,9 +208,8 @@ function BabyDevice() {
             }
         }
 
-        if (parentsRef.current.size > 0) {
-            setStatus('CONNECTED');
-        } else disconnectAll(pollingRef.current);
+        if (parentsRef.current.size > 0) setStatus('CONNECTED');
+        else disconnectAll(pollingRef.current);
     }
 
     async function flipCameraStream() {
@@ -245,8 +244,10 @@ function BabyDevice() {
                         isTalking={talking}
                         parentsCount={parentsCount} />
 
-                    <video ref={videoRef} autoPlay muted
-                        className={`w-full rounded-lg border-2 shadow cursor-pointer ${!talking ? 'border-pink-500' : 'border-yellow-400'}`}
+                    <video ref={videoRef} autoPlay muted className={`
+                            w-full shadow cursor-pointer rounded-lg border-2 transition-colors duration-300
+                            ${talking ? 'border-yellow-400' : 'border-pink-500'}
+                        `}
                         onClick={flipCameraStream} />
 
                     <Button size="small" className="w-fit mt-1!"

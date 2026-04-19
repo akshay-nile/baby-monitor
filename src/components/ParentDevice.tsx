@@ -13,11 +13,38 @@ function ParentDevice() {
     const babyRef = useRef<Baby>(null);
     const videoRef = useRef<HTMLVideoElement>(null);
     const streamRef = useRef<MediaStream>(null);
+    const recorderRef = useRef<MediaRecorder>(null);
+    const recordedChunksRef = useRef<Blob[]>([]);
 
     const [status, setStatus] = useState<'CONNECTED' | 'CONNECTING' | 'DISCONNECTED'>('DISCONNECTED');
     const [talking, setTalking] = useState<boolean>(false);
+    const [recording, setRecording] = useState<'border-red-500' | 'border-transparent' | null>(null);
+
+    const stopAndSaveRecording = useCallback(() => {
+        const [recorder, recordedChunks] = [recorderRef.current, recordedChunksRef.current];
+        if (!recorder || recordedChunks.length === 0) return;
+        recorder.onstop = () => {
+            const recordedBlob = new Blob(recordedChunks, { type: 'video/webm' });
+            const url = URL.createObjectURL(recordedBlob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Recording_${Date.now()}.webm`;
+            a.click();
+            URL.revokeObjectURL(url);
+            recorderRef.current = null;
+            recordedChunksRef.current = [];
+            setRecording(null);
+            showToast({ severity: 'info', summary: 'Recording Stopped' });
+        };
+        if (recorder.state === 'recording') {
+            recorder.requestData();
+            recorder.stop();
+        }
+    }, [showToast]);
 
     const disconnect = useCallback(() => {
+        stopAndSaveRecording();
+
         if (babyRef.current) {
             sendMessage(babyRef.current.dc, 'DISCONNECT');
             babyRef.current.dc.close();
@@ -39,7 +66,7 @@ function ParentDevice() {
 
         setStatus('DISCONNECTED');
         showToast({ severity: 'warn', summary: 'Disconnected' });
-    }, [showToast]);
+    }, [showToast, stopAndSaveRecording]);
 
     async function connect() {
         // Start local media stream
@@ -118,6 +145,19 @@ function ParentDevice() {
         sendMessage(babyRef.current.dc, pushed ? 'TALKING' : 'SILENCED');
     }
 
+    function startRecording() {
+        const remoteStream = videoRef.current?.srcObject as MediaStream;
+        if (!babyRef.current || !remoteStream || recorderRef.current) return;
+        recorderRef.current = new MediaRecorder(remoteStream, { mimeType: 'video/webm' });
+        recorderRef.current.ondataavailable = (e: BlobEvent) => {
+            setRecording(prev => prev === 'border-red-500' ? 'border-transparent' : 'border-red-500');
+            recordedChunksRef.current.push(e.data);
+        };
+        recorderRef.current.start(500);
+        setRecording('border-red-500');
+        showToast({ severity: 'info', summary: 'Recording Started' });
+    }
+
     useEffect(() => {
         return () => { if (streamRef.current || babyRef.current) disconnect(); };
     }, [disconnect]);
@@ -127,16 +167,24 @@ function ParentDevice() {
             <div className="w-full md:w-1/2 lg:w-1/3 mx-auto min-h-dvh flex flex-col justify-between items-center gap-4 p-4 text-white bg-neutral-800 rounded-xl select-none duration-300 transition-all">
                 <Header>Parent Device ID</Header>
 
-                <div className="w-full flex flex-col gap-1.5">
+                <div className="w-full flex flex-col items-center gap-1.5">
                     <ParentStatusPanel
                         isLive={status === 'CONNECTED'}
                         isTalking={talking}
                         onFullscreen={() => videoRef.current?.requestFullscreen()} />
-                    <video ref={videoRef} autoPlay muted={talking}
-                        className={`w-full rounded-lg border-2 shadow cursor-pointer ${!talking ? 'border-pink-500' : 'border-yellow-400'}`}
+
+                    <video ref={videoRef} autoPlay muted={talking} className={`
+                            w-full shadow cursor-pointer rounded-lg border-2 transition-colors duration-300
+                            ${talking ? 'border-yellow-400' : recording ?? 'border-pink-500'}
+                        `}
                         onMouseDown={() => pushToTalk(true)} onTouchStart={() => pushToTalk(true)}
                         onMouseUp={() => pushToTalk(false)} onTouchEnd={() => pushToTalk(false)}
                         onMouseLeave={() => pushToTalk(false)} />
+
+                    <Button size="small" className="w-fit mt-1!"
+                        label={recording ? 'Stop & Save Recording' : 'Start Recording'}
+                        onClick={() => recording ? stopAndSaveRecording() : startRecording()}
+                        disabled={status !== 'CONNECTED'} />
                 </div>
 
                 <Button size="large"
