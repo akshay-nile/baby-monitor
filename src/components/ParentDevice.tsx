@@ -115,11 +115,11 @@ function ParentDevice() {
         setTalking(pushed);
         videoRef.current.muted = pushed;
         streamRef.current.getTracks().forEach(track => track.enabled = pushed);
-        sendMessage(babyRef.current.dc, pushed ? 'UNMUTE' : 'MUTE');
+        sendMessage(babyRef.current.dc, pushed ? 'TALKING' : 'SILENCED');
     }
 
     useEffect(() => {
-        return () => { if (streamRef.current !== null) disconnect(); };
+        return () => { if (streamRef.current || babyRef.current) disconnect(); };
     }, [disconnect]);
 
     return (
@@ -133,7 +133,7 @@ function ParentDevice() {
                         isMuted={talking}
                         onFullscreen={() => videoRef.current?.requestFullscreen()} />
                     <video ref={videoRef} autoPlay muted={talking}
-                        className={`w-full rounded-lg border-2 shadow ${!talking ? 'border-pink-500' : 'border-yellow-400'}`}
+                        className={`w-full rounded-lg border-2 shadow cursor-pointer ${!talking ? 'border-pink-500' : 'border-yellow-400'}`}
                         onMouseDown={() => pushToTalk(true)} onTouchStart={() => pushToTalk(true)}
                         onMouseUp={() => pushToTalk(false)} onTouchEnd={() => pushToTalk(false)}
                         onMouseLeave={() => pushToTalk(false)} />

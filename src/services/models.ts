@@ -10,4 +10,5 @@ export interface Baby {
 
 export interface Parent extends Baby {
     audio: HTMLAudioElement,
+    talking: boolean
 }

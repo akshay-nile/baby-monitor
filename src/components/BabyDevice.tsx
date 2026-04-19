@@ -17,7 +17,7 @@ function BabyDevice() {
     const timeoutRef = useRef<number>(null);
     const parentsRef = useRef<Map<string, Parent>>(new Map());
 
-    const [speakerCount, setSpeakerCount] = useState<number>(0);
+    const [talking, setTalking] = useState<boolean>(false);
     const [parentsCount, setParentsCount] = useState<number>(0);
     const [status, setStatus] = useState<'CONNECTED' | 'POLLING' | 'DISCONNECTED'>('DISCONNECTED');
 
@@ -39,8 +39,9 @@ function BabyDevice() {
         if (timeoutRef.current) {
             clearTimeout(timeoutRef.current);
             timeoutRef.current = null;
-            if (toast) showToast({ severity: 'info', summary: 'Polling Stopped', detail: parentsRef.current.size + ' parent devices are connected.' });
         }
+        clearSDP();
+        if (toast) showToast({ severity: 'info', summary: 'Polling Stopped', detail: parentsRef.current.size + ' parent devices are connected.' });
     }, [showToast]);
 
     const disconnect = useCallback((parentID: string, toast = true) => {
@@ -76,8 +77,8 @@ function BabyDevice() {
         }
 
         clearSDP();
+        setTalking(false);
         stopPolling(false);
-        setSpeakerCount(0);
         if (toast) showToast({ severity: 'info', summary: 'Camera Stopped', detail });
     }, [showToast, disconnect, stopPolling]);
 
@@ -113,22 +114,22 @@ function BabyDevice() {
                     .forEach(track => track.kind === sender.track?.kind && sender.replaceTrack(track))));
     }
 
-    async function connect() {
-        // Reset and clear everything
-        disconnectAll(false);
-
+    async function startPolling(toast = true) {
         // Start local video stream
-        streamRef.current = await getCameraStream();
-        if (!streamRef.current) return;
-        if (videoRef.current) {
-            videoRef.current.srcObject = streamRef.current;
-            showToast({ severity: 'info', summary: 'Camera Started', detail: 'Waiting for parent connections.' });
+        if (!streamRef.current) {
+            streamRef.current = await getCameraStream();
+            if (!streamRef.current) return;
+            if (videoRef.current) {
+                videoRef.current.srcObject = streamRef.current;
+                showToast({ severity: 'success', summary: 'Camera Started', detail: 'Waiting for parent connections.' });
+            }
         }
 
         // Start polling for parent connections
         pollingRef.current = true;
         setStatus('POLLING');
         timeoutRef.current = setTimeout(stopPolling, 5 * 60 * 1000);
+        if (toast) showToast({ severity: 'success', summary: 'Polling Started', detail: 'Parent should connect within 5 minutes' });
 
         // Allow connecting parents until polling timeout
         while (pollingRef.current) {
@@ -150,7 +151,7 @@ function BabyDevice() {
             const dc = pc.createDataChannel('SIGNAL');
             dc.onopen = () => {
                 if (!parentID) return;
-                const parent = { pc, dc, audio };
+                const parent = { pc, dc, audio, talking: false };
                 addParent(parentID, parent);
                 replaceParentTracks([parent]);
             };
@@ -163,13 +164,17 @@ function BabyDevice() {
                     if (!pollingRef.current && parentsRef.current.size === 0) setStatus('DISCONNECTED');
                     return;
                 }
-                if (e.data === 'MUTE') {
-                    setSpeakerCount(prevCount => prevCount - 1);
+                const parent = parentsRef.current.get(parentID);
+                if (!parent) return;
+                if (e.data === 'SILENCED') {
+                    parent.talking = false;
+                    setTalking(parentsRef.current.values().some(p => p.talking));
                     return;
                 }
-                if (e.data === 'UNMUTE') {
-                    setSpeakerCount(prevCount => prevCount + 1);
+                if (e.data === 'TALKING') {
+                    parent.talking = true;
                     showToast({ severity: 'info', summary: 'Parent Talking', detail: 'Parent ID: ' + parentID });
+                    setTalking(true);
                 }
             };
 
@@ -224,7 +229,7 @@ function BabyDevice() {
 
     useEffect(() => {
         const parents = parentsRef.current;
-        return () => { if (streamRef.current !== null || parents.size > 0) disconnectAll(); };
+        return () => { if (streamRef.current || parents.size > 0) disconnectAll(); };
     }, [disconnectAll]);
 
     return (
@@ -232,20 +237,26 @@ function BabyDevice() {
             <div className="w-full md:w-1/2 lg:w-1/3 mx-auto min-h-dvh flex flex-col justify-between items-center gap-12 p-4 text-white bg-neutral-800 rounded-xl select-none duration-300 transition-all">
                 <Header>Baby Device ID</Header>
 
-                <div className="w-full flex flex-col gap-1.5">
+                <div className="w-full flex flex-col items-center gap-1.5">
                     <BabyStatusPanel
                         isLive={status !== 'DISCONNECTED'}
                         isPolling={status === 'POLLING'}
-                        isMuted={speakerCount <= 0}
+                        isMuted={talking}
                         parentsCount={parentsCount} />
+
                     <video ref={videoRef} autoPlay muted
-                        className={`w-full rounded-lg border-2 shadow ${speakerCount <= 0 ? 'border-pink-500' : 'border-yellow-400'}`}
+                        className={`w-full rounded-lg border-2 shadow cursor-pointer ${!talking ? 'border-pink-500' : 'border-yellow-400'}`}
                         onClick={flipCameraStream} />
+
+                    <Button size="small" className="w-fit mt-1!"
+                        label={status === 'POLLING' ? 'Stop Polling' : 'Start Polling'}
+                        onClick={() => status === 'POLLING' ? stopPolling() : startPolling()}
+                        disabled={status === 'DISCONNECTED'} />
                 </div>
 
                 <Button size="large"
                     label={status === 'DISCONNECTED' ? 'Start Camera' : 'Stop Camera'}
-                    onClick={() => status === 'DISCONNECTED' ? connect() : disconnectAll()} />
+                    onClick={() => status === 'DISCONNECTED' ? startPolling(false) : disconnectAll()} />
             </div>
         </PageAnimation>
     );

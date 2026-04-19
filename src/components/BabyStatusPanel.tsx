@@ -1,10 +1,10 @@
-import { Ban, Camera, CameraOff, Mic, MicOff, Users, Volume2, VolumeOff } from 'lucide-react';
+import { Ban, Camera, CameraOff, Mic, MicOff, User, Users, Volume2, VolumeOff } from 'lucide-react';
 
 type Props = { parentsCount: number, isLive: boolean, isPolling: boolean, isMuted: boolean };
 
 function BabyStatusPanel({ parentsCount, isLive, isPolling, isMuted }: Props) {
     return (
-        <div className="w-full flex justify-between items-center px-2">
+        <div className="w-full flex justify-between px-2">
             <div className="flex flex-col">
                 {
                     isLive
@@ -24,8 +24,10 @@ function BabyStatusPanel({ parentsCount, isLive, isPolling, isMuted }: Props) {
                 {
                     (isPolling || parentsCount > 0)
                         ? <span className="flex gap-2 justify-center items-center">
-                            <Users size={18} />
-                            <span>{parentsCount}{isPolling && '+'}</span>
+                            {parentsCount > 1 ? <Users size={18} /> : <User size={18} />}
+                            <span className="text-sm font-bold tracking-widest">
+                                {parentsCount}{isPolling && '+'}
+                            </span>
                         </span>
                         : <span className="flex gap-2 justify-center items-center">
                             <Ban size={18} />
