@@ -1,13 +1,13 @@
 import { Fullscreen, Mic, MicOff, Video, VideoOff, Volume2, VolumeOff } from 'lucide-react';
 
-type Props = { isLive: boolean, isMuted: boolean, onFullscreen: () => void };
+type Props = { isLive: boolean, isTalking: boolean, onFullscreen: () => void };
 
-function ParentStatusPanel({ isLive, isMuted, onFullscreen }: Props) {
+function ParentStatusPanel({ isLive, isTalking, onFullscreen }: Props) {
     return (
         <div className="w-full flex justify-between px-2">
             <div className="flex flex-col items-center gap-0.5">
                 <span className="flex gap-2 justify-center items-center">
-                    {isMuted ? <Mic size={18} /> : <MicOff size={18} />}
+                    {isTalking ? <Mic size={18} /> : <MicOff size={18} />}
                 </span>
                 <div className="text-sm">sending</div>
             </div>
@@ -24,7 +24,7 @@ function ParentStatusPanel({ isLive, isMuted, onFullscreen }: Props) {
                     isLive
                         ? <span className="flex gap-2 justify-center items-center">
                             <Video size={18} />
-                            {isMuted ? <VolumeOff size={18} /> : <Volume2 size={18} />}
+                            {isTalking ? <VolumeOff size={18} /> : <Volume2 size={18} />}
                         </span>
                         : <span className="flex gap-2 justify-center items-center">
                             <VideoOff size={18} />

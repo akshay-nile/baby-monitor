@@ -130,7 +130,7 @@ function ParentDevice() {
                 <div className="w-full flex flex-col gap-1.5">
                     <ParentStatusPanel
                         isLive={status === 'CONNECTED'}
-                        isMuted={talking}
+                        isTalking={talking}
                         onFullscreen={() => videoRef.current?.requestFullscreen()} />
                     <video ref={videoRef} autoPlay muted={talking}
                         className={`w-full rounded-lg border-2 shadow cursor-pointer ${!talking ? 'border-pink-500' : 'border-yellow-400'}`}

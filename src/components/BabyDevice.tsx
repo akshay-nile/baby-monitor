@@ -242,7 +242,7 @@ function BabyDevice() {
                     <BabyStatusPanel
                         isLive={status !== 'DISCONNECTED'}
                         isPolling={status === 'POLLING'}
-                        isMuted={!talking}
+                        isTalking={talking}
                         parentsCount={parentsCount} />
 
                     <video ref={videoRef} autoPlay muted
