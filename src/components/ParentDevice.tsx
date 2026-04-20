@@ -16,7 +16,7 @@ function ParentDevice() {
     const recorderRef = useRef<MediaRecorder>(null);
     const recordedChunksRef = useRef<Blob[]>([]);
 
-    const [status, setStatus] = useState<'CONNECTED' | 'CONNECTING' | 'DISCONNECTED'>('DISCONNECTED');
+    const [connection, setConnection] = useState<'CONNECTED' | 'CONNECTING' | 'DISCONNECTED'>('DISCONNECTED');
     const [talking, setTalking] = useState<boolean>(false);
     const [recording, setRecording] = useState<'border-red-500' | 'border-transparent' | null>(null);
 
@@ -64,30 +64,31 @@ function ParentDevice() {
             streamRef.current = null;
         }
 
-        setStatus('DISCONNECTED');
+        setConnection('DISCONNECTED');
         showToast({ severity: 'warn', summary: 'Disconnected' });
     }, [showToast, stopAndSaveRecording]);
 
-    async function connect() {
-        // Start local media stream
-        if (!streamRef.current) {
-            if (!window.isSecureContext) {
-                showToast({ severity: 'error', summary: 'No Secure Context' });
-                return;
-            }
-            try {
-                streamRef.current = await navigator.mediaDevices.getUserMedia({
-                    audio: { noiseSuppression: true, echoCancellation: true, autoGainControl: true }
-                });
-                streamRef.current.getTracks().forEach(track => track.enabled = false);
-            }
-            catch (error) {
-                showToast({ severity: 'error', summary: 'Media Access Denied', detail: error });
-                return;
-            }
+    async function startMicrophone() {
+        if (streamRef.current) return;
+        if (!window.isSecureContext) {
+            showToast({ severity: 'error', summary: 'Insecure Web Context' });
+            return;
         }
+        try {
+            streamRef.current = await navigator.mediaDevices.getUserMedia({
+                audio: { noiseSuppression: true, echoCancellation: true, autoGainControl: true }
+            });
+            streamRef.current.getTracks().forEach(track => track.enabled = false);
+        }
+        catch (error) {
+            showToast({ severity: 'error', summary: 'Media Access Denied', detail: error });
+            return;
+        }
+    }
 
-        setStatus('CONNECTING');
+    async function connect() {
+        startMicrophone();
+        setConnection('CONNECTING');
         const offer = await getSDP('offer');
 
         if (offer) {
@@ -101,12 +102,12 @@ function ParentDevice() {
                 if (videoRef.current) videoRef.current.srcObject = e.streams[0];
             };
 
-            // When baby gets connected
+            // When baby gets connected or sends a message
             pc.ondatachannel = (e: RTCDataChannelEvent) => {
                 const dc = e.channel;
                 dc.onopen = () => {
                     babyRef.current = { pc, dc };
-                    setStatus('CONNECTED');
+                    setConnection('CONNECTED');
                     showToast({ severity: 'success', summary: 'Connection Success', detail: 'Baby ID: ' + offer.browserID });
                 };
                 dc.onmessage = (e: MessageEvent) => {
@@ -128,11 +129,11 @@ function ParentDevice() {
             const isPosted = await postSDP(pc.localDescription!);
             if (!isPosted) {
                 pc.close();
-                setStatus('DISCONNECTED');
+                setConnection('DISCONNECTED');
                 showToast({ severity: 'error', summary: 'Connection Failed', detail: 'Failed to post the answer sdp' });
             }
         } else {
-            setStatus('DISCONNECTED');
+            setConnection('DISCONNECTED');
             showToast({ severity: 'warn', summary: 'Baby Device Offline', detail: 'No offer sdp was detected' });
         }
     }
@@ -169,7 +170,7 @@ function ParentDevice() {
 
                 <div className="w-full flex flex-col items-center gap-1.5">
                     <ParentStatusPanel
-                        isLive={status === 'CONNECTED'}
+                        isLive={connection === 'CONNECTED'}
                         isTalking={talking}
                         onFullscreen={() => videoRef.current?.requestFullscreen()} />
 
@@ -184,13 +185,13 @@ function ParentDevice() {
                     <Button size="small" className="w-fit mt-1!"
                         label={recording ? 'Stop & Save Recording' : 'Start Recording'}
                         onClick={() => recording ? stopAndSaveRecording() : startRecording()}
-                        disabled={status !== 'CONNECTED'} />
+                        disabled={connection !== 'CONNECTED'} />
                 </div>
 
                 <Button size="large"
-                    label={status === 'DISCONNECTED' ? 'Connect' : status === 'CONNECTED' ? 'Disconnect' : 'Connecting'}
-                    onClick={() => status === 'DISCONNECTED' ? connect() : disconnect()}
-                    disabled={status === 'CONNECTING'} />
+                    label={connection === 'DISCONNECTED' ? 'Connect' : connection === 'CONNECTED' ? 'Disconnect' : 'Connecting...'}
+                    onClick={() => connection === 'DISCONNECTED' ? connect() : connection === 'CONNECTED' ? disconnect() : null}
+                    disabled={connection === 'CONNECTING'} />
             </div>
         </PageAnimation>
     );
