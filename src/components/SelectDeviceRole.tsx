@@ -17,7 +17,7 @@ function SelectDeviceRole() {
                     </h1>
 
                     <button className={styles.bigButton} onClick={() => navigate('/baby-device')}>
-                        <Baby size="70" strokeWidth={1.5} />
+                        <Baby size="65" strokeWidth={1.5} />
                         <div className={styles.bigBtnText}>
                             <span className="text-xl">Use as Baby Device</span>
                             <span>(Camera & Microphone)</span>
@@ -25,7 +25,7 @@ function SelectDeviceRole() {
                     </button>
 
                     <button className={styles.bigButton} onClick={() => navigate('/parent-device')}>
-                        <Users size="70" strokeWidth={1.5} />
+                        <Users size="65" strokeWidth={1.5} />
                         <div className={styles.bigBtnText}>
                             <span className="text-xl">Use as Parent Device</span>
                             <span>(Display & Speakers)</span>

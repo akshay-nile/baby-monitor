@@ -98,7 +98,7 @@ function BabyDevice() {
         if (cameras.length === 1) facingMode.current = 'user';
         try {
             return await navigator.mediaDevices.getUserMedia({
-                video: { facingMode: facingMode.current },
+                video: { facingMode: facingMode.current, frameRate: { ideal: 60 } },
                 audio: { noiseSuppression: true, echoCancellation: true, autoGainControl: true }
             });
         }
@@ -216,10 +216,7 @@ function BabyDevice() {
     }
 
     async function flipCameraStream() {
-        if (!streamRef.current) {
-            showToast({ severity: 'warn', summary: 'Camera Not Started' });
-            return;
-        }
+        if (!streamRef.current) return;
         facingMode.current = facingMode.current === 'user' ? 'environment' : 'user';
         const [oldStream, newStream] = [streamRef.current, await getCameraStream()];
         if (!newStream || !videoRef.current) return;
@@ -238,7 +235,7 @@ function BabyDevice() {
     return (
         <PageAnimation>
             <div className="w-full md:w-1/2 lg:w-1/3 mx-auto min-h-dvh flex flex-col justify-between items-center gap-4 p-4 text-white bg-neutral-800 rounded-xl select-none duration-300 transition-all">
-                <Header>Baby Device ID</Header>
+                <Header screen="baby">Baby Device ID</Header>
 
                 <div className="w-full flex flex-col items-center gap-1.5">
                     <BabyStatusPanel
@@ -261,7 +258,8 @@ function BabyDevice() {
 
                 <Button size="large"
                     label={camera === 'STARTED' ? 'Stop Camera' : camera === 'STOPPED' ? 'Start Camera' : 'Starting...'}
-                    onClick={() => camera === 'STARTED' ? stopCamera() : camera === 'STOPPED' ? startCamera() : null} />
+                    onClick={() => camera === 'STARTED' ? stopCamera() : camera === 'STOPPED' ? startCamera() : null}
+                    disabled={camera === 'STARTING'} />
             </div>
         </PageAnimation>
     );

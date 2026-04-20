@@ -42,7 +42,7 @@ function ParentDevice() {
         }
     }, [showToast]);
 
-    const disconnect = useCallback(() => {
+    const disconnect = useCallback((toast = true) => {
         stopAndSaveRecording();
 
         if (babyRef.current) {
@@ -52,6 +52,7 @@ function ParentDevice() {
             babyRef.current.pc.getReceivers().forEach(receiver => receiver.track?.stop());
             babyRef.current.pc.close();
             babyRef.current = null;
+            toast = true;
         }
 
         if (videoRef.current) {
@@ -65,7 +66,7 @@ function ParentDevice() {
         }
 
         setConnection('DISCONNECTED');
-        showToast({ severity: 'warn', summary: 'Disconnected' });
+        if (toast) showToast({ severity: 'warn', summary: 'Disconnected' });
     }, [showToast, stopAndSaveRecording]);
 
     async function startMicrophone() {
@@ -87,8 +88,8 @@ function ParentDevice() {
     }
 
     async function connect() {
-        startMicrophone();
         setConnection('CONNECTING');
+        await startMicrophone();
         const offer = await getSDP('offer');
 
         if (offer) {
@@ -160,13 +161,13 @@ function ParentDevice() {
     }
 
     useEffect(() => {
-        return () => { if (streamRef.current || babyRef.current) disconnect(); };
+        return () => { if (streamRef.current || babyRef.current) disconnect(false); };
     }, [disconnect]);
 
     return (
         <PageAnimation>
             <div className="w-full md:w-1/2 lg:w-1/3 mx-auto min-h-dvh flex flex-col justify-between items-center gap-4 p-4 text-white bg-neutral-800 rounded-xl select-none duration-300 transition-all">
-                <Header>Parent Device ID</Header>
+                <Header screen="parent">Parent Device ID</Header>
 
                 <div className="w-full flex flex-col items-center gap-1.5">
                     <ParentStatusPanel
