@@ -2,8 +2,9 @@ import { Baby, CircleQuestionMark, Download, Settings, User } from 'lucide-react
 import type { ReactNode } from 'react';
 import { useNavigate } from 'react-router';
 import usePWAInstaller from '../hooks/usePWAInstaller';
-import { browserID } from '../services/settings';
+import { getBrowserID } from '../services/settings';
 
+const browserID = getBrowserID();
 type Props = { children?: ReactNode, screen?: 'baby' | 'parent' | 'settings' };
 
 function Header({ children, screen }: Props) {

@@ -1,7 +1,8 @@
 import type { SDP } from './models';
-import { browserID } from './settings';
+import { getBrowserID } from './settings';
 
 const baseURL = 'https://akshaynile.pythonanywhere.com/exchange/baby-monitor';
+const browserID = getBrowserID();
 
 export async function getSDP(type: 'offer' | 'answer'): Promise<SDP | null> {
     const response = await fetch(baseURL);

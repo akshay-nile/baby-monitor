@@ -12,3 +12,11 @@ export interface Parent extends Baby {
     audio: HTMLAudioElement,
     talking: boolean
 }
+
+export interface Settings {
+    startWithCamera: 'user' | 'environment',
+    maxParentConnections: number,
+    pollingTimeout: number,
+    usePushToTalk: boolean,
+    trustedParents: string[],
+}

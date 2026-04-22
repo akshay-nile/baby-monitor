@@ -6,8 +6,10 @@ import type { Baby } from '../services/models';
 import Header from './Header';
 import PageAnimation from './PageAnimation';
 import ParentStatusPanel from './ParentStatusPanel';
+import { getSettings } from '../services/settings';
 
 function ParentDevice() {
+    const settings = getSettings();
     const { showToast } = useToastMessage();
 
     const babyRef = useRef<Baby>(null);
@@ -70,7 +72,7 @@ function ParentDevice() {
     }, [showToast, stopAndSaveRecording]);
 
     async function startMicrophone() {
-        if (streamRef.current) return;
+        if (streamRef.current || !settings.usePushToTalk) return;
         if (!window.isSecureContext) {
             showToast({ severity: 'error', summary: 'Insecure Web Context' });
             return;
@@ -95,8 +97,10 @@ function ParentDevice() {
         if (offer) {
             const pc = new RTCPeerConnection();
 
-            const ms = streamRef.current as MediaStream;
-            ms.getTracks().forEach(track => pc.addTrack(track, ms));
+            if (settings.usePushToTalk) {
+                const ms = streamRef.current as MediaStream;
+                ms.getTracks().forEach(track => pc.addTrack(track, ms));
+            }
 
             // When baby media stream receives
             pc.ontrack = (e: RTCTrackEvent) => {
@@ -140,6 +144,10 @@ function ParentDevice() {
     }
 
     function pushToTalk(pushed: boolean) {
+        if (!settings.usePushToTalk) {
+            showToast({ severity: 'warn', summary: 'Feature Disabled', detail: 'Push-To-Talk feature is disabled in settings' });
+            return;
+        }
         if (!babyRef.current || !videoRef.current || !streamRef.current) return;
         setTalking(pushed);
         videoRef.current.muted = pushed;

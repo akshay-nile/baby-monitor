@@ -1,21 +1,26 @@
+import { User } from 'lucide-react';
 import { Button } from 'primereact/button';
+import { confirmDialog, ConfirmDialog } from 'primereact/confirmdialog';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useToastMessage } from '../contexts/ToastMessage/useToastMessage';
 import { clearSDP, getSDP, postSDP, sendMessage, waitForIceGatheringCompletion } from '../services/connex';
 import type { Parent } from '../services/models';
+import { getSettings, setSettings } from '../services/settings';
 import BabyStatusPanel from './BabyStatusPanel';
 import Header from './Header';
 import PageAnimation from './PageAnimation';
 
+
 function BabyDevice() {
+    const settings = getSettings();
     const { showToast } = useToastMessage();
 
     const videoRef = useRef<HTMLVideoElement>(null);
     const streamRef = useRef<MediaStream>(null);
-    const facingMode = useRef<'user' | 'environment'>('user');
     const pollingRef = useRef<boolean>(false);
     const timeoutRef = useRef<number>(null);
     const parentsRef = useRef<Map<string, Parent>>(new Map());
+    const facingModeRef = useRef<'user' | 'environment'>(settings.startWithCamera);
 
     const [camera, setCamera] = useState<'STARTED' | 'STARTING' | 'STOPPED'>('STOPPED');
     const [polling, setPolling] = useState<boolean>(false);
@@ -95,10 +100,10 @@ function BabyDevice() {
             showToast({ severity: 'error', summary: 'No Camera Found' });
             return null;
         }
-        if (cameras.length === 1) facingMode.current = 'user';
+        if (cameras.length === 1) facingModeRef.current = 'user';
         try {
             return await navigator.mediaDevices.getUserMedia({
-                video: { facingMode: facingMode.current, frameRate: { ideal: 60 } },
+                video: { facingMode: facingModeRef.current, frameRate: { ideal: 60 } },
                 audio: { noiseSuppression: true, echoCancellation: true, autoGainControl: true }
             });
         }
@@ -134,11 +139,17 @@ function BabyDevice() {
         // Abort if polling is already active
         if (pollingRef.current) return;
 
+        // Abort if max parents limit is reached
+        if (parentsRef.current.size >= settings.maxParentConnections) {
+            showToast({ severity: 'warn', summary: 'Max Parents Limit Reached', detail: `${settings.maxParentConnections} parents are already connected` });
+            return;
+        }
+
         // Start polling for parent connections
         setPolling(true);
         pollingRef.current = true;
-        timeoutRef.current = setTimeout(stopPolling, 5 * 60 * 1000);
-        if (toast) showToast({ severity: 'success', summary: 'Polling Started', detail: 'Parent should connect within 5 minutes' });
+        timeoutRef.current = setTimeout(stopPolling, settings.pollingTimeout * 60 * 1000);
+        if (toast) showToast({ severity: 'success', summary: 'Polling Started', detail: `Parent should connect within ${settings.pollingTimeout} minutes` });
 
         // Allow connecting parents while polling is active
         while (pollingRef.current) {
@@ -163,6 +174,7 @@ function BabyDevice() {
                 const parent = { pc, dc, audio, talking: false };
                 addParent(parentID, parent);
                 replaceParentTracks([parent]);
+                if (parentsRef.current.size >= settings.maxParentConnections) stopPolling();
             };
 
             // When parent sends a message
@@ -195,7 +207,7 @@ function BabyDevice() {
             // Create and send the offer sdp
             await pc.setLocalDescription(await pc.createOffer());
             await waitForIceGatheringCompletion(pc);
-            const isPosted = await postSDP(pc.localDescription!);
+            let isPosted = await postSDP(pc.localDescription!);
 
             // Keep checking for the answer sdp
             while (isPosted && pollingRef.current && pc.remoteDescription === null) {
@@ -203,7 +215,28 @@ function BabyDevice() {
                 const answer = await getSDP('answer');
                 if (answer) {
                     parentID = answer.browserID;
-                    await pc.setRemoteDescription(answer.sdp);
+                    if (settings.trustedParents.includes(parentID)) await pc.setRemoteDescription(answer.sdp);
+                    else isPosted = await new Promise<boolean>(resolve => {
+                        confirmDialog({
+                            group: 'templating',
+                            header: 'Confirm Parent Connection',
+                            message: (
+                                <div className="flex flex-col justify-center items-center gap-4">
+                                    <span className="flex flex-col items-center font-semibold gap-1">
+                                        <User size={70} strokeWidth={1.5} /> {parentID}
+                                    </span>
+                                    <span className="font-bold text-lg">Allow this parent to connect?</span>
+                                </div>
+                            ),
+                            accept: async () => {
+                                await pc.setRemoteDescription(answer.sdp);
+                                settings.trustedParents.push(answer.browserID);
+                                setSettings(settings);
+                                resolve(false);
+                            },
+                            reject: async () => resolve(await postSDP(pc.localDescription!))
+                        });
+                    });
                 }
             }
 
@@ -217,12 +250,12 @@ function BabyDevice() {
 
     async function flipCameraStream() {
         if (!streamRef.current) return;
-        facingMode.current = facingMode.current === 'user' ? 'environment' : 'user';
+        facingModeRef.current = facingModeRef.current === 'user' ? 'environment' : 'user';
         const [oldStream, newStream] = [streamRef.current, await getCameraStream()];
         if (!newStream || !videoRef.current) return;
         videoRef.current.srcObject = newStream;
         replaceParentTracks(parentsRef.current.values().toArray(), newStream);
-        showToast({ severity: 'info', summary: `Switched to ${facingMode.current === 'user' ? 'Front' : 'Back'} Camera` });
+        showToast({ severity: 'info', summary: `Switched to ${facingModeRef.current === 'user' ? 'Front' : 'Back'} Camera` });
         streamRef.current = newStream;
         if (oldStream) oldStream.getTracks().forEach(track => track.stop());
     }
@@ -260,6 +293,8 @@ function BabyDevice() {
                     label={camera === 'STARTED' ? 'Stop Camera' : camera === 'STOPPED' ? 'Start Camera' : 'Starting...'}
                     onClick={() => camera === 'STARTED' ? stopCamera() : camera === 'STOPPED' ? startCamera() : null}
                     disabled={camera === 'STARTING'} />
+
+                <ConfirmDialog group="templating" showCloseIcon={false} />
             </div>
         </PageAnimation>
     );
