@@ -148,7 +148,7 @@ function BabyDevice() {
         // Start polling for parent connections
         setPolling(true);
         pollingRef.current = true;
-        timeoutRef.current = setTimeout(stopPolling, settings.pollingTimeout * 60 * 1000);
+        timeoutRef.current = setTimeout(stopPolling, settings.pollingTimeout * 60_000);
         if (toast) showToast({ severity: 'success', summary: 'Polling Started', detail: `Parent should connect within ${settings.pollingTimeout} minutes` });
 
         // Allow connecting parents while polling is active

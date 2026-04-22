@@ -3,10 +3,10 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useToastMessage } from '../contexts/ToastMessage/useToastMessage';
 import { getSDP, postSDP, sendMessage, waitForIceGatheringCompletion } from '../services/connex';
 import type { Baby } from '../services/models';
+import { getSettings } from '../services/settings';
 import Header from './Header';
 import PageAnimation from './PageAnimation';
 import ParentStatusPanel from './ParentStatusPanel';
-import { getSettings } from '../services/settings';
 
 function ParentDevice() {
     const settings = getSettings();
@@ -130,21 +130,33 @@ function ParentDevice() {
             await pc.setLocalDescription(await pc.createAnswer());
             await waitForIceGatheringCompletion(pc);
 
-            // Discard unfertilized pc if failed to post the answer sdp
+            // Discard unfertilized pc
             const isPosted = await postSDP(pc.localDescription!);
-            if (!isPosted) {
+            if (isPosted) {  // check if connection request is rejected by the baby
+                let attempts = 10;
+                while (attempts-- > 0) {
+                    await new Promise(resolve => setTimeout(resolve, 5_000));
+                    if (pc.connectionState === 'connected') break;  // connection accepted
+                    if (await getSDP('offer') !== null) {  // connection rejected
+                        pc.close();
+                        disconnect(false);
+                        showToast({ severity: 'warn', summary: 'Connection Rejected', detail: 'Baby device rejected the connection request' });
+                        break;
+                    }
+                }
+            } else {  // if failed to post the answer sdp
                 pc.close();
-                setConnection('DISCONNECTED');
+                disconnect(false);
                 showToast({ severity: 'error', summary: 'Connection Failed', detail: 'Failed to post the answer sdp' });
             }
         } else {
-            setConnection('DISCONNECTED');
+            disconnect(false);
             showToast({ severity: 'warn', summary: 'Baby Device Offline', detail: 'No offer sdp was detected' });
         }
     }
 
     function pushToTalk(pushed: boolean) {
-        if (!settings.usePushToTalk) {
+        if (pushed && !settings.usePushToTalk) {
             showToast({ severity: 'warn', summary: 'Feature Disabled', detail: 'Push-To-Talk feature is disabled in settings' });
             return;
         }
