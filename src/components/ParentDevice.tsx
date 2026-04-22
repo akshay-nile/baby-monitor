@@ -16,33 +16,18 @@ function ParentDevice() {
     const videoRef = useRef<HTMLVideoElement>(null);
     const streamRef = useRef<MediaStream>(null);
     const recorderRef = useRef<MediaRecorder>(null);
-    const recordedChunksRef = useRef<Blob[]>([]);
 
     const [connection, setConnection] = useState<'CONNECTED' | 'CONNECTING' | 'DISCONNECTED'>('DISCONNECTED');
     const [talking, setTalking] = useState<boolean>(false);
     const [recording, setRecording] = useState<'border-red-500' | 'border-transparent' | null>(null);
 
     const stopAndSaveRecording = useCallback(() => {
-        const [recorder, recordedChunks] = [recorderRef.current, recordedChunksRef.current];
-        if (!recorder || recordedChunks.length === 0) return;
-        recorder.onstop = () => {
-            const recordedBlob = new Blob(recordedChunks, { type: 'video/webm' });
-            const url = URL.createObjectURL(recordedBlob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `Recording_${Date.now()}.webm`;
-            a.click();
-            URL.revokeObjectURL(url);
-            recorderRef.current = null;
-            recordedChunksRef.current = [];
-            setRecording(null);
-            showToast({ severity: 'info', summary: 'Recording Stopped' });
-        };
-        if (recorder.state === 'recording') {
+        const recorder = recorderRef.current;
+        if (recorder && recorder.state === 'recording') {
             recorder.requestData();
             recorder.stop();
         }
-    }, [showToast]);
+    }, []);
 
     const disconnect = useCallback((toast = true) => {
         stopAndSaveRecording();
@@ -170,13 +155,46 @@ function ParentDevice() {
     function startRecording() {
         const remoteStream = videoRef.current?.srcObject as MediaStream;
         if (!babyRef.current || !remoteStream || recorderRef.current) return;
-        recorderRef.current = new MediaRecorder(remoteStream, { mimeType: 'video/webm' });
-        recorderRef.current.ondataavailable = (e: BlobEvent) => {
-            setRecording(prev => prev === 'border-red-500' ? 'border-transparent' : 'border-red-500');
-            recordedChunksRef.current.push(e.data);
+
+        const mimeType = [
+            'video/mp4;codecs="hvc1, mp4a.40.2"',
+            'video/mp4;codecs="avc3.42E01E, mp4a.40.2"',
+            'video/mp4;codecs="avc3.4D401E, mp4a.40.2"',
+            'video/mp4;codecs="avc3"',
+            'video/webm;codecs=av1,opus',
+            'video/webm;codecs=vp9,opus',
+            'video/webm;codecs=vp8,opus',
+            'video/webm'
+        ].find(mt => MediaRecorder.isTypeSupported(mt));
+
+        if (!mimeType) {
+            showToast({ severity: 'error', summary: 'Recording Not Supported' });
+            return;
+        }
+
+        const recorder = new MediaRecorder(remoteStream, { mimeType });
+        const recordedChunks: Blob[] = [];
+
+        recorder.ondataavailable = (e: BlobEvent) => recordedChunks.push(e.data);
+        recorder.onstop = recorder.onerror = () => {
+            if (recordedChunks.length === 0) return;
+            const recordedBlob = new Blob(recordedChunks, { type: mimeType });
+            const url = URL.createObjectURL(recordedBlob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `recording_${Date.now()}.${mimeType.includes('video/mp4') ? 'mp4' : 'webm'}`;
+            a.click();
+            URL.revokeObjectURL(url);
+            recorderRef.current = null;
+            setRecording(null);
+            clearInterval(blinker);
+            showToast({ severity: 'info', summary: 'Recording Stopped' });
         };
-        recorderRef.current.start(500);
-        setRecording('border-red-500');
+
+        recorder.start(1000);
+        recorderRef.current = recorder;
+
+        const blinker = setInterval(() => setRecording(prev => prev === 'border-red-500' ? 'border-transparent' : 'border-red-500'), 333);
         showToast({ severity: 'info', summary: 'Recording Started' });
     }
 
