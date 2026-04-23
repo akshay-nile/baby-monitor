@@ -38,17 +38,10 @@ export function setSettings(userSettings: Settings) {
     localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
 }
 
-export function resetSettings() {
+export function resetSettings(): Settings {
     setSettings({
         ...defaultSettings,
         trustedParents: getSettings().trustedParents
     });
-}
-
-export function isSettingChanged(userSettings: Settings): boolean {
-    const settings = getSettings();
-    for (const key of Object.keys(settings) as Array<keyof Settings>) {
-        if (settings[key] !== userSettings[key]) return true;
-    }
-    return false;
+    return defaultSettings;
 }

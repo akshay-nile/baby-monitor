@@ -103,7 +103,7 @@ function BabyDevice() {
         if (cameras.length === 1) facingModeRef.current = 'user';
         try {
             return await navigator.mediaDevices.getUserMedia({
-                video: { facingMode: facingModeRef.current, frameRate: { ideal: 60 } },
+                video: { facingMode: { exact: facingModeRef.current }, frameRate: { ideal: 60 } },
                 audio: { noiseSuppression: true, echoCancellation: true, autoGainControl: true }
             });
         }
