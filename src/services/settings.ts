@@ -26,22 +26,21 @@ export function getSettings(): Settings {
     if (settings === null) {
         settings = defaultSettings;
         localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
-    }
-    else if (typeof settings === 'string') {
+    } else if (typeof settings === 'string') {
         settings = JSON.parse(settings) as Settings;
     }
     return settings;
 }
 
-export function setSettings(userSettings: Settings) {
+export function setSettings(userSettings: Settings): Settings {
     settings = userSettings;
     localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+    return settings;
 }
 
 export function resetSettings(): Settings {
-    setSettings({
+    return setSettings({
         ...defaultSettings,
         trustedParents: getSettings().trustedParents
     });
-    return defaultSettings;
 }
