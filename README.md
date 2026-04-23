@@ -5,13 +5,13 @@ No app installs required — runs directly in your browser!
 ---
 
 ## 🎬 Version
-Current Release: **v1.3.6**
+Current Release: **v1.4.6**
 
 ---
 
 ## 📌 Introduction
-The Baby Monitor app allows parents to keep an eye (and ear 👂) on their baby using just their devices’ browsers.  
-It sets up a **direct connection (P2P)** between one Baby Device (camera + mic) and multiple Parent Devices (viewers).
+The Baby Monitor app allows parents to keep an eye (and ear) on their baby using at least two devices connected the same WiFi network.  
+It sets up a **direct connection (P2P)** between one Baby Device (Camera + Mic) and multiple Parent Devices (Monitors).
 
 ---
 
@@ -38,30 +38,32 @@ It sets up a **direct connection (P2P)** between one Baby Device (camera + mic) 
    The Baby Device now:
    - Polls for incoming Parent connections.
    - Displays the count of connected Parents.
-4. ⚠️ Polling lasts **only 5 minutes**, so all Parent Devices must connect within that window.
+4. Polling lasts **5 minutes (default)**, so all Parent Devices must connect within that window.
+5. Polling can be manually controlled as needed once camera is started.
 5. At any time, click **"Stop Camera"** to:
-   - Stop the local feed.
+   - Stop the local camera feed and polling.
    - Disconnect all Parent Devices.
 
 ---
 
 ### Step 3: Setup Parent Device(s)
 1. On each Parent Device, click **"Use as Parent Device"**.
-2. Click **"Request Connection"** → this registers the connection with the server.
+2. Click **"Connect"** → this registers the connection request with the server.
 3. The button will show **"Connecting..."**. 
-3.1 => Wait at least **5 seconds** for the connection request to be recieved by the Baby Device.
-3.2 => Baby device is shown a conformation dialog to accept the request and remember the Parent ID.
-3.3 => If request is not accepted the parent device will stuck at **"Connecting..."** and baby device will continue polling for other parent devices.
+  - 3.1 => Wait at least **5 seconds** for the connection request to be recieved by the Baby Device.
+  - 3.2 => Baby device is shown a conformation dialog to accept the request and remember the Parent ID. 
+  - 3.3 => If request is not accepted the parent device will show **"Connection Rejected"** and baby device will continue polling for other parent devices.
 4. Once connected:
    - 🎥 Live audio/video feed from Baby Device appears.
    - Button label changes to **"Disconnect"**.
+   - Parents can record and save the audio/video stream comming from Baby camera using **Start Recording** button.
 5. Extra controls:
-   - Tap the video screen to **mute/unmute** audio temporarily.
-   - Press and hold the video screen to use Push-To-Talk feature
+   - Tap the video screen on Baby Device to **Flip Camera** between front/back.
+   - Press and hold the video screen on Parent Device to use Push-To-Talk feature.
    - Click **"Disconnect"** to exit and reset the app.
 6. Ensure:
-   - Baby Device shows **"+" symbol next to parent count** before Parent requests.
-   - Baby Device’s browser tab stays **alive/awake** to prevent interruptions.
+   - Baby Device shows **"+" symbol next to parent count** before Parent clicks Connect button.
+   - Baby Device’s browser tab should stay **alive/awake** to prevent interruptions.
 
 ---
 
@@ -70,16 +72,14 @@ It sets up a **direct connection (P2P)** between one Baby Device (camera + mic) 
 - **Live stream data is never stored on the server**.  
 - Server is used **only** for:
   1. Hosting app files (HTML/CSS/JS).  
-  2. Handling signaling (polling & requests) to establish P2P connections.  
-- Once connected, all audio/video flows **directly between devices** over the local Wi-Fi.
+  2. Handling signaling (polling) to establish P2P connections.  
+- Once connected, all audio/video flows **directly between devices** over the local Wi-Fi network.
 
 ---
 
 ## 🛠 Upcoming/Planned Features
-1. **Amplified Audio For Parents**  
-   - Settings option to amplify recieved audio track on Parent Device.  
-2. **Screen Transition Animations**  
-   - Sliding screen animation while transitioning between screens.
+1. **Motion Detection Notification**  
+   - Parent device gets notified if motion is detected by the Baby device camera. 
 
 ---
 
@@ -91,4 +91,4 @@ Contributions are always welcome! Open an issue or drop feedback.
 
 ## 🙏 Thanks
 Thank you for using Baby Monitor!  
-Enjoy safe and simple baby monitoring 👶🎥
+Enjoy safe and secure Baby Monitoring 👶🎥

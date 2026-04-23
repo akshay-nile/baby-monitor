@@ -1,4 +1,5 @@
 import { AnimatePresence } from 'framer-motion';
+import { useEffect } from 'react';
 import { Route, Routes, useLocation } from 'react-router';
 import BabyDevice from './components/BabyDevice';
 import ParentDevice from './components/ParentDevice';
@@ -7,6 +8,13 @@ import UserSettings from './components/UserSettings';
 
 function App() {
   const location = useLocation();
+
+  async function takeWakeLock() {
+    try { await navigator?.wakeLock?.request('screen'); }
+    catch { console.warn('Screen Wake-Lock Failed!'); }
+  }
+
+  useEffect(() => { takeWakeLock(); }, []);
 
   return (
     <div className="x-0 p-0 overflow-hidden">
