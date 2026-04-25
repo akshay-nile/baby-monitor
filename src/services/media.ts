@@ -42,14 +42,18 @@ let timer: number | null = null;
 let canvas: HTMLCanvasElement | null = null;
 let previousFrame: Uint8ClampedArray | null = null;
 
-export function startMotionDetection(video: HTMLVideoElement, onMotionDetected: () => void, interval = 5000, threshold = 2000, sensitivity = 250): void {
+export function startMotionDetection(video: HTMLVideoElement, onMotionDetected: () => void, interval = 1000, threshold = 1000, sensitivity = 250): void {
     stopMotionDetection();
 
-    canvas = document.createElement('canvas');
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
+    const idealResolution = 100_000;
+    const videoResolution = video.videoWidth * video.videoHeight;
+    const downscaleFactor = videoResolution > idealResolution ? Math.sqrt(videoResolution / idealResolution) : 1;
 
+    canvas = document.createElement('canvas');
+    canvas.width = Math.round(video.videoWidth / downscaleFactor);
+    canvas.height = Math.round(video.videoHeight / downscaleFactor);
     const context = canvas.getContext('2d', { willReadFrequently: true });
+
     timer = setInterval(() => {
         if (!canvas || !context) {
             stopMotionDetection();
@@ -68,9 +72,9 @@ export function startMotionDetection(video: HTMLVideoElement, onMotionDetected: 
         let changedPixels = 0;
         for (let i = 0; i < Math.min(currentFrame.length, previousFrame.length); i += 4) {
             const difference =
-                Math.abs(currentFrame[i] - previousFrame[i]) +
-                Math.abs(currentFrame[i + 1] - previousFrame[i + 1]) +
-                Math.abs(currentFrame[i + 2] - previousFrame[i + 2]);
+                Math.abs(currentFrame[i + 0] - previousFrame[i + 0]) +  // Red
+                Math.abs(currentFrame[i + 1] - previousFrame[i + 1]) +  // Green
+                Math.abs(currentFrame[i + 2] - previousFrame[i + 2]);   // Blue
             if (difference > sensitivity) changedPixels++;
         }
 
