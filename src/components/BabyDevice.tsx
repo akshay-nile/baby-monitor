@@ -280,7 +280,7 @@ function BabyDevice() {
                         parentsCount={parentsCount} />
 
                     <video ref={videoRef} autoPlay muted className={`
-                            w-full max-w-full shadow cursor-pointer rounded-lg border-2 transition-all duration-300
+                            w-full max-w-full shadow cursor-pointer rounded-lg border-2 transition-all ease-in-out duration-300
                             ${talking ? 'border-yellow-400' : 'border-pink-500'} ${camera !== 'STARTED' ? 'h-[50vh]' : 'h-auto'}
                         `}
                         onClick={flipCameraStream} />

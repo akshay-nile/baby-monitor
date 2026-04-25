@@ -36,7 +36,7 @@ function Header({ children, screen }: Props) {
     );
     else return (
         <div className="w-full flex justify-between items-center p-4 bg-pink-500 rounded-lg shadow">
-            <div className="w-full flex justify-between">
+            <div className="w-full flex justify-between items-center">
                 <span className="flex items-center gap-2 text-lg font-bold">{content}{children}</span>
                 <span className="text-sm bg-gray-200 text-gray-800 px-2 py-1 rounded font-mono select-text">{browserID}</span>
             </div>

@@ -209,7 +209,7 @@ function ParentDevice() {
                         onFullscreen={() => videoRef.current?.requestFullscreen()} />
 
                     <video ref={videoRef} autoPlay muted={talking} className={`
-                            w-full max-w-full shadow cursor-pointer rounded-lg border-2 transition-all duration-300
+                            w-full max-w-full shadow cursor-pointer rounded-lg border-2 transition-all ease-in-out duration-300
                             ${talking ? 'border-yellow-400' : recording ?? 'border-pink-500'} ${connection !== 'CONNECTED' ? 'h-[50vh]' : 'h-auto'}
                         `}
                         onMouseDown={() => pushToTalk(true)} onTouchStart={() => pushToTalk(true)}
