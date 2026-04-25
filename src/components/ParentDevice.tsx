@@ -2,6 +2,7 @@ import { Button } from 'primereact/button';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useToastMessage } from '../contexts/ToastMessage/useToastMessage';
 import { getSDP, postSDP, sendMessage, waitForIceGatheringCompletion } from '../services/connex';
+import { getMediaDevices, getMediaStream, getRecordingFormat } from '../services/media';
 import type { Baby } from '../services/models';
 import { getSettings } from '../services/settings';
 import Header from './Header';
@@ -62,10 +63,13 @@ function ParentDevice() {
             showToast({ severity: 'error', summary: 'Insecure Web Context' });
             return;
         }
+        const microphones = await getMediaDevices('audioinput');
+        if (microphones.length === 0) {
+            showToast({ severity: 'error', summary: 'No Microphone Found' });
+            return;
+        }
         try {
-            streamRef.current = await navigator.mediaDevices.getUserMedia({
-                audio: { noiseSuppression: true, echoCancellation: true, autoGainControl: true }
-            });
+            streamRef.current = await getMediaStream();
             streamRef.current.getTracks().forEach(track => track.enabled = false);
         }
         catch (error) {
@@ -156,22 +160,7 @@ function ParentDevice() {
         const remoteStream = videoRef.current?.srcObject as MediaStream;
         if (!babyRef.current || !remoteStream || recorderRef.current) return;
 
-        const mimeType = [
-            'video/mp4;codecs="hvc1, mp4a.40.2"',
-            'video/mp4;codecs="avc3.42E01E, mp4a.40.2"',
-            'video/mp4;codecs="avc3.4D401E, mp4a.40.2"',
-            'video/mp4;codecs="avc3"',
-            'video/webm;codecs=av1,opus',
-            'video/webm;codecs=vp9,opus',
-            'video/webm;codecs=vp8,opus',
-            'video/webm'
-        ].find(mt => MediaRecorder.isTypeSupported(mt));
-
-        if (!mimeType) {
-            showToast({ severity: 'error', summary: 'Recording Not Supported' });
-            return;
-        }
-
+        const [mimeType, extension] = getRecordingFormat();
         const recorder = new MediaRecorder(remoteStream, { mimeType });
         const recordedChunks: Blob[] = [];
 
@@ -182,20 +171,20 @@ function ParentDevice() {
             const url = URL.createObjectURL(recordedBlob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `recording_${Date.now()}.${mimeType.includes('video/mp4') ? 'mp4' : 'webm'}`;
+            a.download = `Recording_${Date.now()}.${extension}`;
             a.click();
             URL.revokeObjectURL(url);
             recorderRef.current = null;
             setRecording(null);
             clearInterval(blinker);
-            showToast({ severity: 'info', summary: 'Recording Stopped' });
+            showToast({ severity: 'info', summary: 'Recording Stopped', detail: 'Saved as ' + a.download });
         };
 
         recorder.start(1000);
         recorderRef.current = recorder;
 
         const blinker = setInterval(() => setRecording(prev => prev === 'border-red-500' ? 'border-transparent' : 'border-red-500'), 333);
-        showToast({ severity: 'info', summary: 'Recording Started' });
+        showToast({ severity: 'info', summary: 'Recording Started', detail: 'Supported format: ' + mimeType });
     }
 
     useEffect(() => {
@@ -214,8 +203,8 @@ function ParentDevice() {
                         onFullscreen={() => videoRef.current?.requestFullscreen()} />
 
                     <video ref={videoRef} autoPlay muted={talking} className={`
-                            w-full shadow cursor-pointer rounded-lg border-2 transition-colors duration-300
-                            ${talking ? 'border-yellow-400' : recording ?? 'border-pink-500'}
+                            w-full max-w-full shadow cursor-pointer rounded-lg border-2 transition-all duration-300
+                            ${talking ? 'border-yellow-400' : recording ?? 'border-pink-500'} ${connection !== 'CONNECTED' ? 'h-[50vh]' : 'h-auto'}
                         `}
                         onMouseDown={() => pushToTalk(true)} onTouchStart={() => pushToTalk(true)}
                         onMouseUp={() => pushToTalk(false)} onTouchEnd={() => pushToTalk(false)}

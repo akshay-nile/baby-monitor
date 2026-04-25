@@ -4,6 +4,7 @@ import { confirmDialog, ConfirmDialog } from 'primereact/confirmdialog';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useToastMessage } from '../contexts/ToastMessage/useToastMessage';
 import { clearSDP, getSDP, postSDP, sendMessage, waitForIceGatheringCompletion } from '../services/connex';
+import { getMediaDevices, getMediaStream } from '../services/media';
 import type { Parent } from '../services/models';
 import { getSettings, setSettings } from '../services/settings';
 import BabyStatusPanel from './BabyStatusPanel';
@@ -94,19 +95,13 @@ function BabyDevice() {
             showToast({ severity: 'error', summary: 'Insecure Web Context' });
             return null;
         }
-        const devices = await navigator.mediaDevices.enumerateDevices();
-        const cameras = devices.filter(device => device.kind === 'videoinput');
+        const cameras = await getMediaDevices('videoinput');
         if (cameras.length === 0) {
             showToast({ severity: 'error', summary: 'No Camera Found' });
             return null;
         }
         if (cameras.length === 1) facingModeRef.current = 'user';
-        try {
-            return await navigator.mediaDevices.getUserMedia({
-                video: { facingMode: { exact: facingModeRef.current }, frameRate: { ideal: 60 } },
-                audio: { noiseSuppression: true, echoCancellation: true, autoGainControl: true }
-            });
-        }
+        try { return await getMediaStream(facingModeRef.current); }
         catch (error) {
             showToast({ severity: 'error', summary: 'Media Access Denied', detail: error });
             return null;
@@ -278,8 +273,8 @@ function BabyDevice() {
                         parentsCount={parentsCount} />
 
                     <video ref={videoRef} autoPlay muted className={`
-                            w-full shadow cursor-pointer rounded-lg border-2 transition-colors duration-300
-                            ${talking ? 'border-yellow-400' : 'border-pink-500'}
+                            w-full max-w-full shadow cursor-pointer rounded-lg border-2 transition-all duration-300
+                            ${talking ? 'border-yellow-400' : 'border-pink-500'} ${camera !== 'STARTED' ? 'h-[50vh]' : 'h-auto'}
                         `}
                         onClick={flipCameraStream} />
 
