@@ -16,7 +16,7 @@ function NumberInput({ value, min, max, onChange, id }: Props) {
     }
 
     return (
-        <div className="flex items-center h-10 rounded-lg border border-pink-500 scale-90">
+        <div className="flex justify-center items-center h-10 rounded-lg border border-pink-500 scale-90 m-0">
             <button className="h-10 w-9 text-2xl px-2.5 rounded-l-lg cursor-pointer bg-pink-500 text-white hover:bg-pink-600 disabled:bg-neutral-500"
                 onClick={() => changeValueBy(-1)} disabled={number <= min}>‒</button>
             <input type="text" className="h-10 w-10 text-lg text-center border border-pink-500" disabled readOnly

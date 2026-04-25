@@ -5,7 +5,7 @@ No app installs required — runs directly in your browser!
 ---
 
 ## 🎬 Version
-Current Release: **v1.4.6**
+Current Release: **v1.5.6**
 
 ---
 
@@ -78,8 +78,7 @@ It sets up a **direct connection (P2P)** between one Baby Device (Camera + Mic) 
 ---
 
 ## 🛠 Upcoming/Planned Features
-1. **Motion Detection Notification**  
-   - Parent device gets notified if motion is detected by the Baby device camera. 
+- None
 
 ---
 

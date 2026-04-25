@@ -4,7 +4,7 @@ import { confirmDialog, ConfirmDialog } from 'primereact/confirmdialog';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useToastMessage } from '../contexts/ToastMessage/useToastMessage';
 import { clearSDP, getSDP, postSDP, sendMessage, waitForIceGatheringCompletion } from '../services/connex';
-import { getMediaDevices, getMediaStream } from '../services/media';
+import { getMediaDevices, getMediaStream, startMotionDetection, stopMotionDetection } from '../services/media';
 import type { Parent } from '../services/models';
 import { getSettings, setSettings } from '../services/settings';
 import BabyStatusPanel from './BabyStatusPanel';
@@ -74,6 +74,7 @@ function BabyDevice() {
         setParentsCount(0);
 
         if (videoRef.current) {
+            stopMotionDetection();
             videoRef.current.pause();
             videoRef.current.srcObject = null;
         }
@@ -117,14 +118,20 @@ function BabyDevice() {
     }
 
     async function startCamera() {
-        if (streamRef.current || !videoRef.current || camera === 'STARTING') return;
+        const video = videoRef.current;
+        if (streamRef.current || !video || camera === 'STARTING') return;
         setCamera('STARTING');
         streamRef.current = await getCameraStream();
         if (!streamRef.current) {
             setCamera('STOPPED');
             return;
         }
-        videoRef.current.srcObject = streamRef.current;
+        if (settings.useMotionDetection) {
+            const notifyAllParents = () => parentsRef.current.values().forEach(parent => sendMessage(parent.dc, 'MOTION'));
+            video.onloadeddata = () => startMotionDetection(video, notifyAllParents);
+            video.onerror = video.onended = stopMotionDetection;
+        }
+        video.srcObject = streamRef.current;
         setCamera('STARTED');
         showToast({ severity: 'success', summary: 'Camera Started', detail: 'Waiting for parent connections' });
         await startPolling(false);

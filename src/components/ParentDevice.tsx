@@ -17,6 +17,7 @@ function ParentDevice() {
     const videoRef = useRef<HTMLVideoElement>(null);
     const streamRef = useRef<MediaStream>(null);
     const recorderRef = useRef<MediaRecorder>(null);
+    const audioToneRef = useRef<HTMLAudioElement>(new Audio('./tone.mp3'));
 
     const [connection, setConnection] = useState<'CONNECTED' | 'CONNECTING' | 'DISCONNECTED'>('DISCONNECTED');
     const [talking, setTalking] = useState<boolean>(false);
@@ -91,7 +92,7 @@ function ParentDevice() {
                 ms.getTracks().forEach(track => pc.addTrack(track, ms));
             }
 
-            // When baby media stream receives
+            // When baby camera stream receives
             pc.ontrack = (e: RTCTrackEvent) => {
                 if (videoRef.current) videoRef.current.srcObject = e.streams[0];
             };
@@ -103,9 +104,14 @@ function ParentDevice() {
                     babyRef.current = { pc, dc };
                     setConnection('CONNECTED');
                     showToast({ severity: 'success', summary: 'Connection Success', detail: 'Baby ID: ' + offer.browserID });
+                    audioToneRef.current.preload = 'auto';
                 };
                 dc.onmessage = (e: MessageEvent) => {
                     if (e.data === 'DISCONNECT') disconnect();
+                    else if (e.data === 'MOTION' && settings.notifyMotionDetection) {
+                        showToast({ severity: 'info', summary: 'Motion Detected' });
+                        audioToneRef.current.play().catch(() => console.warn('Failed to play tone.mp3'));
+                    }
                 };
             };
 

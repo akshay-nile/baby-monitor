@@ -18,5 +18,7 @@ export interface Settings {
     maxParentConnections: number,
     pollingTimeout: number,
     usePushToTalk: boolean,
+    useMotionDetection: boolean,
+    notifyMotionDetection: boolean,
     trustedParents: string[],
 }

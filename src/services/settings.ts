@@ -11,6 +11,8 @@ const defaultSettings: Settings = {
     maxParentConnections: 3,
     pollingTimeout: 5,
     usePushToTalk: true,
+    useMotionDetection: false,
+    notifyMotionDetection: true,
     trustedParents: []
 };
 
