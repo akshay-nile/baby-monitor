@@ -19,7 +19,7 @@ const defaultSettings: Settings = {
 
 export function getBrowserID(): string {
     if (browserID === null) {
-        browserID = URL.createObjectURL(new Blob()).split('/').pop()?.split('-').pop()?.toLowerCase() as string;
+        browserID = URL.createObjectURL(new Blob()).split('/').pop()?.split('-').pop()?.toUpperCase() as string;
         localStorage.setItem(BROWSER_ID_KEY, browserID);
     }
     return browserID;
