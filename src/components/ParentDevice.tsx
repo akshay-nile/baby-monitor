@@ -104,11 +104,10 @@ function ParentDevice() {
                     babyRef.current = { pc, dc };
                     setConnection('CONNECTED');
                     showToast({ severity: 'success', summary: 'Connection Success', detail: 'Baby ID: ' + offer.browserID });
-                    audioToneRef.current.preload = 'auto';
                 };
                 dc.onmessage = (e: MessageEvent) => {
                     if (e.data === 'DISCONNECT') disconnect();
-                    else if (e.data === 'MOTION' && settings.notifyMotionDetection) {
+                    else if (e.data === 'MOTION' && settings.motionDetectionAlerts) {
                         showToast({ severity: 'info', summary: 'Motion Detected' });
                         audioToneRef.current.play().catch(() => console.warn('Failed to play tone.mp3'));
                     }
@@ -194,6 +193,7 @@ function ParentDevice() {
     }
 
     useEffect(() => {
+        audioToneRef.current.preload = 'auto';
         return () => { if (streamRef.current || babyRef.current) disconnect(false); };
     }, [disconnect]);
 

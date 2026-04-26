@@ -25,8 +25,8 @@ function UserSettings() {
                         <div className="flex flex-col gap-6">
                             <div className="flex justify-between items-center">
                                 <label htmlFor="startWithCamera">Always Start With</label>
-                                <Dropdown id="startWithCamera" optionLabel="name" className="mr-1" pt={{ input: { style: { padding: '0.4rem 0.8rem', border: '1px solid pink' } }, trigger: { style: { display: 'none' } } }}
-                                    options={[{ name: 'Front Camera', value: 'user' }, { name: 'Back Camera', value: 'environment' }]}
+                                <Dropdown id="startWithCamera" className="mr-1" pt={{ input: { style: { padding: '0.4rem 0.8rem', border: '1px solid pink' } }, trigger: { style: { display: 'none' } } }}
+                                    options={[{ name: 'Front Camera', value: 'user' }, { name: 'Back Camera', value: 'environment' }]} optionLabel="name" optionValue="value"
                                     value={userSettings.startWithCamera}
                                     onChange={e => setUserSettings({ ...userSettings, startWithCamera: e.value })} />
                             </div>
@@ -48,11 +48,24 @@ function UserSettings() {
                                     checked={userSettings.useMotionDetection}
                                     onChange={value => setUserSettings({ ...userSettings, useMotionDetection: value })} />
                             </div>
-                            <div className="flex justify-between items-center">
-                                <label>Trusted Parent Devices ({userSettings.trustedParents.length})</label>
-                                <Button size="small" label="Clear All" className="h-10"
-                                    onClick={() => setUserSettings({ ...userSettings, trustedParents: [] })} />
-                            </div>
+                            {
+                                userSettings.useMotionDetection &&
+                                <div className="flex justify-between items-center">
+                                    <label htmlFor="motionSensitivity">Motion Detection Sensitivity</label>
+                                    <Dropdown id="motionSensitivity" className="mr-1" pt={{ input: { style: { padding: '0.4rem 0.8rem', border: '1px solid pink' } }, trigger: { style: { display: 'none' } } }}
+                                        options={[{ name: 'Low', value: 400 }, { name: 'Medium', value: 250 }, { name: 'High', value: 100 }]} optionLabel="name" optionValue="value"
+                                        value={userSettings.motionSensitivity}
+                                        onChange={e => setUserSettings({ ...userSettings, motionSensitivity: e.value })} />
+                                </div>
+                            }
+                            {
+                                userSettings.trustedParents.length > 0 &&
+                                <div className="flex justify-between items-center">
+                                    <label>Trusted Parent Devices ({userSettings.trustedParents.length})</label>
+                                    <Button size="small" label="Clear All" className="h-10"
+                                        onClick={() => setUserSettings({ ...userSettings, trustedParents: [] })} />
+                                </div>
+                            }
                         </div>
                     </Panel>
 
@@ -65,10 +78,10 @@ function UserSettings() {
                                     onChange={value => setUserSettings({ ...userSettings, usePushToTalk: value })} />
                             </div>
                             <div className="flex justify-between items-center">
-                                <label htmlFor="notifyMotionDetection">Show Motion Detection Alerts</label>
-                                <ToggleSwitch id="notifyMotionDetection"
-                                    checked={userSettings.notifyMotionDetection}
-                                    onChange={value => setUserSettings({ ...userSettings, notifyMotionDetection: value })} />
+                                <label htmlFor="motionDetectionAlerts">Show Motion Detection Alerts</label>
+                                <ToggleSwitch id="motionDetectionAlerts"
+                                    checked={userSettings.motionDetectionAlerts}
+                                    onChange={value => setUserSettings({ ...userSettings, motionDetectionAlerts: value })} />
                             </div>
                         </div>
                     </Panel>

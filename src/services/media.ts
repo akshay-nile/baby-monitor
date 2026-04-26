@@ -42,7 +42,15 @@ let timer: number | null = null;
 let canvas: HTMLCanvasElement | null = null;
 let previousFrame: Uint8ClampedArray | null = null;
 
-export function startMotionDetection(video: HTMLVideoElement, onMotionDetected: () => void, interval = 1000, threshold = 1000, sensitivity = 250): void {
+type Args = {
+    video: HTMLVideoElement,
+    onMotionDetected: () => void,
+    interval?: number,
+    threshold?: number,
+    sensitivity?: number
+};
+
+export function startMotionDetection({ video, onMotionDetected, interval = 1000, threshold = 1000, sensitivity = 250 }: Args): void {
     stopMotionDetection();
 
     const idealResolution = 100_000;

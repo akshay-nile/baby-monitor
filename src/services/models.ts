@@ -19,6 +19,7 @@ export interface Settings {
     pollingTimeout: number,
     usePushToTalk: boolean,
     useMotionDetection: boolean,
-    notifyMotionDetection: boolean,
+    motionSensitivity: 100 | 250 | 400,
+    motionDetectionAlerts: boolean,
     trustedParents: string[],
 }

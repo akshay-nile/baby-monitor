@@ -12,13 +12,14 @@ const defaultSettings: Settings = {
     pollingTimeout: 5,
     usePushToTalk: true,
     useMotionDetection: false,
-    notifyMotionDetection: true,
+    motionSensitivity: 400,
+    motionDetectionAlerts: true,
     trustedParents: []
 };
 
 export function getBrowserID(): string {
     if (browserID === null) {
-        browserID = URL.createObjectURL(new Blob()).split('/').pop()?.split('-').pop() as string;
+        browserID = URL.createObjectURL(new Blob()).split('/').pop()?.split('-').pop()?.toLowerCase() as string;
         localStorage.setItem(BROWSER_ID_KEY, browserID);
     }
     return browserID;

@@ -1,11 +1,11 @@
-# 👶 Baby Monitor (WebRTC-based)
+# 👶 Baby Monitor (WebRTC based)
 A simple and free hobby **Web Application** that uses **WebRTC Peer-to-Peer** connections between **single Baby Device** and **multiple Parent Devices**.  
 No app installs required — runs directly in your browser!
 
 ---
 
 ## 🎬 Version
-Current Release: **v1.5.6**
+Current Release: **v1.5.7**
 
 ---
 
@@ -27,7 +27,7 @@ It sets up a **direct connection (P2P)** between one Baby Device (Camera + Mic) 
 ## 🚀 How to Use
 
 ### Step 1: Open the App
-- Go to 👉 [https://akshaynile.pythonanywhere.com/projects/baby-monitor](https://akshaynile.pythonanywhere.com/projects/baby-monitor) on all devices.
+- Go to 👉 [https://akshaynile.pythonanywhere.com/projects/baby-monitor](https://akshaynile.pythonanywhere.com/projects/baby-monitor) on all devices (at least 2 devices connected to the same WiFi network).
 
 ---
 
@@ -39,8 +39,9 @@ It sets up a **direct connection (P2P)** between one Baby Device (Camera + Mic) 
    - Polls for incoming Parent connections.
    - Displays the count of connected Parents.
 4. Polling lasts **5 minutes (default)**, so all Parent Devices must connect within that window.
-5. Polling can be manually controlled as needed once camera is started.
-5. At any time, click **"Stop Camera"** to:
+5. Polling can be manually turned ON or OFF as needed once camera is started.
+6. **Motion Detection** feature can be turned ON in settings and **sensitivity** can be adjusted as needed.
+7. At any time, click **"Stop Camera"** to:
    - Stop the local camera feed and polling.
    - Disconnect all Parent Devices.
 
@@ -57,6 +58,7 @@ It sets up a **direct connection (P2P)** between one Baby Device (Camera + Mic) 
    - 🎥 Live audio/video feed from Baby Device appears.
    - Button label changes to **"Disconnect"**.
    - Parents can record and save the audio/video stream comming from Baby camera using **Start Recording** button.
+   - If motion detection feature on Baby device is turned ON, motion alert notifications can appear on connected Parent devices. Alerts can be turned OFF in settings as needed.
 5. Extra controls:
    - Tap the video screen on Baby Device to **Flip Camera** between front/back.
    - Press and hold the video screen on Parent Device to use Push-To-Talk feature.
@@ -78,7 +80,7 @@ It sets up a **direct connection (P2P)** between one Baby Device (Camera + Mic) 
 ---
 
 ## 🛠 Upcoming/Planned Features
-- None
+- Only bug fixes and performance improvements
 
 ---
 

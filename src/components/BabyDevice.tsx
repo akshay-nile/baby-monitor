@@ -127,8 +127,8 @@ function BabyDevice() {
             return;
         }
         if (settings.useMotionDetection) {
-            const notifyAllParents = () => parentsRef.current.values().forEach(parent => sendMessage(parent.dc, 'MOTION'));
-            video.onloadeddata = () => startMotionDetection(video, notifyAllParents);
+            const alertAllParents = () => parentsRef.current.values().forEach(parent => sendMessage(parent.dc, 'MOTION'));
+            video.onloadeddata = () => startMotionDetection({ video, onMotionDetected: alertAllParents, sensitivity: settings.motionSensitivity });
             video.onerror = video.onended = stopMotionDetection;
         }
         video.srcObject = streamRef.current;
@@ -228,6 +228,7 @@ function BabyDevice() {
                                         <User size={70} strokeWidth={1.5} /> {parentID}
                                     </span>
                                     <span className="font-bold text-lg">Allow this parent to connect?</span>
+                                    <audio src="./tone.mp3" autoPlay hidden />
                                 </div>
                             ),
                             accept: async () => {
