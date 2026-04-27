@@ -54,6 +54,9 @@ function ParentDevice() {
             streamRef.current = null;
         }
 
+        if (document.pictureInPictureElement) document.exitPictureInPicture();
+        if (document.fullscreenElement) document.exitFullscreen();
+
         setConnection('DISCONNECTED');
         if (toast) showToast({ severity: 'warn', summary: 'Disconnected' });
     }, [showToast, stopAndSaveRecording]);
@@ -210,7 +213,8 @@ function ParentDevice() {
 
                     <video ref={videoRef} autoPlay muted={talking} className={`
                             w-full max-w-full shadow cursor-pointer rounded-lg border-2 transition-all ease-in-out duration-300
-                            ${talking ? 'border-yellow-400' : recording ?? 'border-pink-500'} ${connection !== 'CONNECTED' ? 'h-[50vh]' : 'h-auto'}
+                            ${talking ? 'border-yellow-400' : recording ?? 'border-pink-500'} 
+                            ${connection !== 'CONNECTED' ? 'h-[50vh]' : 'h-auto'}
                         `}
                         onMouseDown={() => pushToTalk(true)} onTouchStart={() => pushToTalk(true)}
                         onMouseUp={() => pushToTalk(false)} onTouchEnd={() => pushToTalk(false)}

@@ -5,12 +5,11 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useToastMessage } from '../contexts/ToastMessage/useToastMessage';
 import { clearSDP, getSDP, postSDP, sendMessage, waitForIceGatheringCompletion } from '../services/connex';
 import { getMediaDevices, getMediaStream, startMotionDetection, stopMotionDetection } from '../services/media';
-import type { Parent } from '../services/models';
+import type { Parent, ParentState } from '../services/models';
 import { getSettings, setSettings } from '../services/settings';
 import BabyStatusPanel from './BabyStatusPanel';
 import Header from './Header';
 import PageAnimation from './PageAnimation';
-
 
 function BabyDevice() {
     const settings = getSettings();
@@ -25,18 +24,23 @@ function BabyDevice() {
 
     const [camera, setCamera] = useState<'STARTED' | 'STARTING' | 'STOPPED'>('STOPPED');
     const [polling, setPolling] = useState<boolean>(false);
-    const [talking, setTalking] = useState<boolean>(false);
-    const [parentsCount, setParentsCount] = useState<number>(0);
+    const [parents, setParents] = useState<ParentState[]>([]);
+
+    function updateParents() {
+        setParents(parentsRef.current.entries().toArray().map(([parentID, parent]) => {
+            return { parentID, talking: parent.talking } as ParentState;
+        }));
+    }
 
     function addParent(parentID: string, parent: Parent, toast = true) {
         parentsRef.current.set(parentID, parent);
-        setParentsCount(parentsRef.current.size);
+        updateParents();
         if (toast) showToast({ severity: 'info', summary: 'Parent Connected', detail: 'Parent ID: ' + parentID });
     }
 
     const removeParent = useCallback((parentID: string, toast = true) => {
         parentsRef.current.delete(parentID);
-        setParentsCount(parentsRef.current.size);
+        updateParents();
         if (toast) showToast({ severity: 'warn', summary: 'Parent Disconnected', detail: 'Parent ID: ' + parentID });
     }, [showToast]);
 
@@ -71,7 +75,6 @@ function BabyDevice() {
 
         parentsRef.current.keys().forEach(parentID => disconnect(parentID, false));
         parentsRef.current.clear();
-        setParentsCount(0);
 
         if (videoRef.current) {
             stopMotionDetection();
@@ -85,7 +88,7 @@ function BabyDevice() {
         }
 
         clearSDP();
-        setTalking(false);
+        setParents([]);
         stopPolling(false);
         setCamera('STOPPED');
         if (toast) showToast({ severity: 'info', summary: 'Camera Stopped', detail });
@@ -190,13 +193,13 @@ function BabyDevice() {
                 if (!parent) return;
                 if (e.data === 'SILENCED') {
                     parent.talking = false;
-                    setTalking(parentsRef.current.values().some(p => p.talking));
+                    updateParents();
                     return;
                 }
                 if (e.data === 'TALKING') {
                     parent.talking = true;
+                    updateParents();
                     showToast({ severity: 'info', summary: 'Parent Talking', detail: 'Parent ID: ' + parentID });
-                    setTalking(true);
                 }
             };
 
@@ -277,12 +280,13 @@ function BabyDevice() {
                     <BabyStatusPanel
                         isLive={camera === 'STARTED'}
                         isPolling={polling}
-                        isTalking={talking}
-                        parentsCount={parentsCount} />
+                        parents={parents}
+                        onDisconnect={disconnect} />
 
                     <video ref={videoRef} autoPlay muted className={`
                             w-full max-w-full shadow cursor-pointer rounded-lg border-2 transition-all ease-in-out duration-300
-                            ${talking ? 'border-yellow-400' : 'border-pink-500'} ${camera !== 'STARTED' ? 'h-[50vh]' : 'h-auto'}
+                            ${parents.some(p => p.talking) ? 'border-yellow-400' : 'border-pink-500'} 
+                            ${camera !== 'STARTED' ? 'h-[50vh]' : 'h-auto'}
                         `}
                         onClick={flipCameraStream} />
 

@@ -13,6 +13,11 @@ export interface Parent extends Baby {
     talking: boolean
 }
 
+export interface ParentState {
+    parentID: string,
+    talking: boolean
+}
+
 export interface Settings {
     startWithCamera: 'user' | 'environment',
     maxParentConnections: number,
