@@ -11,8 +11,12 @@ function ToastContextProvider({ children }: Props) {
         if (toastRef.current) toastRef.current.show(options);
     }, []);
 
+    const clearToast = useCallback(() => {
+        if (toastRef.current) toastRef.current.clear();
+    }, []);
+
     return (
-        <ToastContext.Provider value={{ showToast }}>
+        <ToastContext.Provider value={{ showToast, clearToast }}>
             <div>
                 {children}
                 <Toast ref={toastRef} position="top-center" />

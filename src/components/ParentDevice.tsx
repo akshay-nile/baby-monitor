@@ -111,7 +111,7 @@ function ParentDevice() {
                 dc.onmessage = (e: MessageEvent) => {
                     if (e.data === 'DISCONNECT') disconnect();
                     else if (e.data === 'MOTION' && settings.motionDetectionAlerts) {
-                        showToast({ severity: 'info', summary: 'Motion Detected' });
+                        showToast({ severity: 'info', summary: 'Motion Detected', life: 1000 });
                         audioToneRef.current.play().catch(() => console.warn('Failed to play tone.mp3'));
                     }
                 };
