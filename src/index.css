@@ -6,3 +6,15 @@
     outline: none !important;
     box-shadow: none !important;
 }
+
+@keyframes fade {
+
+    0%,
+    100% {
+        opacity: 0;
+    }
+
+    50% {
+        opacity: 1;
+    }
+}

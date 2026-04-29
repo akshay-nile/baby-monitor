@@ -7,7 +7,7 @@ function ParentStatusPanel({ isLive, isTalking, onFullscreen }: Props) {
         <div className="w-full flex justify-between px-2">
             <div className="flex flex-col items-center gap-0.5">
                 <span className="flex gap-2 justify-center items-center">
-                    {isTalking ? <Mic size={18} /> : <MicOff size={18} />}
+                    {isLive && isTalking ? <Mic size={18} /> : <MicOff size={18} />}
                 </span>
                 <div className="text-sm">sending</div>
             </div>
@@ -20,17 +20,13 @@ function ParentStatusPanel({ isLive, isTalking, onFullscreen }: Props) {
             }
 
             <div className="flex flex-col items-center gap-0.5">
-                {
-                    isLive
-                        ? <span className="flex gap-2 justify-center items-center">
-                            <Video size={18} />
-                            {isTalking ? <VolumeOff size={18} /> : <Volume2 size={18} />}
-                        </span>
-                        : <span className="flex gap-2 justify-center items-center">
-                            <VideoOff size={18} />
-                            <VolumeOff size={18} />
-                        </span>
-                }
+                <span className="flex gap-2 justify-center items-center">
+                    {
+                        isLive
+                            ? <><Video size={18} /> {isTalking ? <VolumeOff size={18} /> : <Volume2 size={18} />}</>
+                            : <><VideoOff size={18} /> <VolumeOff size={18} /></>
+                    }
+                </span>
                 <div className="text-sm">receiving</div>
             </div>
         </div>

@@ -153,7 +153,7 @@ function BabyDevice() {
         // Start polling for parent connections
         setPolling(true);
         pollingRef.current = true;
-        timeoutRef.current = setTimeout(stopPolling, settings.pollingTimeout * 60_000);
+        timeoutRef.current = setTimeout(() => parentsRef.current.size === 0 ? stopCamera() : stopPolling(), settings.pollingTimeout * 60_000);
         if (toast) showToast({ severity: 'success', summary: 'Polling Started', detail: `Parent should connect within ${settings.pollingTimeout} minutes` });
 
         // Allow connecting parents while polling is active
@@ -162,7 +162,7 @@ function BabyDevice() {
             let parentID: string | null = null;
 
             const ms = streamRef.current as MediaStream;
-            ms.getTracks().forEach(track => pc.addTrack(track, ms));
+            if (ms) ms.getTracks().forEach(track => pc.addTrack(track, ms));
 
             // When parent mic stream receives
             let audio: HTMLAudioElement;
@@ -187,6 +187,7 @@ function BabyDevice() {
                 if (!parentID) return;
                 if (e.data === 'DISCONNECT') {
                     disconnect(parentID);
+                    if (parentsRef.current.size === 0 && !pollingRef.current) startPolling();
                     return;
                 }
                 const parent = parentsRef.current.get(parentID);
@@ -206,7 +207,10 @@ function BabyDevice() {
             // When parent gets disconnected
             pc.onconnectionstatechange = () => {
                 if (!parentID) return;
-                if (['disconnected', 'closed', 'failed'].includes(pc.connectionState)) disconnect(parentID);
+                if (['disconnected', 'closed', 'failed'].includes(pc.connectionState)) {
+                    disconnect(parentID);
+                    if (parentsRef.current.size === 0 && !pollingRef.current) startPolling();
+                }
             };
 
             // Create and send the offer sdp
@@ -284,7 +288,7 @@ function BabyDevice() {
                         onDisconnect={disconnect} />
 
                     <video ref={videoRef} autoPlay muted className={`
-                            w-full max-w-full shadow cursor-pointer rounded-lg border-2 transition-all ease-in-out duration-300
+                            w-full max-w-full shadow cursor-pointer rounded-lg border-2 transition-all ease-in-out duration-200
                             ${parents.some(p => p.talking) ? 'border-yellow-400' : 'border-pink-500'} 
                             ${camera !== 'STARTED' ? 'h-[50vh]' : 'h-auto'}
                         `}

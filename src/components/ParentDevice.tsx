@@ -84,7 +84,7 @@ function ParentDevice() {
 
     async function connect() {
         setConnection('CONNECTING');
-        await startMicrophone();
+        if (settings.usePushToTalk) await startMicrophone();
         const offer = await getSDP('offer');
 
         if (offer) {
@@ -92,7 +92,7 @@ function ParentDevice() {
 
             if (settings.usePushToTalk) {
                 const ms = streamRef.current as MediaStream;
-                ms.getTracks().forEach(track => pc.addTrack(track, ms));
+                if (ms) ms.getTracks().forEach(track => pc.addTrack(track, ms));
             }
 
             // When baby camera stream receives
@@ -212,7 +212,7 @@ function ParentDevice() {
                         onFullscreen={() => videoRef.current?.requestFullscreen()} />
 
                     <video ref={videoRef} autoPlay muted={talking} className={`
-                            w-full max-w-full shadow cursor-pointer rounded-lg border-2 transition-all ease-in-out duration-300
+                            w-full max-w-full shadow cursor-pointer rounded-lg border-2 transition-all ease-in-out duration-200
                             ${talking ? 'border-yellow-400' : recording ?? 'border-pink-500'} 
                             ${connection !== 'CONNECTED' ? 'h-[50vh]' : 'h-auto'}
                         `}
