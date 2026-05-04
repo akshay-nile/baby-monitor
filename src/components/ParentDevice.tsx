@@ -112,7 +112,7 @@ function ParentDevice() {
                 dc.onmessage = (e: MessageEvent) => {
                     if (e.data === 'DISCONNECT') disconnect();
                     else if (e.data === 'MOTION' && settings.motionDetectionAlerts) {
-                        if ((Date.now() - lastAlertRef.current) < 1200) return;
+                        if ((Date.now() - lastAlertRef.current) < 1000) return;
                         showToast({ severity: 'info', summary: 'Motion Detected', life: 1000 });
                         audioToneRef.current.play().catch(() => console.warn('Failed to play tone.mp3'));
                         lastAlertRef.current = Date.now();

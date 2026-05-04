@@ -39,8 +39,9 @@ export function getRecordingFormat() {
 // ---------- Motion Detection Logic ---------- //
 
 let timer: number | null = null;
+let previousFrame: Uint8Array | null = null;
 let canvas: HTMLCanvasElement | null = null;
-let previousFrame: Uint8ClampedArray | null = null;
+let context: CanvasRenderingContext2D | null = null;
 
 export function startMotionDetection(video: HTMLVideoElement, onMotionDetected: () => void, interval = 250): void {
     stopMotionDetection();
@@ -53,8 +54,7 @@ export function startMotionDetection(video: HTMLVideoElement, onMotionDetected: 
     canvas = document.createElement('canvas');
     canvas.width = Math.round(video.videoWidth / downscaleFactor);
     canvas.height = Math.round(video.videoHeight / downscaleFactor);
-
-    const context = canvas.getContext('2d', { willReadFrequently: true });
+    context = canvas.getContext('2d', { willReadFrequently: true });
     if (context) context.filter = 'grayscale(1)';
 
     timer = setInterval(() => {
@@ -66,34 +66,32 @@ export function startMotionDetection(video: HTMLVideoElement, onMotionDetected: 
         context.drawImage(video, 0, 0, canvas.width, canvas.height);
         const frame = context.getImageData(0, 0, canvas.width, canvas.height);
 
-        const currentFrame = new Uint8ClampedArray(frame.data);
+        const currentFrame = new Uint8Array(frame.data.length / 4);
+        for (let i = 1, j = 0; i < currentFrame.length && j < frame.data.length; i += 4, j++) currentFrame[j] = frame.data[i];
+
         if (!previousFrame) {
             previousFrame = currentFrame;
             return;
         }
 
-        let changedPixels = 0;
+        let changedPixelCount = 0;
         const frameLength = Math.min(currentFrame.length, previousFrame.length);
+        for (let i = 0; i < frameLength; i++) if ((Math.abs(currentFrame[i] - previousFrame[i])) > 10) changedPixelCount++;
 
-        for (let i = 0; i < frameLength; i += 4) {
-            const difference = Math.abs(currentFrame[i] - previousFrame[i]);
-            if (difference > 10) changedPixels++;
-        }
+        samples.push(changedPixelCount);
+        while (samples.length > 20) samples.shift();
 
-        samples.push(changedPixels);
-        while (samples.length >= 20) samples.shift();
         const threshold = Math.round(samples.reduce((a, b) => a + b, 0) / samples.length) * 2;
+        if (changedPixelCount > threshold) onMotionDetected();
 
-        if (changedPixels > threshold) onMotionDetected();
         previousFrame = currentFrame;
     }, interval);
 }
 
 export function stopMotionDetection(): void {
-    if (timer) {
-        clearInterval(timer);
-        timer = null;
-    }
-    previousFrame = null;
+    if (timer) clearInterval(timer);
+    timer = null;
     canvas = null;
+    context = null;
+    previousFrame = null;
 }
