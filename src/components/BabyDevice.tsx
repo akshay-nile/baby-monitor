@@ -131,7 +131,7 @@ function BabyDevice() {
         }
         if (settings.useMotionDetection) {
             const alertAllParents = () => parentsRef.current.values().forEach(parent => sendMessage(parent.dc, 'MOTION'));
-            video.onloadeddata = () => startMotionDetection({ video, onMotionDetected: alertAllParents, sensitivity: settings.motionSensitivity });
+            video.onloadeddata = () => startMotionDetection(video, alertAllParents);
             video.onerror = video.onended = stopMotionDetection;
         }
         video.srcObject = streamRef.current;

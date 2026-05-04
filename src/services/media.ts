@@ -42,17 +42,10 @@ let timer: number | null = null;
 let canvas: HTMLCanvasElement | null = null;
 let previousFrame: Uint8ClampedArray | null = null;
 
-type Args = {
-    video: HTMLVideoElement,
-    onMotionDetected: () => void,
-    interval?: number,
-    threshold?: number,
-    sensitivity?: number
-};
-
-export function startMotionDetection({ video, onMotionDetected, interval = 1000, threshold = 1000, sensitivity = 250 }: Args): void {
+export function startMotionDetection(video: HTMLVideoElement, onMotionDetected: () => void, interval = 250): void {
     stopMotionDetection();
 
+    const samples: number[] = [];
     const idealResolution = 100_000;
     const videoResolution = video.videoWidth * video.videoHeight;
     const downscaleFactor = videoResolution > idealResolution ? Math.sqrt(videoResolution / idealResolution) : 1;
@@ -60,7 +53,9 @@ export function startMotionDetection({ video, onMotionDetected, interval = 1000,
     canvas = document.createElement('canvas');
     canvas.width = Math.round(video.videoWidth / downscaleFactor);
     canvas.height = Math.round(video.videoHeight / downscaleFactor);
+
     const context = canvas.getContext('2d', { willReadFrequently: true });
+    if (context) context.filter = 'grayscale(1)';
 
     timer = setInterval(() => {
         if (!canvas || !context) {
@@ -78,13 +73,16 @@ export function startMotionDetection({ video, onMotionDetected, interval = 1000,
         }
 
         let changedPixels = 0;
-        for (let i = 0; i < Math.min(currentFrame.length, previousFrame.length); i += 4) {
-            const difference =
-                Math.abs(currentFrame[i + 0] - previousFrame[i + 0]) +  // Red
-                Math.abs(currentFrame[i + 1] - previousFrame[i + 1]) +  // Green
-                Math.abs(currentFrame[i + 2] - previousFrame[i + 2]);   // Blue
-            if (difference > sensitivity) changedPixels++;
+        const frameLength = Math.min(currentFrame.length, previousFrame.length);
+
+        for (let i = 0; i < frameLength; i += 4) {
+            const difference = Math.abs(currentFrame[i] - previousFrame[i]);
+            if (difference > 10) changedPixels++;
         }
+
+        samples.push(changedPixels);
+        while (samples.length >= 20) samples.shift();
+        const threshold = Math.round(samples.reduce((a, b) => a + b, 0) / samples.length) * 2;
 
         if (changedPixels > threshold) onMotionDetected();
         previousFrame = currentFrame;

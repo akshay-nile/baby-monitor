@@ -49,16 +49,6 @@ function UserSettings() {
                                     onChange={value => setUserSettings({ ...userSettings, useMotionDetection: value })} />
                             </div>
                             {
-                                userSettings.useMotionDetection &&
-                                <div className="flex justify-between items-center">
-                                    <label htmlFor="motionSensitivity">Motion Detection Sensitivity</label>
-                                    <Dropdown id="motionSensitivity" className="mr-1" pt={{ input: { style: { padding: '0.4rem 0.8rem', border: '1px solid pink' } }, trigger: { style: { display: 'none' } } }}
-                                        options={[{ name: 'Low', value: 400 }, { name: 'Medium', value: 250 }, { name: 'High', value: 100 }]} optionLabel="name" optionValue="value"
-                                        value={userSettings.motionSensitivity}
-                                        onChange={e => setUserSettings({ ...userSettings, motionSensitivity: e.value })} />
-                                </div>
-                            }
-                            {
                                 userSettings.trustedParents.length > 0 &&
                                 <div className="flex justify-between items-center">
                                     <label>Trusted Parent Devices ({userSettings.trustedParents.length})</label>

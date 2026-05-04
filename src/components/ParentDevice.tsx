@@ -17,6 +17,7 @@ function ParentDevice() {
     const videoRef = useRef<HTMLVideoElement>(null);
     const streamRef = useRef<MediaStream>(null);
     const recorderRef = useRef<MediaRecorder>(null);
+    const lastAlertRef = useRef<number>(0);
     const audioToneRef = useRef<HTMLAudioElement>(new Audio('./tone.mp3'));
 
     const [connection, setConnection] = useState<'CONNECTED' | 'CONNECTING' | 'DISCONNECTED'>('DISCONNECTED');
@@ -111,8 +112,10 @@ function ParentDevice() {
                 dc.onmessage = (e: MessageEvent) => {
                     if (e.data === 'DISCONNECT') disconnect();
                     else if (e.data === 'MOTION' && settings.motionDetectionAlerts) {
+                        if ((Date.now() - lastAlertRef.current) < 1200) return;
                         showToast({ severity: 'info', summary: 'Motion Detected', life: 1000 });
                         audioToneRef.current.play().catch(() => console.warn('Failed to play tone.mp3'));
+                        lastAlertRef.current = Date.now();
                     }
                 };
             };
