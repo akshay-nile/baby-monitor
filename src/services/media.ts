@@ -43,10 +43,11 @@ let previousFrame: Uint8Array | null = null;
 let canvas: HTMLCanvasElement | null = null;
 let context: CanvasRenderingContext2D | null = null;
 
-export function startMotionDetection(video: HTMLVideoElement, onMotionDetected: () => void, interval = 250): void {
+export function startMotionDetection(video: HTMLVideoElement, onMotionDetected: () => void): void {
     stopMotionDetection();
 
-    const samples: number[] = [];
+    const [interval, sensitivity, minThreshold] = [250, 50, 200];
+    const recentSamples = new Array<number>();
     const idealResolution = 100_000;
     const videoResolution = video.videoWidth * video.videoHeight;
     const downscaleFactor = videoResolution > idealResolution ? Math.sqrt(videoResolution / idealResolution) : 1;
@@ -55,7 +56,7 @@ export function startMotionDetection(video: HTMLVideoElement, onMotionDetected: 
     canvas.width = Math.round(video.videoWidth / downscaleFactor);
     canvas.height = Math.round(video.videoHeight / downscaleFactor);
     context = canvas.getContext('2d', { willReadFrequently: true });
-    if (context) context.filter = 'grayscale(1)';
+    if (context) context.filter = 'grayscale(1); blur(2px);';
 
     timer = setInterval(() => {
         if (!canvas || !context) {
@@ -64,27 +65,26 @@ export function startMotionDetection(video: HTMLVideoElement, onMotionDetected: 
         }
 
         context.drawImage(video, 0, 0, canvas.width, canvas.height);
-        const frame = context.getImageData(0, 0, canvas.width, canvas.height);
-
-        const currentFrame = new Uint8Array(frame.data.length / 4);
-        for (let i = 1, j = 0; i < currentFrame.length && j < frame.data.length; i += 4, j++) currentFrame[j] = frame.data[i];
+        const currentFrame = context.getImageData(0, 0, canvas.width, canvas.height).data;
 
         if (!previousFrame) {
-            previousFrame = currentFrame;
+            previousFrame = new Uint8Array(currentFrame.length / 4);
+            for (let cfi = 1, pfi = 0; cfi < currentFrame.length; cfi += 4, pfi++) previousFrame[pfi] = currentFrame[cfi];
             return;
         }
 
         let changedPixelCount = 0;
-        const frameLength = Math.min(currentFrame.length, previousFrame.length);
-        for (let i = 0; i < frameLength; i++) if ((Math.abs(currentFrame[i] - previousFrame[i])) > 10) changedPixelCount++;
+        for (let cfi = 1, pfi = 0; cfi < currentFrame.length; cfi += 4, pfi++) {
+            const difference = Math.abs(currentFrame[cfi] - previousFrame[pfi]);
+            if (difference > sensitivity) changedPixelCount++;
+            previousFrame[pfi] = currentFrame[cfi];
+        }
 
-        samples.push(changedPixelCount);
-        while (samples.length > 20) samples.shift();
+        recentSamples.push(changedPixelCount);
+        while (recentSamples.length > 20) recentSamples.shift();
 
-        const threshold = Math.round(samples.reduce((a, b) => a + b, 0) / samples.length) * 2;
+        const threshold = Math.round(recentSamples.reduce((a, b) => a + b, 0) / recentSamples.length) + minThreshold;
         if (changedPixelCount > threshold) onMotionDetected();
-
-        previousFrame = currentFrame;
     }, interval);
 }
 
