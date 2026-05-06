@@ -43,12 +43,10 @@ let previousFrame: Uint8Array | null = null;
 let canvas: HTMLCanvasElement | null = null;
 let context: CanvasRenderingContext2D | null = null;
 
-export function startMotionDetection(video: HTMLVideoElement, onMotionDetected: () => void): void {
+export function startMotionDetection(video: HTMLVideoElement, onMotionDetected: () => void, sensitivity = 100): void {
     stopMotionDetection();
 
-    const [interval, sensitivity, minThreshold] = [250, 50, 200];
-    const recentSamples = new Array<number>();
-    const idealResolution = 100_000;
+    const [interval, minThreshold, idealResolution, recentSamples] = [250, 100, 100_000, new Array<number>()];
     const videoResolution = video.videoWidth * video.videoHeight;
     const downscaleFactor = videoResolution > idealResolution ? Math.sqrt(videoResolution / idealResolution) : 1;
 
@@ -83,7 +81,8 @@ export function startMotionDetection(video: HTMLVideoElement, onMotionDetected: 
         recentSamples.push(changedPixelCount);
         while (recentSamples.length > 20) recentSamples.shift();
 
-        const threshold = Math.round(recentSamples.reduce((a, b) => a + b, 0) / recentSamples.length) + minThreshold;
+        const avgMotion = recentSamples.reduce((a, b) => a + b, 0) / recentSamples.length;
+        const threshold = Math.round(avgMotion * 1.414) + minThreshold;
         if (changedPixelCount > threshold) onMotionDetected();
     }, interval);
 }

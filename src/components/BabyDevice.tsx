@@ -23,8 +23,8 @@ function BabyDevice() {
     const facingModeRef = useRef<'user' | 'environment'>(settings.startWithCamera);
 
     const [camera, setCamera] = useState<'STARTED' | 'STARTING' | 'STOPPED'>('STOPPED');
-    const [polling, setPolling] = useState<boolean>(false);
     const [parents, setParents] = useState<ParentState[]>([]);
+    const [polling, setPolling] = useState<boolean>(false);
 
     function updateParents() {
         setParents(parentsRef.current.entries().toArray().map(([parentID, parent]) => {
@@ -131,7 +131,7 @@ function BabyDevice() {
         }
         if (settings.useMotionDetection) {
             const alertAllParents = () => parentsRef.current.values().forEach(parent => sendMessage(parent.dc, 'MOTION'));
-            video.onloadeddata = () => startMotionDetection(video, alertAllParents);
+            video.onloadeddata = () => startMotionDetection(video, alertAllParents, settings.motionSensitivity);
             video.onerror = video.onended = stopMotionDetection;
         }
         video.srcObject = streamRef.current;

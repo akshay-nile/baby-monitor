@@ -12,6 +12,7 @@ const defaultSettings: Settings = {
     pollingTimeout: 5,
     usePushToTalk: true,
     useMotionDetection: false,
+    motionSensitivity: 100,
     motionDetectionAlerts: true,
     trustedParents: []
 };
