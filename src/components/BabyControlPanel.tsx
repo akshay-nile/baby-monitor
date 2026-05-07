@@ -1,23 +1,27 @@
 import { Button } from 'primereact/button';
 import { useState } from 'react';
+import { getSettings } from '../services/settings';
 
 type Props = {
     isLive: boolean,
-    isPolling: boolean, startPolling: () => void, stopPolling: () => void,
-    motionDetectionSensitivity: number | null,
-    toggleMotionDetectionSensitivity: (n: number | null) => void
+    isPolling: boolean,
+    onTogglePolling: (b: boolean) => void,
+    onToggleMotionDetection: (n: number | null) => void
 };
 
-function BabyControlPanel({ isLive, isPolling, startPolling, stopPolling, motionDetectionSensitivity, toggleMotionDetectionSensitivity }: Props) {
-    const motionDetectionLabels = [
+function BabyControlPanel({ isLive, isPolling, onTogglePolling, onToggleMotionDetection }: Props) {
+    const motionDetectionOptions = [
         { name: 'Disabled', value: null },
         { name: 'Low', value: 100 },
         { name: 'Medium', value: 50 },
         { name: 'High', value: 10 }
     ];
 
+    const [motionDetectionValue, setMotionDetectionValue] = useState<number | null>(
+        getSettings().useMotionDetection ? getSettings().motionSensitivity : null
+    );
     const [motionDetectionIndex, setMotionDetectionIndex] = useState<number>(
-        motionDetectionLabels.findIndex(l => l.value === motionDetectionSensitivity)
+        motionDetectionOptions.findIndex(op => op.value === motionDetectionValue)
     );
 
     return (
@@ -27,19 +31,20 @@ function BabyControlPanel({ isLive, isPolling, startPolling, stopPolling, motion
                 <Button size="small" className="h-10"
                     severity={isPolling ? undefined : 'secondary'}
                     label={isPolling ? 'Allowed' : 'Disabled'}
-                    onClick={() => isPolling ? stopPolling() : startPolling()}
+                    onClick={() => onTogglePolling(!isPolling)}
                     disabled={!isLive} />
             </div>
 
             <div className="flex flex-col items-center gap-1">
-                <div className="text-sm">Motion {motionDetectionSensitivity ? 'Sensitivity' : 'Detection'}</div>
+                <div className="text-sm">Motion {motionDetectionValue ? 'Sensitivity' : 'Detection'}</div>
                 <Button size="small" className="h-10"
-                    severity={motionDetectionLabels[motionDetectionIndex].value ? undefined : 'secondary'}
-                    label={motionDetectionLabels[motionDetectionIndex].name}
+                    severity={motionDetectionOptions[motionDetectionIndex].value ? undefined : 'secondary'}
+                    label={motionDetectionOptions[motionDetectionIndex].name}
                     onClick={() => {
-                        const i = (motionDetectionIndex + 1) % motionDetectionLabels.length;
+                        const i = (motionDetectionIndex + 1) % motionDetectionOptions.length;
                         setMotionDetectionIndex(i);
-                        toggleMotionDetectionSensitivity(motionDetectionLabels[i].value);
+                        setMotionDetectionValue(motionDetectionOptions[i].value);
+                        onToggleMotionDetection(motionDetectionOptions[i].value);
                     }}
                     disabled={!isLive} />
             </div>

@@ -10,8 +10,7 @@ import PageAnimation from './PageAnimation';
 import ToggleSwitch from './ToggleSwitch';
 
 function UserSettings() {
-    const settings = getSettings();
-    const [userSettings, setUserSettings] = useState<Settings>(settings);
+    const [userSettings, setUserSettings] = useState<Settings>(getSettings());
 
     useEffect(() => { setSettings(userSettings); }, [userSettings]);
 

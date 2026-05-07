@@ -4,18 +4,19 @@ import { useToastMessage } from '../contexts/ToastMessage/useToastMessage';
 import { getSDP, postSDP, sendMessage, waitForIceGatheringCompletion } from '../services/connex';
 import { getMediaDevices, getMediaStream, getRecordingFormat } from '../services/media';
 import type { Baby } from '../services/models';
-import { getSettings } from '../services/settings';
+import { getSettings, setSettings } from '../services/settings';
 import Header from './Header';
 import PageAnimation from './PageAnimation';
+import ParentControlPanel from './ParentControlPanel';
 import ParentStatusPanel from './ParentStatusPanel';
 
 function ParentDevice() {
-    const settings = getSettings();
     const { showToast } = useToastMessage();
 
     const babyRef = useRef<Baby>(null);
     const videoRef = useRef<HTMLVideoElement>(null);
     const streamRef = useRef<MediaStream>(null);
+    const settingsRef = useRef(getSettings());
     const recorderRef = useRef<MediaRecorder>(null);
     const lastAlertRef = useRef<number>(0);
     const audioToneRef = useRef<HTMLAudioElement>(new Audio('./tone.mp3'));
@@ -63,7 +64,7 @@ function ParentDevice() {
     }, [showToast, stopAndSaveRecording]);
 
     async function startMicrophone() {
-        if (streamRef.current || !settings.usePushToTalk) return;
+        if (streamRef.current || !settingsRef.current.usePushToTalk) return;
         if (!window.isSecureContext) {
             showToast({ severity: 'error', summary: 'Insecure Web Context' });
             return;
@@ -85,13 +86,13 @@ function ParentDevice() {
 
     async function connect() {
         setConnection('CONNECTING');
-        if (settings.usePushToTalk) await startMicrophone();
+        if (settingsRef.current.usePushToTalk) await startMicrophone();
         const offer = await getSDP('offer');
 
         if (offer) {
             const pc = new RTCPeerConnection();
 
-            if (settings.usePushToTalk) {
+            if (settingsRef.current.usePushToTalk) {
                 const ms = streamRef.current as MediaStream;
                 if (ms) ms.getTracks().forEach(track => pc.addTrack(track, ms));
             }
@@ -111,7 +112,7 @@ function ParentDevice() {
                 };
                 dc.onmessage = (e: MessageEvent) => {
                     if (e.data === 'DISCONNECT') disconnect();
-                    else if (e.data === 'MOTION' && settings.motionDetectionAlerts) {
+                    else if (e.data === 'MOTION' && settingsRef.current.motionDetectionAlerts) {
                         if ((Date.now() - lastAlertRef.current) < 1000) return;
                         showToast({ severity: 'info', summary: 'Motion Detected', life: 1000 });
                         audioToneRef.current.play().catch(() => console.warn('Failed to play tone.mp3'));
@@ -156,7 +157,7 @@ function ParentDevice() {
     }
 
     function pushToTalk(pushed: boolean) {
-        if (pushed && !settings.usePushToTalk) {
+        if (pushed && !settingsRef.current.usePushToTalk) {
             showToast({ severity: 'warn', summary: 'Feature Disabled', detail: 'Push-To-Talk feature is disabled in settings' });
             return;
         }
@@ -198,6 +199,12 @@ function ParentDevice() {
         showToast({ severity: 'info', summary: 'Recording Started', detail: 'Supported format: ' + mimeType });
     }
 
+    function toggleMotionAlerts(alerts: boolean) {
+        settingsRef.current.motionDetectionAlerts = alerts;
+        setSettings(settingsRef.current);
+        showToast({ severity: 'info', summary: `Motion Alerts ${alerts ? 'ON' : 'OFF'}` });
+    }
+
     useEffect(() => {
         audioToneRef.current.preload = 'auto';
         return () => { if (streamRef.current || babyRef.current) disconnect(false); };
@@ -223,10 +230,11 @@ function ParentDevice() {
                         onMouseUp={() => pushToTalk(false)} onTouchEnd={() => pushToTalk(false)}
                         onMouseLeave={() => pushToTalk(false)} />
 
-                    <Button size="small" className="w-fit mt-1!"
-                        label={recording ? 'Stop & Save Recording' : 'Start Recording'}
-                        onClick={() => recording ? stopAndSaveRecording() : startRecording()}
-                        disabled={connection !== 'CONNECTED'} />
+                    <ParentControlPanel
+                        isLive={connection === 'CONNECTED'}
+                        isRecording={!!recording}
+                        onToggleRecording={b => b ? startRecording() : stopAndSaveRecording()}
+                        onToggleMotionAlerts={toggleMotionAlerts} />
                 </div>
 
                 <Button size="large"

@@ -14,7 +14,6 @@ import PageAnimation from './PageAnimation';
 
 
 function BabyDevice() {
-    const settings = getSettings();
     const { showToast } = useToastMessage();
 
     const videoRef = useRef<HTMLVideoElement>(null);
@@ -22,14 +21,12 @@ function BabyDevice() {
     const pollingRef = useRef<boolean>(false);
     const timeoutRef = useRef<number>(null);
     const parentsRef = useRef<Map<string, Parent>>(new Map());
-    const facingModeRef = useRef<'user' | 'environment'>(settings.startWithCamera);
+    const settingsRef = useRef(getSettings());
+    const facingModeRef = useRef<'user' | 'environment'>(getSettings().startWithCamera);
 
     const [camera, setCamera] = useState<'STARTED' | 'STARTING' | 'STOPPED'>('STOPPED');
     const [parents, setParents] = useState<ParentState[]>([]);
     const [polling, setPolling] = useState<boolean>(false);
-    const [motionDetectionAndSensitivity, setMotionDetectionAndSensitivity] = useState<number | null>(
-        settings.useMotionDetection ? settings.motionSensitivity : null
-    );
 
     function updateParents() {
         setParents(parentsRef.current.entries().toArray().map(([parentID, parent]) => {
@@ -135,7 +132,7 @@ function BabyDevice() {
             return;
         }
         video.srcObject = streamRef.current;
-        toggleMotionDetectionAndSensitivity(motionDetectionAndSensitivity);
+        toggleMotionDetectionAndSensitivity(settingsRef.current.useMotionDetection ? settingsRef.current.motionSensitivity : null);
         setCamera('STARTED');
         showToast({ severity: 'success', summary: 'Camera Started', detail: 'Waiting for parent connections' });
         await startPolling(false);
@@ -146,16 +143,16 @@ function BabyDevice() {
         if (pollingRef.current) return;
 
         // Abort if max parents limit is reached
-        if (parentsRef.current.size >= settings.maxParentConnections) {
-            showToast({ severity: 'warn', summary: 'Max Parents Limit Reached', detail: `${settings.maxParentConnections} parents are already connected` });
+        if (parentsRef.current.size >= settingsRef.current.maxParentConnections) {
+            showToast({ severity: 'warn', summary: 'Max Parents Limit Reached', detail: `${settingsRef.current.maxParentConnections} parents are already connected` });
             return;
         }
 
         // Start polling for parent connections
         setPolling(true);
         pollingRef.current = true;
-        timeoutRef.current = setTimeout(() => parentsRef.current.size === 0 ? stopCamera() : stopPolling(), settings.pollingTimeout * 60_000);
-        if (toast) showToast({ severity: 'success', summary: 'Polling Started', detail: `Parent should connect within ${settings.pollingTimeout} minutes` });
+        timeoutRef.current = setTimeout(() => parentsRef.current.size === 0 ? stopCamera() : stopPolling(), settingsRef.current.pollingTimeout * 60_000);
+        if (toast) showToast({ severity: 'success', summary: 'Polling Started', detail: `Parent should connect within ${settingsRef.current.pollingTimeout} minutes` });
 
         // Allow connecting parents while polling is active
         while (pollingRef.current) {
@@ -180,7 +177,7 @@ function BabyDevice() {
                 const parent = { pc, dc, audio, talking: false };
                 addParent(parentID, parent);
                 replaceParentTracks([parent]);
-                if (parentsRef.current.size >= settings.maxParentConnections) stopPolling();
+                if (parentsRef.current.size >= settingsRef.current.maxParentConnections) stopPolling();
             };
 
             // When parent sends a message
@@ -225,7 +222,7 @@ function BabyDevice() {
                 const answer = await getSDP('answer');
                 if (answer) {
                     parentID = answer.browserID;
-                    if (settings.trustedParents.includes(parentID)) await pc.setRemoteDescription(answer.sdp);
+                    if (settingsRef.current.trustedParents.includes(parentID)) await pc.setRemoteDescription(answer.sdp);
                     else isPosted = await new Promise<boolean>(resolve => {
                         confirmDialog({
                             group: 'templating',
@@ -241,8 +238,8 @@ function BabyDevice() {
                             ),
                             accept: async () => {
                                 await pc.setRemoteDescription(answer.sdp);
-                                settings.trustedParents.push(answer.browserID);
-                                setSettings(settings);
+                                settingsRef.current.trustedParents.push(answer.browserID);
+                                setSettings(settingsRef.current);
                                 resolve(false);
                             },
                             reject: async () => resolve(await postSDP(pc.localDescription!))
@@ -282,11 +279,10 @@ function BabyDevice() {
             if (video) video.onloadeddata = null;
             stopMotionDetection();
         }
-        const toast = settings.useMotionDetection !== !!sensitivity;
-        settings.useMotionDetection = !!sensitivity;
-        settings.motionSensitivity = sensitivity ?? settings.motionSensitivity;
-        setSettings(settings);
-        setMotionDetectionAndSensitivity(sensitivity);
+        const toast = settingsRef.current.useMotionDetection !== !!sensitivity;
+        settingsRef.current.useMotionDetection = !!sensitivity;
+        settingsRef.current.motionSensitivity = sensitivity ?? settingsRef.current.motionSensitivity;
+        setSettings(settingsRef.current);
         if (toast) showToast({ severity: 'info', summary: `Motion Detection ${sensitivity ? 'Activated' : 'Stopped'}` });
     }
 
@@ -317,9 +313,9 @@ function BabyDevice() {
 
                     <BabyControlPanel
                         isLive={camera === 'STARTED'}
-                        isPolling={polling} startPolling={startPolling} stopPolling={stopPolling}
-                        motionDetectionSensitivity={motionDetectionAndSensitivity}
-                        toggleMotionDetectionSensitivity={toggleMotionDetectionAndSensitivity} />
+                        isPolling={polling}
+                        onTogglePolling={b => b ? startPolling() : stopPolling()}
+                        onToggleMotionDetection={toggleMotionDetectionAndSensitivity} />
 
                 </div>
 
