@@ -54,7 +54,7 @@ export function startMotionDetection(video: HTMLVideoElement, onMotionDetected: 
     canvas.width = Math.round(video.videoWidth / downscaleFactor);
     canvas.height = Math.round(video.videoHeight / downscaleFactor);
     context = canvas.getContext('2d', { willReadFrequently: true });
-    if (context) context.filter = 'grayscale(1); blur(2px);';
+    if (context) context.filter = 'grayscale(1) blur(2px)';
 
     timer = setInterval(() => {
         if (!canvas || !context) {

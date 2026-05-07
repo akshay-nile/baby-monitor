@@ -7,9 +7,11 @@ import { clearSDP, getSDP, postSDP, sendMessage, waitForIceGatheringCompletion }
 import { getMediaDevices, getMediaStream, startMotionDetection, stopMotionDetection } from '../services/media';
 import type { Parent, ParentState } from '../services/models';
 import { getSettings, setSettings } from '../services/settings';
+import BabyControlPanel from './BabyControlPanel';
 import BabyStatusPanel from './BabyStatusPanel';
 import Header from './Header';
 import PageAnimation from './PageAnimation';
+
 
 function BabyDevice() {
     const settings = getSettings();
@@ -25,6 +27,9 @@ function BabyDevice() {
     const [camera, setCamera] = useState<'STARTED' | 'STARTING' | 'STOPPED'>('STOPPED');
     const [parents, setParents] = useState<ParentState[]>([]);
     const [polling, setPolling] = useState<boolean>(false);
+    const [motionDetectionAndSensitivity, setMotionDetectionAndSensitivity] = useState<number | null>(
+        settings.useMotionDetection ? settings.motionSensitivity : null
+    );
 
     function updateParents() {
         setParents(parentsRef.current.entries().toArray().map(([parentID, parent]) => {
@@ -129,12 +134,8 @@ function BabyDevice() {
             setCamera('STOPPED');
             return;
         }
-        if (settings.useMotionDetection) {
-            const alertAllParents = () => parentsRef.current.values().forEach(parent => sendMessage(parent.dc, 'MOTION'));
-            video.onloadeddata = () => startMotionDetection(video, alertAllParents, settings.motionSensitivity);
-            video.onerror = video.onended = stopMotionDetection;
-        }
         video.srcObject = streamRef.current;
+        toggleMotionDetectionAndSensitivity(motionDetectionAndSensitivity);
         setCamera('STARTED');
         showToast({ severity: 'success', summary: 'Camera Started', detail: 'Waiting for parent connections' });
         await startPolling(false);
@@ -270,6 +271,25 @@ function BabyDevice() {
         if (oldStream) oldStream.getTracks().forEach(track => track.stop());
     }
 
+    function toggleMotionDetectionAndSensitivity(sensitivity: number | null) {
+        const [video, parents] = [videoRef.current, parentsRef.current];
+        if (!video) return;
+        if (sensitivity) {
+            const alertAllParents = () => parents.values().forEach(parent => sendMessage(parent.dc, 'MOTION'));
+            if (video.readyState >= 2) startMotionDetection(video, alertAllParents, sensitivity);
+            else video.onloadeddata = () => startMotionDetection(video, alertAllParents, sensitivity);
+        } else {
+            if (video) video.onloadeddata = null;
+            stopMotionDetection();
+        }
+        const toast = settings.useMotionDetection !== !!sensitivity;
+        settings.useMotionDetection = !!sensitivity;
+        settings.motionSensitivity = sensitivity ?? settings.motionSensitivity;
+        setSettings(settings);
+        setMotionDetectionAndSensitivity(sensitivity);
+        if (toast) showToast({ severity: 'info', summary: `Motion Detection ${sensitivity ? 'Activated' : 'Stopped'}` });
+    }
+
     useEffect(() => {
         const parents = parentsRef.current;
         return () => { if (streamRef.current || parents.size > 0) stopCamera(); };
@@ -292,12 +312,15 @@ function BabyDevice() {
                             ${parents.some(p => p.talking) ? 'border-yellow-400' : 'border-pink-500'} 
                             ${camera !== 'STARTED' ? 'h-[50vh]' : 'h-auto'}
                         `}
-                        onClick={flipCameraStream} />
+                        onClick={flipCameraStream}
+                        onPause={stopMotionDetection} onEnded={stopMotionDetection} onError={stopMotionDetection} />
 
-                    <Button size="small" className="w-fit mt-1!"
-                        label={polling ? 'Stop Polling' : 'Start Polling'}
-                        onClick={() => polling ? stopPolling() : startPolling()}
-                        disabled={camera !== 'STARTED'} />
+                    <BabyControlPanel
+                        isLive={camera === 'STARTED'}
+                        isPolling={polling} startPolling={startPolling} stopPolling={stopPolling}
+                        motionDetectionSensitivity={motionDetectionAndSensitivity}
+                        toggleMotionDetectionSensitivity={toggleMotionDetectionAndSensitivity} />
+
                 </div>
 
                 <Button size="large"
