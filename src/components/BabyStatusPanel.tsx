@@ -1,4 +1,4 @@
-import { Camera, CameraOff, Mic, MicOff, User, UserPlus, UserX, Volume2, VolumeOff } from 'lucide-react';
+import { Camera, CameraOff, Mic, MicOff, User, UserPlus, UserX, Volume2, VolumeOff, X } from 'lucide-react';
 import { Button } from 'primereact/button';
 import { Column } from 'primereact/column';
 import { DataTable } from 'primereact/datatable';
@@ -44,10 +44,10 @@ function BabyStatusPanel({ parents, isLive, isPolling, onDisconnect }: Props) {
                                     <User size={28} className={p.talking ? 'text-yellow-600' : undefined} /> {p.parentID}
                                 </span>
                             } />
-                            <Column body={(p: ParentState) => <Button label="Disconnect" size="small" onClick={e => {
+                            <Column body={(p: ParentState) => <Button size="small" className="p-2!" onClick={e => {
                                 e.stopPropagation();
                                 onDisconnect(p.parentID);
-                            }} />} />
+                            }}><X size={18} /></Button>} />
                         </DataTable>
                     </OverlayPanel>
                 </div>

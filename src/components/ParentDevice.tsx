@@ -224,7 +224,7 @@ function ParentDevice() {
                     <video ref={videoRef} autoPlay muted={talking} className={`
                             w-full max-w-full shadow cursor-pointer rounded-lg border-2 transition-all ease-in-out duration-200
                             ${talking ? 'border-yellow-400' : recording ?? 'border-pink-500'} 
-                            ${connection !== 'CONNECTED' ? 'h-[50vh]' : 'h-auto'}
+                            ${connection !== 'CONNECTED' ? 'aspect-square' : 'aspect-auto'}
                         `}
                         onMouseDown={() => pushToTalk(true)} onTouchStart={() => pushToTalk(true)}
                         onMouseUp={() => pushToTalk(false)} onTouchEnd={() => pushToTalk(false)}

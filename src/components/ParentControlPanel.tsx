@@ -1,5 +1,5 @@
 import { Button } from 'primereact/button';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { getSettings } from '../services/settings';
 
 type Props = {
@@ -10,12 +10,38 @@ type Props = {
 };
 
 function ParentControlPanel({ isLive, isRecording, onToggleRecording, onToggleMotionAlerts }: Props) {
+    const recordingTimerRef = useRef<number | null>(null);
+
+    const [recordingLength, setRecordingLength] = useState<string>('00:00');
     const [motionDetectionAlerts, setMotionDetectionAlerts] = useState<boolean>(getSettings().motionDetectionAlerts);
+
+    useEffect(() => {
+        const stopTimer = () => {
+            if (recordingTimerRef.current) clearInterval(recordingTimerRef.current);
+            recordingTimerRef.current = null;
+            setRecordingLength('00:00');
+        };
+
+        if (isRecording) {
+            const startTime = Date.now();
+            recordingTimerRef.current = setInterval(() => {
+                const ms = Date.now() - startTime;
+                const s = Math.round(ms / 1000);
+                const m = Math.floor(s / 60);
+                const hours = Math.floor(m / 60).toString().padStart(2, '0');
+                const minutes = (m % 60).toString().padStart(2, '0');
+                const seconds = (s % 60).toString().padStart(2, '0');
+                setRecordingLength((hours === '00' ? '' : `${hours}:`) + `${minutes}:${seconds}`);
+            }, 1000);
+        } else stopTimer();
+
+        return stopTimer;
+    }, [isRecording]);
 
     return (
         <div className="w-full flex justify-between px-2">
             <div className="flex flex-col items-center gap-1">
-                <div className="text-sm">Stream Recorder</div>
+                <div className="text-sm">{isRecording ? `[${recordingLength}] Recording...` : 'Stream Recorder'}</div>
                 <Button size="small" className="h-10"
                     severity={isRecording ? undefined : 'secondary'}
                     label={isRecording ? 'On' : 'Off'}

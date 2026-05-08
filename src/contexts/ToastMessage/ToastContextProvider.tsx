@@ -19,7 +19,7 @@ function ToastContextProvider({ children }: Props) {
         <ToastContext.Provider value={{ showToast, clearToast }}>
             <div>
                 {children}
-                <Toast ref={toastRef} position="top-center" />
+                <Toast ref={toastRef} position="center" />
             </div>
         </ToastContext.Provider>
     );
