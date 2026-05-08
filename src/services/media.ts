@@ -18,6 +18,7 @@ export async function getMediaStream(facingMode?: 'user' | 'environment') {
 
 export async function getMediaDevices(kind: 'videoinput' | 'audioinput') {
     const devices = await navigator.mediaDevices.enumerateDevices();
+    console.log(devices.filter(device => device.kind === kind));
     return devices.filter(device => device.kind === kind);
 }
 

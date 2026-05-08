@@ -11,7 +11,7 @@ type Props = {
     onToggleMotionAlerts: (b: boolean) => void
 };
 
-function ParentControlPanel({ isLive, isTorch, isRecording, onToggleTorch, onToggleRecording, onToggleMotionAlerts }: Props) {
+function ParentTogglePanel({ isLive, isTorch, isRecording, onToggleTorch, onToggleRecording, onToggleMotionAlerts }: Props) {
     const recordingTimerRef = useRef<number | null>(null);
 
     const [recordingLength, setRecordingLength] = useState<string>('00:00');
@@ -69,11 +69,10 @@ function ParentControlPanel({ isLive, isTorch, isRecording, onToggleTorch, onTog
                         const alerts = !motionDetectionAlerts;
                         setMotionDetectionAlerts(alerts);
                         onToggleMotionAlerts(alerts);
-                    }}
-                    disabled={!isLive} />
+                    }} />
             </div>
         </div>
     );
 }
 
-export default ParentControlPanel;
+export default ParentTogglePanel;

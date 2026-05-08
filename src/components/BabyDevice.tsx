@@ -7,8 +7,8 @@ import { clearSDP, getSDP, postSDP, sendMessage, waitForIceGatheringCompletion }
 import { getMediaDevices, getMediaStream, startMotionDetection, stopMotionDetection } from '../services/media';
 import type { Parent, ParentState } from '../services/models';
 import { getSettings, setSettings } from '../services/settings';
-import BabyControlPanel from './BabyControlPanel';
 import BabyStatusPanel from './BabyStatusPanel';
+import BabyTogglePanel from './BabyTogglePanel';
 import Header from './Header';
 import PageAnimation from './PageAnimation';
 
@@ -195,24 +195,18 @@ function BabyDevice() {
             // When parent sends a message
             dc.onmessage = async (e: MessageEvent) => {
                 if (!parentID) return;
-                if (e.data === 'DISCONNECT') {
+                else if (e.data === 'DISCONNECT') {
                     disconnect(parentID);
                     if (parentsRef.current.size === 0 && !pollingRef.current) startPolling();
-                    return;
                 }
-                const parent = parentsRef.current.get(parentID);
-                if (!parent) return;
-                if (e.data === 'SILENCED') {
-                    parent.talking = false;
-                    updateParents();
-                    return;
+                else if (['TALKING', 'SILENCED'].includes(e.data)) {
+                    const parent = parentsRef.current.get(parentID);
+                    if (parent) {
+                        parent.talking = e.data === 'TALKING';
+                        updateParents();
+                    }
                 }
-                if (e.data === 'TALKING') {
-                    parent.talking = true;
-                    updateParents();
-                    showToast({ severity: 'info', summary: 'Parent Talking', detail: 'Parent ID: ' + parentID });
-                }
-                if (['TORCH ON', 'TORCH OFF'].includes(e.data)) {
+                else if (['TORCH ON', 'TORCH OFF'].includes(e.data)) {
                     if (!streamRef.current) return;
                     const track = streamRef.current.getVideoTracks()[0];
                     if ('torch' in track.getCapabilities()) {
@@ -302,7 +296,7 @@ function BabyDevice() {
         settingsRef.current.useMotionDetection = !!sensitivity;
         settingsRef.current.motionSensitivity = sensitivity ?? settingsRef.current.motionSensitivity;
         setSettings(settingsRef.current);
-        if (toast) showToast({ severity: 'info', summary: `Motion Detection ${sensitivity ? 'Activated' : 'Stopped'}` });
+        if (toast) showToast({ severity: 'info', summary: `Motion Detection ${sensitivity ? 'ON' : 'OFF'}` });
     }
 
     useEffect(() => {
@@ -330,7 +324,7 @@ function BabyDevice() {
                         onClick={flipCameraStream}
                         onPause={stopMotionDetection} onEnded={stopMotionDetection} onError={stopMotionDetection} />
 
-                    <BabyControlPanel
+                    <BabyTogglePanel
                         isLive={camera === 'STARTED'}
                         isPolling={polling}
                         onTogglePolling={b => b ? startPolling() : stopPolling()}

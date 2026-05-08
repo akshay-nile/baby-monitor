@@ -7,8 +7,8 @@ import type { Baby } from '../services/models';
 import { getSettings, setSettings } from '../services/settings';
 import Header from './Header';
 import PageAnimation from './PageAnimation';
-import ParentControlPanel from './ParentControlPanel';
 import ParentStatusPanel from './ParentStatusPanel';
+import ParentTogglePanel from './ParentTogglePanel';
 
 function ParentDevice() {
     const { showToast } = useToastMessage();
@@ -240,7 +240,7 @@ function ParentDevice() {
                         onMouseUp={() => pushToTalk(false)} onTouchEnd={() => pushToTalk(false)}
                         onMouseLeave={() => pushToTalk(false)} />
 
-                    <ParentControlPanel
+                    <ParentTogglePanel
                         isLive={connection === 'CONNECTED'}
                         isTorch={torch}
                         isRecording={!!recording}

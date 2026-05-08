@@ -9,7 +9,7 @@ type Props = {
     onToggleMotionDetection: (n: number | null) => void
 };
 
-function BabyControlPanel({ isLive, isPolling, onTogglePolling, onToggleMotionDetection }: Props) {
+function BabyTogglePanel({ isLive, isPolling, onTogglePolling, onToggleMotionDetection }: Props) {
     const motionDetectionOptions = [
         { name: 'Disabled', value: null },
         { name: 'Low', value: 100 },
@@ -45,11 +45,10 @@ function BabyControlPanel({ isLive, isPolling, onTogglePolling, onToggleMotionDe
                         setMotionDetectionIndex(i);
                         setMotionDetectionValue(motionDetectionOptions[i].value);
                         onToggleMotionDetection(motionDetectionOptions[i].value);
-                    }}
-                    disabled={!isLive} />
+                    }} />
             </div>
         </div>
     );
 }
 
-export default BabyControlPanel;
+export default BabyTogglePanel;
