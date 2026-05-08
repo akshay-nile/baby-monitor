@@ -4,12 +4,14 @@ import { getSettings } from '../services/settings';
 
 type Props = {
     isLive: boolean,
+    isTorch: boolean | null,
     isRecording: boolean,
+    onToggleTorch: (b: boolean) => void,
     onToggleRecording: (b: boolean) => void,
     onToggleMotionAlerts: (b: boolean) => void
 };
 
-function ParentControlPanel({ isLive, isRecording, onToggleRecording, onToggleMotionAlerts }: Props) {
+function ParentControlPanel({ isLive, isTorch, isRecording, onToggleTorch, onToggleRecording, onToggleMotionAlerts }: Props) {
     const recordingTimerRef = useRef<number | null>(null);
 
     const [recordingLength, setRecordingLength] = useState<string>('00:00');
@@ -41,12 +43,21 @@ function ParentControlPanel({ isLive, isRecording, onToggleRecording, onToggleMo
     return (
         <div className="w-full flex justify-between px-2">
             <div className="flex flex-col items-center gap-1">
-                <div className="text-sm">{isRecording ? `[${recordingLength}] Recording...` : 'Stream Recorder'}</div>
+                <div className="text-sm">{isRecording ? `[${recordingLength}] Recording` : 'Stream Recorder'}</div>
                 <Button size="small" className="h-10"
                     severity={isRecording ? undefined : 'secondary'}
                     label={isRecording ? 'On' : 'Off'}
                     onClick={() => onToggleRecording(!isRecording)}
                     disabled={!isLive} />
+            </div>
+
+            <div className="flex flex-col items-center gap-1">
+                <div className="text-sm">Torch Light</div>
+                <Button size="small" className="h-10"
+                    severity={isTorch ? undefined : 'secondary'}
+                    label={isTorch ? 'On' : 'Off'}
+                    onClick={() => { if (isTorch !== null) onToggleTorch(!isTorch); }}
+                    disabled={!isLive || isTorch === null} />
             </div>
 
             <div className="flex flex-col items-center gap-1">

@@ -1,3 +1,9 @@
+declare global {
+    interface MediaTrackConstraintSet {
+        torch?: boolean;
+    }
+}
+
 export interface SDP {
     browserID: string,
     sdp: RTCSessionDescription,

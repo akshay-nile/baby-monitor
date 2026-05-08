@@ -28,6 +28,10 @@ function BabyDevice() {
     const [parents, setParents] = useState<ParentState[]>([]);
     const [polling, setPolling] = useState<boolean>(false);
 
+    function broadcastMessage(message: string) {
+        parentsRef.current.values().forEach(parent => sendMessage(parent.dc, message));
+    }
+
     function updateParents() {
         setParents(parentsRef.current.entries().toArray().map(([parentID, parent]) => {
             return { parentID, talking: parent.talking } as ParentState;
@@ -116,10 +120,18 @@ function BabyDevice() {
 
     function replaceParentTracks(parents: Array<Parent>, stream?: MediaStream) {
         const ms = stream ?? streamRef.current;
-        if (ms) parents
-            .forEach(parent => parent.pc.getSenders()
-                .forEach(sender => ms.getTracks()
-                    .forEach(track => track.kind === sender.track?.kind && sender.replaceTrack(track))));
+        if (ms) {
+            parents
+                .forEach(parent => parent.pc.getSenders()
+                    .forEach(sender => ms.getTracks()
+                        .forEach(track => track.kind === sender.track?.kind && sender.replaceTrack(track))));
+            const track = ms.getVideoTracks()[0];
+            broadcastMessage(
+                'torch' in track.getCapabilities()
+                    ? track.getSettings().torch ? 'TORCH ON' : 'TORCH OFF'
+                    : 'TORCH NA'
+            );
+        }
     }
 
     async function startCamera() {
@@ -181,7 +193,7 @@ function BabyDevice() {
             };
 
             // When parent sends a message
-            dc.onmessage = (e: MessageEvent) => {
+            dc.onmessage = async (e: MessageEvent) => {
                 if (!parentID) return;
                 if (e.data === 'DISCONNECT') {
                     disconnect(parentID);
@@ -199,6 +211,14 @@ function BabyDevice() {
                     parent.talking = true;
                     updateParents();
                     showToast({ severity: 'info', summary: 'Parent Talking', detail: 'Parent ID: ' + parentID });
+                }
+                if (['TORCH ON', 'TORCH OFF'].includes(e.data)) {
+                    if (!streamRef.current) return;
+                    const track = streamRef.current.getVideoTracks()[0];
+                    if ('torch' in track.getCapabilities()) {
+                        await track.applyConstraints({ advanced: [{ torch: e.data === 'TORCH ON' }] });
+                        broadcastMessage(track.getSettings().torch ? 'TORCH ON' : 'TORCH OFF');
+                    } else broadcastMessage('TORCH NA');
                 }
             };
 
@@ -269,14 +289,13 @@ function BabyDevice() {
     }
 
     function toggleMotionDetectionAndSensitivity(sensitivity: number | null) {
-        const [video, parents] = [videoRef.current, parentsRef.current];
+        const video = videoRef.current;
         if (!video) return;
         if (sensitivity) {
-            const alertAllParents = () => parents.values().forEach(parent => sendMessage(parent.dc, 'MOTION'));
-            if (video.readyState >= 2) startMotionDetection(video, alertAllParents, sensitivity);
-            else video.onloadeddata = () => startMotionDetection(video, alertAllParents, sensitivity);
+            if (video.readyState >= 2) startMotionDetection(video, () => broadcastMessage('MOTION'), sensitivity);
+            else video.onloadeddata = () => startMotionDetection(video, () => broadcastMessage('MOTION'), sensitivity);
         } else {
-            if (video) video.onloadeddata = null;
+            video.onloadeddata = null;
             stopMotionDetection();
         }
         const toast = settingsRef.current.useMotionDetection !== !!sensitivity;

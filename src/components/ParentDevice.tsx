@@ -22,8 +22,9 @@ function ParentDevice() {
     const audioToneRef = useRef<HTMLAudioElement>(new Audio('./tone.mp3'));
 
     const [connection, setConnection] = useState<'CONNECTED' | 'CONNECTING' | 'DISCONNECTED'>('DISCONNECTED');
-    const [talking, setTalking] = useState<boolean>(false);
     const [recording, setRecording] = useState<'border-red-500' | 'border-transparent' | null>(null);
+    const [talking, setTalking] = useState<boolean>(false);
+    const [torch, setTorch] = useState<boolean | null>(null);
 
     const stopAndSaveRecording = useCallback(() => {
         const recorder = recorderRef.current;
@@ -59,6 +60,7 @@ function ParentDevice() {
         if (document.pictureInPictureElement) document.exitPictureInPicture();
         if (document.fullscreenElement) document.exitFullscreen();
 
+        setTorch(null);
         setConnection('DISCONNECTED');
         if (toast) showToast({ severity: 'warn', summary: 'Disconnected' });
     }, [showToast, stopAndSaveRecording]);
@@ -86,6 +88,7 @@ function ParentDevice() {
 
     async function connect() {
         setConnection('CONNECTING');
+
         if (settingsRef.current.usePushToTalk) await startMicrophone();
         const offer = await getSDP('offer');
 
@@ -118,6 +121,7 @@ function ParentDevice() {
                         audioToneRef.current.play().catch(() => console.warn('Failed to play tone.mp3'));
                         lastAlertRef.current = Date.now();
                     }
+                    else if (e.data.startsWith('TORCH')) setTorch(e.data.endsWith('NA') ? null : e.data.endsWith('ON'));
                 };
             };
 
@@ -199,6 +203,12 @@ function ParentDevice() {
         showToast({ severity: 'info', summary: 'Recording Started', detail: 'Supported format: ' + mimeType });
     }
 
+    function toggleTorchLight(isTorch: boolean) {
+        if (!babyRef.current) return;
+        sendMessage(babyRef.current.dc, `TORCH ${isTorch ? 'ON' : 'OFF'}`);
+        setTorch(isTorch);
+    }
+
     function toggleMotionAlerts(alerts: boolean) {
         settingsRef.current.motionDetectionAlerts = alerts;
         setSettings(settingsRef.current);
@@ -232,7 +242,9 @@ function ParentDevice() {
 
                     <ParentControlPanel
                         isLive={connection === 'CONNECTED'}
+                        isTorch={torch}
                         isRecording={!!recording}
+                        onToggleTorch={toggleTorchLight}
                         onToggleRecording={b => b ? startRecording() : stopAndSaveRecording()}
                         onToggleMotionAlerts={toggleMotionAlerts} />
                 </div>
