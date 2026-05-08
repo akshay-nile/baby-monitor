@@ -1,4 +1,9 @@
-export async function getMediaStream(facingMode?: 'user' | 'environment') {
+type Camera = {
+    facingMode?: 'user' | 'environment',
+    deviceId?: string
+}
+
+export async function getMediaStream(camera?: Camera) {
     const audio = {
         channelCount: { ideal: 2 },
         sampleRate: { ideal: 48_000 },
@@ -7,18 +12,17 @@ export async function getMediaStream(facingMode?: 'user' | 'environment') {
         autoGainControl: true
     };
     const video = {
-        facingMode: { exact: facingMode },
+        ...camera,
         frameRate: { ideal: 60 },
         width: { ideal: 1920 },
         height: { ideal: 1080 }
     };
-    const configs = facingMode ? { video, audio } : { audio };
+    const configs = camera ? { video, audio } : { audio };
     return navigator.mediaDevices.getUserMedia(configs);
 }
 
 export async function getMediaDevices(kind: 'videoinput' | 'audioinput') {
     const devices = await navigator.mediaDevices.enumerateDevices();
-    console.log(devices.filter(device => device.kind === kind));
     return devices.filter(device => device.kind === kind);
 }
 

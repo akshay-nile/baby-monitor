@@ -1,15 +1,18 @@
 import { Button } from 'primereact/button';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { getSettings } from '../services/settings';
+import { getMediaDevices } from '../services/media';
+import { Dropdown } from 'primereact/dropdown';
 
 type Props = {
     isLive: boolean,
     isPolling: boolean,
+    onSelectCamera: (m: MediaDeviceInfo) => void,
     onTogglePolling: (b: boolean) => void,
     onToggleMotionDetection: (n: number | null) => void
 };
 
-function BabyTogglePanel({ isLive, isPolling, onTogglePolling, onToggleMotionDetection }: Props) {
+function BabyTogglePanel({ isLive, isPolling, onSelectCamera, onTogglePolling, onToggleMotionDetection }: Props) {
     const motionDetectionOptions = [
         { name: 'Disabled', value: null },
         { name: 'Low', value: 100 },
@@ -24,6 +27,12 @@ function BabyTogglePanel({ isLive, isPolling, onTogglePolling, onToggleMotionDet
         motionDetectionOptions.findIndex(op => op.value === motionDetectionValue)
     );
 
+    const [cameras, setCameras] = useState<MediaDeviceInfo[]>([]);
+
+    useEffect(() => {
+        if (isLive) (async () => setCameras(await getMediaDevices('videoinput')))();
+    }, [isLive]);
+
     return (
         <div className="w-full flex justify-between px-2">
             <div className="flex flex-col items-center gap-1">
@@ -32,6 +41,14 @@ function BabyTogglePanel({ isLive, isPolling, onTogglePolling, onToggleMotionDet
                     severity={isPolling ? undefined : 'secondary'}
                     label={isPolling ? 'Allowed' : 'Disabled'}
                     onClick={() => onTogglePolling(!isPolling)}
+                    disabled={!isLive} />
+            </div>
+
+            <div className="flex flex-col items-center gap-1">
+                <div className="text-sm">Camera</div>
+                <Dropdown className="h-10" pt={{ input: { style: { display: 'none', border: '1px solid pink' } } }}
+                    options={cameras} optionLabel="label"
+                    onChange={e => onSelectCamera(e.value)}
                     disabled={!isLive} />
             </div>
 

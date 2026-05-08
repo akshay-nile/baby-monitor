@@ -100,7 +100,7 @@ function BabyDevice() {
         if (toast) showToast({ severity: 'info', summary: 'Camera Stopped', detail });
     }, [showToast, disconnect, stopPolling]);
 
-    async function getCameraStream(): Promise<MediaStream | null> {
+    async function getCameraStream(camera?: MediaDeviceInfo): Promise<MediaStream | null> {
         if (!window.isSecureContext) {
             showToast({ severity: 'error', summary: 'Insecure Web Context' });
             return null;
@@ -111,7 +111,11 @@ function BabyDevice() {
             return null;
         }
         if (cameras.length === 1) facingModeRef.current = 'user';
-        try { return await getMediaStream(facingModeRef.current); }
+        try {
+            return await getMediaStream(
+                camera ? { deviceId: camera.deviceId } : { facingMode: facingModeRef.current }
+            );
+        }
         catch (error) {
             showToast({ severity: 'error', summary: 'Media Access Denied', detail: error });
             return null;
@@ -270,14 +274,14 @@ function BabyDevice() {
         }
     }
 
-    async function flipCameraStream() {
+    async function flipCameraStream(camera?: MediaDeviceInfo) {
         if (!streamRef.current) return;
-        facingModeRef.current = facingModeRef.current === 'user' ? 'environment' : 'user';
-        const [oldStream, newStream] = [streamRef.current, await getCameraStream()];
+        if (!camera) facingModeRef.current = facingModeRef.current === 'user' ? 'environment' : 'user';
+        const [oldStream, newStream] = [streamRef.current, await getCameraStream(camera)];
         if (!newStream || !videoRef.current) return;
         videoRef.current.srcObject = newStream;
         replaceParentTracks(parentsRef.current.values().toArray(), newStream);
-        showToast({ severity: 'info', summary: `Switched to ${facingModeRef.current === 'user' ? 'Front' : 'Back'} Camera` });
+        showToast({ severity: 'info', summary: `Switched to ${camera ? camera.label : facingModeRef.current === 'user' ? 'Front' : 'Back'} Camera` });
         streamRef.current = newStream;
         if (oldStream) oldStream.getTracks().forEach(track => track.stop());
     }
@@ -321,12 +325,13 @@ function BabyDevice() {
                             ${parents.some(p => p.talking) ? 'border-yellow-400' : 'border-pink-500'} 
                             ${camera !== 'STARTED' ? 'aspect-square' : 'aspect-auto'}
                         `}
-                        onClick={flipCameraStream}
+                        onClick={() => flipCameraStream()}
                         onPause={stopMotionDetection} onEnded={stopMotionDetection} onError={stopMotionDetection} />
 
                     <BabyTogglePanel
                         isLive={camera === 'STARTED'}
                         isPolling={polling}
+                        onSelectCamera={m => flipCameraStream(m)}
                         onTogglePolling={b => b ? startPolling() : stopPolling()}
                         onToggleMotionDetection={toggleMotionDetectionAndSensitivity} />
 
