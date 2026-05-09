@@ -9,7 +9,7 @@ function ParentStatusPanel({ isLive, isTalking, onFullscreen }: Props) {
                 <span className="flex gap-2 justify-center items-center">
                     {isLive && isTalking ? <Mic size={18} /> : <MicOff size={18} />}
                 </span>
-                <div className="text-sm">sending</div>
+                <div className="text-xs">Sending</div>
             </div>
 
             {
@@ -27,7 +27,7 @@ function ParentStatusPanel({ isLive, isTalking, onFullscreen }: Props) {
                             : <><VideoOff size={18} /> <VolumeOff size={18} /></>
                     }
                 </span>
-                <div className="text-sm">receiving</div>
+                <div className="text-xs">Receiving</div>
             </div>
         </div>
     );

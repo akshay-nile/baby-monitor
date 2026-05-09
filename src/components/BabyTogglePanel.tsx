@@ -1,8 +1,8 @@
 import { Button } from 'primereact/button';
-import { useEffect, useState } from 'react';
-import { getSettings } from '../services/settings';
-import { getMediaDevices } from '../services/media';
 import { Dropdown } from 'primereact/dropdown';
+import { useEffect, useState } from 'react';
+import { getMediaDevices } from '../services/media';
+import { getSettings } from '../services/settings';
 
 type Props = {
     isLive: boolean,
@@ -35,26 +35,26 @@ function BabyTogglePanel({ isLive, isPolling, onSelectCamera, onTogglePolling, o
 
     return (
         <div className="w-full flex justify-between px-2">
-            <div className="flex flex-col items-center gap-1">
-                <div className="text-sm">Parent Connections</div>
-                <Button size="small" className="h-10"
+            <div className="flex flex-col items-center gap-1.5">
+                <div className="text-xs">Parent Connections</div>
+                <Button size="small" className="h-9 text-xs!"
                     severity={isPolling ? undefined : 'secondary'}
                     label={isPolling ? 'Allowed' : 'Disabled'}
                     onClick={() => onTogglePolling(!isPolling)}
                     disabled={!isLive} />
             </div>
 
-            <div className="flex flex-col items-center gap-1">
-                <div className="text-sm">Camera</div>
-                <Dropdown className="h-10" pt={{ input: { style: { display: 'none', border: '1px solid pink' } } }}
+            <div className="flex flex-col items-center gap-1.5">
+                <div className="text-xs">Camera</div>
+                <Dropdown className="h-9 text-xs!" pt={{ input: { style: { display: 'none', border: '1px solid pink' } } }}
                     options={cameras} optionLabel="label"
                     onChange={e => onSelectCamera(e.value)}
                     disabled={!isLive} />
             </div>
 
-            <div className="flex flex-col items-center gap-1">
-                <div className="text-sm">Motion {motionDetectionValue ? 'Sensitivity' : 'Detection'}</div>
-                <Button size="small" className="h-10"
+            <div className="flex flex-col items-center gap-1.5">
+                <div className="text-xs">Motion {motionDetectionValue ? 'Sensitivity' : 'Detection'}</div>
+                <Button size="small" className="h-9 text-xs!"
                     severity={motionDetectionOptions[motionDetectionIndex].value ? undefined : 'secondary'}
                     label={motionDetectionOptions[motionDetectionIndex].name}
                     onClick={() => {

@@ -42,27 +42,27 @@ function ParentTogglePanel({ isLive, isTorch, isRecording, onToggleTorch, onTogg
 
     return (
         <div className="w-full flex justify-between px-2">
-            <div className="flex flex-col items-center gap-1">
-                <div className="text-sm">{isRecording ? `[${recordingLength}] Recording` : 'Stream Recorder'}</div>
-                <Button size="small" className="h-10"
+            <div className="flex flex-col items-center gap-1.5">
+                <div className="text-xs">{isRecording ? `[${recordingLength}] Recording` : 'Stream Recorder'}</div>
+                <Button size="small" className="h-9 text-xs!"
                     severity={isRecording ? undefined : 'secondary'}
                     label={isRecording ? 'On' : 'Off'}
                     onClick={() => onToggleRecording(!isRecording)}
                     disabled={!isLive} />
             </div>
 
-            <div className="flex flex-col items-center gap-1">
-                <div className="text-sm">Torch Light</div>
-                <Button size="small" className="h-10"
+            <div className="flex flex-col items-center gap-1.5">
+                <div className="text-xs">Torch Light</div>
+                <Button size="small" className="h-9 text-xs!"
                     severity={isTorch ? undefined : 'secondary'}
                     label={isTorch ? 'On' : 'Off'}
                     onClick={() => { if (isTorch !== null) onToggleTorch(!isTorch); }}
                     disabled={!isLive || isTorch === null} />
             </div>
 
-            <div className="flex flex-col items-center gap-1">
-                <div className="text-sm">Motion Alerts</div>
-                <Button size="small" className="h-10"
+            <div className="flex flex-col items-center gap-1.5">
+                <div className="text-xs">Motion Alerts</div>
+                <Button size="small" className="h-9 text-xs!"
                     severity={motionDetectionAlerts ? undefined : 'secondary'}
                     label={motionDetectionAlerts ? 'On' : 'Off'}
                     onClick={() => {

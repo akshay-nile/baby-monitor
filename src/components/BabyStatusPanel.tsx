@@ -22,7 +22,7 @@ function BabyStatusPanel({ parents, isLive, isPolling, onDisconnect }: Props) {
                             : <><CameraOff size={18} /> <MicOff size={18} /></>
                     }
                 </span>
-                <div className="text-sm">sending</div>
+                <div className="text-xs">Sending</div>
             </div>
 
             {
@@ -36,7 +36,7 @@ function BabyStatusPanel({ parents, isLive, isPolling, onDisconnect }: Props) {
                                 : parents.length === 0 && <UserX size={18} className="text-red-500" />
                         }
                     </span>
-                    <div className="text-sm">parents ({parents.length}{isPolling && '+'})</div>
+                    <div className="text-xs">Parents ({parents.length}{isPolling && '+'})</div>
                     <OverlayPanel ref={opRef} showCloseIcon closeOnEscape dismissable pt={{ content: { style: { padding: '0.4rem' } } }}>
                         <DataTable size="small" value={parents} key="parentID" emptyMessage={isPolling ? 'No Parent(s) Connected' : 'Polling Stopped'}>
                             <Column field="parentID" body={(p: ParentState) =>
@@ -57,7 +57,7 @@ function BabyStatusPanel({ parents, isLive, isPolling, onDisconnect }: Props) {
                 <span className="flex gap-2 justify-center items-center">
                     {isLive && isTalking ? <Volume2 size={18} /> : <VolumeOff size={18} />}
                 </span>
-                <div className="text-sm">receiving</div>
+                <div className="text-xs">Receiving</div>
             </div>
         </div>
     );
