@@ -1,6 +1,7 @@
 # 👶 Baby Monitor (WebRTC based)
-A simple and free hobby **Web Application** that uses **WebRTC Peer-to-Peer** connections between **single Baby Device** and **multiple Parent Devices**.  
+A simple and free hobby **Web Application** that uses **WebRTC Peer-to-Peer** connections between a **single Baby Device** and **multiple Parent Devices**.  
 No app installs required — runs directly in your browser!
+Can be installed for free as a Progressive Web App (PWA)
 
 ---
 
@@ -10,8 +11,8 @@ Current Release: **v1.6.9**
 ---
 
 ## 📌 Introduction
-The Baby Monitor app allows parents to keep an eye (and ear) on their baby using at least two devices connected the same WiFi network.  
-It sets up a **direct connection (P2P)** between one Baby Device (Camera + Mic) and multiple Parent Devices (Monitors).
+The Baby Monitor app allows parents to keep an eye (and ear) on their baby using at least two devices (Phones/PCs with Camera on at least one device) connected over the same WiFi network.  
+It sets up a **direct WebRTC connection (P2P)** between one Baby Device (Camera + Mic) and multiple Parent Devices (Monitors).
 
 ---
 
@@ -20,76 +21,104 @@ It sets up a **direct connection (P2P)** between one Baby Device (Camera + Mic) 
    (Chrome, Firefox, Safari, Edge, etc.)
 2. **Two or more devices** are required. At least one should have a camera/mic.  
 3. All devices must be connected to the **same Wi-Fi network**.  
-   (Connections over Mobile Data are *not guaranteed* to work.)
+   (Connections over Mobile Data are *not guaranteed* to work reliably.)
 
 ---
 
-## 🚀 How to Use
+## 🚀 How to Connect
 
 ### Step 1: Open the App
-- Go to 👉 [https://akshaynile.pythonanywhere.com/projects/baby-monitor](https://akshaynile.pythonanywhere.com/projects/baby-monitor) on all devices (at least 2 devices connected to the same WiFi network).
+- Go to 👉 [https://akshaynile.pythonanywhere.com/projects/baby-monitor](https://akshaynile.pythonanywhere.com/projects/baby-monitor) on all devices (at least two devices connected to the same WiFi network).
 
 ---
 
 ### Step 2: Setup Baby Device (camera source)
 1. On the device that will act as the baby monitor, click **"Use as Baby Device"**.
-2. Click **"Start Camera"** → allow necessary browser permissions.
-3. Wait a few seconds until the **local camera feed starts**.  
+2. Click **"Start Camera"** → allow necessary browser permissions to access camera.
+3. Wait for a few seconds until the **local camera feed starts**.  
    The Baby Device now:
-   - Polls for incoming Parent connections.
-   - Displays the count of connected Parents.
+   - Continuesly polls the server for incoming Parent connections.
+   - Displays the count of connected Parents in the status panel.
 4. Polling lasts **5 minutes (default)**, so all Parent Devices must connect within that window.
-5. Polling can be manually turned ON or OFF as needed once camera is started.
-6. **Motion Detection** feature can be turned ON in settings and **sensitivity** can be adjusted as needed.
-7. At any time, click **"Stop Camera"** to:
+5. Parent connections can be manually Allowed or Disabled as needed once camera is started.
+6. At any time, click **"Stop Camera"** to:
    - Stop the local camera feed and polling.
-   - Disconnect all Parent Devices.
+   - Disconnect all the Parent Devices if any.
 
 ---
 
 ### Step 3: Setup Parent Device(s)
 1. On each Parent Device, click **"Use as Parent Device"**.
-2. Click **"Connect"** → this registers the connection request with the server.
+2. Click **"Connect"** button on any one Parent Device at a time. 
+3. This registers the connection request with the server for the Baby Device which is online.
 3. The button will show **"Connecting..."**. 
-  - 3.1 => Wait at least **5 seconds** for the connection request to be recieved by the Baby Device.
-  - 3.2 => Baby device is shown a conformation dialog to accept the request and remember the Parent ID. 
+  - 3.1 => Wait at least 5 seconds for the connection request to be recieved by the Baby Device.
+  - 3.2 => Baby device shows a conformation dialog to accept the request and remembers the Parent ID. 
   - 3.3 => If request is not accepted the parent device will show **"Connection Rejected"** and baby device will continue polling for other parent devices.
 4. Once connected:
-   - 🎥 Live audio/video feed from Baby Device appears.
+   - Live audio/video feed from Baby Device appears.
    - Button label changes to **"Disconnect"**.
-   - Parents can record and save the audio/video stream comming from Baby camera using **Start Recording** button.
-   - If motion detection feature on Baby device is turned ON, motion alert notifications can appear on connected Parent devices. Alerts can be turned OFF in settings as needed.
-5. Extra controls:
-   - Tap the video screen on Baby Device to **Flip Camera** between front/back.
-   - Press and hold the video screen on Parent Device to use Push-To-Talk feature.
-   - Click **"Disconnect"** to exit and reset the app.
-6. Ensure:
-   - Baby Device shows **"+" symbol next to parent count** before Parent clicks Connect button.
-   - Baby Device’s browser tab should stay **alive/awake** to prevent interruptions.
+5. Same process should be repeated on other Parent Devices **one-by-one**.
 
 ---
 
-## 🔒 Data Safety & Security
-- 100% **web-based**: no third-party apps or services required.
+## ✨ How to Use Features 
+
+---
+
+### Motion Detection and Alerts
+   - Place the Baby Device on a stable platform where camera facing towards the sleeping Baby.
+   - Turn on the Motion Detection feature from the Baby Device toggle panel (or settings).
+   - Adjust sensitivity to Low, Medium or High presets depending on how bright the room is lit.
+   - All the Parent Devices will recieve motion alerts if any motion is detected by the Baby Device.
+   - Motion alerts can be turned On/Off in Parent Device toggle panel (or settings) as needed.
+
+### Stream Recording Feature
+   - Parents can record and save the Audio/Video stream comming from Baby camera using Recorder toggle button.
+   - Clicking the same toggle button will stop and save the recorded stream on the Parent Device.
+
+### Push-To-Talk Feature
+   - Parents can directly talk to the Baby just by press and holding the video screen on their Parent Devices.
+   - While pushed, incomming audio from the Baby device is muted and parent's voice can be heard on Baby device. 
+
+### Torchlight Toggle
+   - Torchlight toggle gets enabled on all the Parent Devices when baby device camera has flash/torch available
+   - Any parent can turn the Torchlight On/Off on the Baby device for better visibility in the dark rooms.
+
+### Fullscreen & Picture-in-Picture Mode
+   - Parents can monitor the Baby in Fullscreen mode when connected.
+
+### Other Useful Features and Hacks
+   - Tap the video screen on the Baby Device to quickly flip between Front/Back facing cameras.
+   - Polling automatically starts to allow parent connections when the last Parent Device gets Disconnected.
+   - New (unknown) parent connection shows confirmation pop-up on the Baby Device for security reasons. 
+   - When connection is accepted, Parent Device ID is marked as Trusted Parent by the Baby Device and allows quick connection on next attempt without any confirmation pop-up.
+   - Polling Timeout, Max Parent Connections, Discard All Trusted Parents settings in User Settings screen.
+
+---
+
+## 🔒 Data Privacy & Security
+- 100% **web-based** and no third-party apps or services are used.
 - **Live stream data is never stored on the server**.  
 - Server is used **only** for:
-  1. Hosting app files (HTML/CSS/JS).  
-  2. Handling signaling (polling) to establish P2P connections.  
-- Once connected, all audio/video flows **directly between devices** over the local Wi-Fi network.
+  1. Hosting app files like HTML, CSS, JS, Icons etc only.  
+  2. Relay signaling (polling) to establish WebRTC P2P connections.  
+- Once connected, **all audio/video flows directly between devices** over the local WiFi network.
 
 ---
 
-## 🛠 Upcoming/Planned Features
-- Only bug fixes and performance improvements
+## ⚒️ Upcoming/Planned Features
+- Development is freezed and only bug fixes and performance improvements will be added as needed.
 
 ---
 
 ## 💡 Contribute
-Got ideas, suggestions, or bug reports?  
-Contributions are always welcome! Open an issue or drop feedback.
+Got any ideas, suggestions, or bug reports?  
+Contributions are always welcome! 
+Open an issue or drop feedback on my GitHub repo.
 
 ---
 
 ## 🙏 Thanks
-Thank you for using Baby Monitor!  
-Enjoy safe and secure Baby Monitoring 👶🎥
+Thank you for using the Baby Monitor! ❤️  
+Enjoy safe and secure Baby Monitoring... 👶🎥

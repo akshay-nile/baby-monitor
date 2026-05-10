@@ -43,16 +43,16 @@ function ParentTogglePanel({ isLive, isTorch, isRecording, onToggleTorch, onTogg
     return (
         <div className="w-full flex justify-between px-2">
             <div className="flex flex-col items-center gap-1.5">
-                <div className="text-xs">{isRecording ? `[${recordingLength}] Recording` : 'Stream Recorder'}</div>
+                <div className="text-xs">{isRecording ? 'Recording...' : 'Stream Recorder'}</div>
                 <Button size="small" className="h-9 text-xs!"
                     severity={isRecording ? undefined : 'secondary'}
-                    label={isRecording ? 'On' : 'Off'}
+                    label={isRecording ? recordingLength : 'Off'}
                     onClick={() => onToggleRecording(!isRecording)}
                     disabled={!isLive} />
             </div>
 
             <div className="flex flex-col items-center gap-1.5">
-                <div className="text-xs">Torch Light</div>
+                <div className="text-xs">Torchlight</div>
                 <Button size="small" className="h-9 text-xs!"
                     severity={isTorch ? undefined : 'secondary'}
                     label={isTorch ? 'On' : 'Off'}

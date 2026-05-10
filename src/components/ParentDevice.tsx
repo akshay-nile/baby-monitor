@@ -89,9 +89,16 @@ function ParentDevice() {
     async function connect() {
         setConnection('CONNECTING');
 
-        if (settingsRef.current.usePushToTalk) await startMicrophone();
-        const offer = await getSDP('offer');
+        if (settingsRef.current.usePushToTalk) {
+            await startMicrophone();
+            if (!streamRef.current) {
+                showToast({ severity: 'error', summary: 'Microphone Not Started' });
+                setConnection('DISCONNECTED');
+                return;
+            }
+        }
 
+        const offer = await getSDP('offer');
         if (offer) {
             const pc = new RTCPeerConnection();
 
@@ -203,16 +210,16 @@ function ParentDevice() {
         showToast({ severity: 'info', summary: 'Recording Started', detail: 'Supported format: ' + mimeType });
     }
 
-    function toggleTorchLight(isTorch: boolean) {
+    function toggleTorchLight(isTorchOn: boolean) {
         if (!babyRef.current) return;
-        sendMessage(babyRef.current.dc, `TORCH ${isTorch ? 'ON' : 'OFF'}`);
-        setTorch(isTorch);
+        sendMessage(babyRef.current.dc, `TORCH ${isTorchOn ? 'ON' : 'OFF'}`);
+        setTorch(isTorchOn);
     }
 
-    function toggleMotionAlerts(alerts: boolean) {
-        settingsRef.current.motionDetectionAlerts = alerts;
+    function toggleMotionAlerts(isAlertOn: boolean) {
+        settingsRef.current.motionDetectionAlerts = isAlertOn;
         setSettings(settingsRef.current);
-        showToast({ severity: 'info', summary: `Motion Alerts ${alerts ? 'ON' : 'OFF'}` });
+        showToast({ severity: 'info', summary: `Motion Alerts ${isAlertOn ? 'ON' : 'OFF'}` });
     }
 
     useEffect(() => {
