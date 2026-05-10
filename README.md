@@ -30,8 +30,6 @@ It sets up a **direct WebRTC connection (P2P)** between one Baby Device (Camera 
 ### Step 1: Open the App
 - Go to 👉 [https://akshaynile.pythonanywhere.com/projects/baby-monitor](https://akshaynile.pythonanywhere.com/projects/baby-monitor) on all devices (at least two devices connected to the same WiFi network).
 
----
-
 ### Step 2: Setup Baby Device (camera source)
 1. On the device that will act as the baby monitor, click **"Use as Baby Device"**.
 2. Click **"Start Camera"** → allow necessary browser permissions to access camera.
@@ -44,8 +42,6 @@ It sets up a **direct WebRTC connection (P2P)** between one Baby Device (Camera 
 6. At any time, click **"Stop Camera"** to:
    - Stop the local camera feed and polling.
    - Disconnect all the Parent Devices if any.
-
----
 
 ### Step 3: Setup Parent Device(s)
 1. On each Parent Device, click **"Use as Parent Device"**.
@@ -63,8 +59,6 @@ It sets up a **direct WebRTC connection (P2P)** between one Baby Device (Camera 
 ---
 
 ## ✨ How to Use Features 
-
----
 
 ### Motion Detection and Alerts
    - Place the Baby Device on a stable platform where camera facing towards the sleeping Baby.
