@@ -12,7 +12,6 @@ import BabyTogglePanel from './BabyTogglePanel';
 import Header from './Header';
 import PageAnimation from './PageAnimation';
 
-
 function BabyDevice() {
     const { showToast } = useToastMessage();
 
@@ -331,6 +330,7 @@ function BabyDevice() {
                     <BabyTogglePanel
                         isLive={camera === 'STARTED'}
                         isPolling={polling}
+                        cameraStream={streamRef}
                         onSelectCamera={m => flipCameraStream(m)}
                         onTogglePolling={b => b ? startPolling() : stopPolling()}
                         onToggleMotionDetection={toggleMotionDetectionAndSensitivity} />
