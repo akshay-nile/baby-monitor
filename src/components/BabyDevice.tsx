@@ -26,6 +26,13 @@ function BabyDevice() {
     const [camera, setCamera] = useState<'STARTED' | 'STARTING' | 'STOPPED'>('STOPPED');
     const [parents, setParents] = useState<ParentState[]>([]);
     const [polling, setPolling] = useState<boolean>(false);
+    const [selectedCameraId, setSelectedCameraId] = useState<string | null>(null);
+
+    function setLocalStream(stream: MediaStream) {
+        if (!videoRef.current) return;
+        videoRef.current.srcObject = streamRef.current = stream;
+        setSelectedCameraId(stream.getVideoTracks()[0].getSettings().deviceId ?? null);
+    }
 
     function broadcastMessage(message: string) {
         parentsRef.current.values().forEach(parent => sendMessage(parent.dc, message));
@@ -48,6 +55,7 @@ function BabyDevice() {
         updateParents();
         if (toast) showToast({ severity: 'warn', summary: 'Parent Disconnected', detail: 'Parent ID: ' + parentID });
     }, [showToast]);
+
 
     const stopPolling = useCallback((toast = true) => {
         if (timeoutRef.current) {
@@ -96,6 +104,7 @@ function BabyDevice() {
         setParents([]);
         stopPolling(false);
         setCamera('STOPPED');
+        setSelectedCameraId(null);
         if (toast) showToast({ severity: 'info', summary: 'Camera Stopped', detail });
     }, [showToast, disconnect, stopPolling]);
 
@@ -141,12 +150,12 @@ function BabyDevice() {
         const video = videoRef.current;
         if (streamRef.current || !video || camera === 'STARTING') return;
         setCamera('STARTING');
-        streamRef.current = await getCameraStream();
-        if (!streamRef.current) {
+        const stream = await getCameraStream();
+        if (!stream) {
             setCamera('STOPPED');
             return;
         }
-        video.srcObject = streamRef.current;
+        setLocalStream(stream);
         toggleMotionDetectionAndSensitivity(settingsRef.current.useMotionDetection ? settingsRef.current.motionSensitivity : null);
         setCamera('STARTED');
         showToast({ severity: 'success', summary: 'Camera Started', detail: 'Waiting for parent connections' });
@@ -275,14 +284,13 @@ function BabyDevice() {
 
     async function flipCameraStream(camera?: MediaDeviceInfo) {
         if (!streamRef.current) return;
-        if (!camera) facingModeRef.current = facingModeRef.current === 'user' ? 'environment' : 'user';
+        facingModeRef.current = facingModeRef.current === 'user' ? 'environment' : 'user';
         const [oldStream, newStream] = [streamRef.current, await getCameraStream(camera)];
-        if (!newStream || !videoRef.current) return;
-        videoRef.current.srcObject = newStream;
+        if (!oldStream || !newStream) return;
+        setLocalStream(newStream);
         replaceParentTracks(parentsRef.current.values().toArray(), newStream);
         showToast({ severity: 'info', summary: `Switched to ${camera ? camera.label : facingModeRef.current === 'user' ? 'Front' : 'Back'} Camera` });
-        streamRef.current = newStream;
-        if (oldStream) oldStream.getTracks().forEach(track => track.stop());
+        oldStream.getTracks().forEach(track => track.stop());
     }
 
     function toggleMotionDetectionAndSensitivity(sensitivity: number | null) {
@@ -330,7 +338,7 @@ function BabyDevice() {
                     <BabyTogglePanel
                         isLive={camera === 'STARTED'}
                         isPolling={polling}
-                        cameraStream={streamRef}
+                        selectedCameraId={selectedCameraId}
                         onSelectCamera={m => flipCameraStream(m)}
                         onTogglePolling={b => b ? startPolling() : stopPolling()}
                         onToggleMotionDetection={toggleMotionDetectionAndSensitivity} />

@@ -1,19 +1,19 @@
 import { Button } from 'primereact/button';
 import { Dropdown } from 'primereact/dropdown';
-import { useEffect, useState, type RefObject } from 'react';
+import { useEffect, useState } from 'react';
 import { getMediaDevices } from '../services/media';
 import { getSettings } from '../services/settings';
 
 type Props = {
     isLive: boolean,
     isPolling: boolean,
-    cameraStream: RefObject<MediaStream | null>,
+    selectedCameraId: string | null,
     onSelectCamera: (m: MediaDeviceInfo) => void,
     onTogglePolling: (b: boolean) => void,
     onToggleMotionDetection: (n: number | null) => void
 };
 
-function BabyTogglePanel({ isLive, isPolling, cameraStream, onSelectCamera, onTogglePolling, onToggleMotionDetection }: Props) {
+function BabyTogglePanel({ isLive, isPolling, selectedCameraId, onSelectCamera, onTogglePolling, onToggleMotionDetection }: Props) {
     const motionDetectionOptions = [
         { name: 'Disabled', value: null },
         { name: 'Low', value: 100 },
@@ -29,7 +29,6 @@ function BabyTogglePanel({ isLive, isPolling, cameraStream, onSelectCamera, onTo
     );
 
     const [cameras, setCameras] = useState<MediaDeviceInfo[]>([]);
-    const selectedCameraId = cameraStream.current?.getVideoTracks()[0]?.getSettings()?.deviceId;
 
     useEffect(() => {
         if (isLive) (async () => setCameras(await getMediaDevices('videoinput')))();
@@ -48,10 +47,13 @@ function BabyTogglePanel({ isLive, isPolling, cameraStream, onSelectCamera, onTo
 
             <div className="flex flex-col items-center gap-1.5">
                 <div className="text-xs">Camera</div>
-                <Dropdown className="h-9 text-xs!" pt={{ input: { style: { display: 'none', border: '1px solid pink' } } }}
-                    options={cameras} optionLabel="label"
-                    value={cameras.find(c => c.deviceId === selectedCameraId)}
-                    onChange={e => onSelectCamera(e.value)}
+                <Dropdown className="h-9 text-xs!" pt={{ input: { style: { display: 'none' } } }}
+                    options={cameras} optionLabel="label" optionValue="deviceId"
+                    value={selectedCameraId}
+                    onChange={e => {
+                        const selectedCamera = cameras.find(c => c.deviceId === e.value);
+                        if (selectedCamera) onSelectCamera(selectedCamera);
+                    }}
                     disabled={!isLive} />
             </div>
 

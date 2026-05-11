@@ -1,6 +1,6 @@
 # 👶 Baby Monitor (WebRTC based)
-A simple and free hobby **Web Application** that uses **WebRTC Peer-to-Peer** connections between a **single Baby Device** and **multiple Parent Devices**.\ 
-No app installs required — runs directly in your browser!\
+A simple and free hobby **Web Application** that uses **WebRTC Peer-to-Peer** connections between a **single Baby Device** and **multiple Parent Devices**.  
+No app installs required — runs directly in your browser!  
 Can be installed for free as a Progressive Web App (PWA)
 
 ---
@@ -11,17 +11,16 @@ Current Release: **v1.6.9**
 ---
 
 ## 📌 Introduction
-The Baby Monitor app allows parents to keep an eye (and ear) on their baby using at least two devices (Phones/PCs with Camera on at least one device) connected over the same WiFi network.\
+The Baby Monitor app allows parents to keep an eye (and ear) on their baby using at least two devices (Phones/PCs with Camera on at least one device) connected over the same WiFi network.  
 It sets up a **direct WebRTC connection (P2P)** between one Baby Device (Camera + Mic) and multiple Parent Devices (Monitors).
 
 ---
 
 ## ✅ Requirements
-1. **No app installation** needed — works directly in modern browsers.  
-   like Chrome, Firefox, Safari, Edge, etc.\
+1. **No app installation** needed — works directly in modern browsers like Chrome, Firefox, Safari, Edge, etc.  
    (**Google Chrome** is highly recommended)
 2. **Two or more devices** are required. At least one should have a camera/mic.  
-3. All devices must be connected to the **same WiFi network**.\
+3. All devices must be connected to the **same WiFi network**.  
    (Connections over Mobile Data are *not guaranteed* to work reliably.)
 
 ---
@@ -112,12 +111,12 @@ It sets up a **direct WebRTC connection (P2P)** between one Baby Device (Camera 
 ---
 
 ## 💡 Contribute
-Got any ideas, suggestions, or bug reports?\
-Contributions are always welcome!\
+Got any ideas, suggestions, or bug reports?  
+Contributions are always welcome!  
 Open an issue or drop feedback on my GitHub repo.
 
 ---
 
 ## 🙏 Thanks
-Thank you for using the Baby Monitor! ❤️\
-Enjoy safe and secure Baby Monitoring... 👶\
+Thank you for using the Baby Monitor! ❤️  
+Enjoy safe and secure Baby Monitoring... 👶  
