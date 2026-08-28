@@ -110,6 +110,12 @@ It sets up a **direct WebRTC connection (P2P)** between one Baby Device (Camera 
 
 ---
 
+## 📄 License
+This project is licensed under the **MIT License**. 
+See the [LICENSE](LICENSE) file for more details.
+
+---
+
 ## 💡 Contribute
 Got any ideas, suggestions, or bug reports?  
 Contributions are always welcome!  
