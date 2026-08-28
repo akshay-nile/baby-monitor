@@ -328,12 +328,13 @@ function BabyDevice() {
                         onDisconnect={disconnect} />
 
                     <video ref={videoRef} autoPlay muted className={`
-                            w-full max-w-full shadow cursor-pointer rounded-lg border-2 transition-all ease-in-out duration-200
+                            w-full max-w-full shadow cursor-pointer rounded-lg border-2 transition-all ease-in-out duration-200 select-none
                             ${parents.some(p => p.talking) ? 'border-yellow-400' : 'border-pink-500'} 
                             ${camera !== 'STARTED' ? 'aspect-square' : 'aspect-auto'}
                         `}
                         onClick={() => flipCameraStream()}
-                        onPause={stopMotionDetection} onEnded={stopMotionDetection} onError={stopMotionDetection} />
+                        onPause={stopMotionDetection} onEnded={stopMotionDetection} onError={stopMotionDetection}
+                        onContextMenu={e => e.preventDefault()} />
 
                     <BabyTogglePanel
                         isLive={camera === 'STARTED'}

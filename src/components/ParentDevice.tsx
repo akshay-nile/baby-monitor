@@ -239,13 +239,14 @@ function ParentDevice() {
                         onFullscreen={() => videoRef.current?.requestFullscreen()} />
 
                     <video ref={videoRef} autoPlay muted={talking} className={`
-                            w-full max-w-full shadow cursor-pointer rounded-lg border-2 transition-all ease-in-out duration-200
+                            w-full max-w-full shadow cursor-pointer rounded-lg border-2 transition-all ease-in-out duration-200 select-none
                             ${talking ? 'border-yellow-400' : recording ?? 'border-pink-500'} 
                             ${connection !== 'CONNECTED' ? 'aspect-square' : 'aspect-auto'}
                         `}
                         onMouseDown={() => pushToTalk(true)} onTouchStart={() => pushToTalk(true)}
                         onMouseUp={() => pushToTalk(false)} onTouchEnd={() => pushToTalk(false)}
-                        onMouseLeave={() => pushToTalk(false)} />
+                        onMouseLeave={() => pushToTalk(false)}
+                        onContextMenu={e => e.preventDefault()} />
 
                     <ParentTogglePanel
                         isLive={connection === 'CONNECTED'}
